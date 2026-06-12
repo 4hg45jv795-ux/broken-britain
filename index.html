@@ -106,7 +106,6 @@ canvas#cv{display:block;width:100%;height:auto;}
   <canvas id="cv" width="800" height="360"></canvas>
   <div class="topbar">
     <div class="who" id="who">—<small id="flag"></small></div>
-    <button class="change" id="change">Change fighter</button>
   </div>
   <div class="banner" id="banner">St. Jude's Park — end of level</div>
   <div id="cutscene">
@@ -291,20 +290,27 @@ function updateNPC(){
   if(npc.state==='walkin'){
     npc.x-=1.4; npc.anim+=0.17;
     if(!csDone&&Math.abs(player.x-npc.x)<180){npc.state='idle';startCutscene();}
-  }else{
-    const targetX=player.x+220;
+  }
+  else if(npc.state==='idle'){
+    // Cutscene done — hold position (facing the player) until he walks past.
+    npc.t=0;
+    if(player.x > npc.x + 20) npc.state='trail';
+  }
+  else{
+    // Trail behind the player: he heads right, photographer stays on his left.
+    const targetX=player.x-130;
     const gap=npc.x-targetX;
-    if(gap>30){npc.x-=1.6;npc.anim+=0.16;npc.state='walk';}
-    else if(gap<-20){npc.x+=1.2;npc.anim+=0.14;npc.state='walk';}
-    else{npc.state=(player.atk>=0)?'photo':'idle';}
+    if(gap>30){npc.x-=1.8;npc.anim+=0.16;npc.state='trail';}
+    else if(gap<-20){npc.x+=2.3;npc.anim+=0.16;npc.state='trail';}
+    else npc.state=(player.atk>=0)?'photo':'trailIdle';
     if(player.atk>=0&&npc.state==='photo'){npc.t++;if(npc.t>40)npc.t=0;}
-    else{npc.t=0;}
+    else if(npc.state!=='photo')npc.t=0;
   }
   npc.x=Math.max(0,Math.min(BGW-NPCW,npc.x));
   npc.y=groundAt(npc.x+NPCW/2)-NPCH;
 }
 function npcFrame(){
-  if(npc.state==='walkin'||npc.state==='walk') return Math.floor(npc.anim)%6;
+  if(npc.state==='walkin'||npc.state==='walk'||npc.state==='trail') return Math.floor(npc.anim)%6;
   if(npc.state==='photo'){
     const p=npc.t/40;
     return p<0.3?6:p<0.6?7:8;
@@ -365,17 +371,9 @@ function start(m){
   bannerShown=false;csActive=false;csDone=false;
   initNPC();
   const bgm=document.getElementById('bgm');
-  bgm.currentTime=0;bgm.play().catch(()=>{});
+  bgm.currentTime=0;bgm.volume=0.3;bgm.play().catch(()=>{});
   if(!raf)loop();
 }
-document.getElementById('change').onclick=()=>{
-  document.getElementById('game').style.display='none';
-  document.getElementById('select').style.display='block';
-  document.getElementById('kbhint').style.display='block';
-  cancelAnimationFrame(raf);raf=null;
-  document.getElementById('bgm').pause();
-  if(csActive){clearTimeout(csTimeout);endCutscene();}
-};
 
 function update(){
   if(csActive)return;
