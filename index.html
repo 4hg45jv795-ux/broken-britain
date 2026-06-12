@@ -197,7 +197,7 @@ function buildCards(){
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
 const VW=800,VH=360;
 let BGW=4047;
-loaded.bg.onload=()=>{BGW=loaded.bg.naturalWidth||4047;};
+// BGW default is 4047 — correct for our background
 const ZOOM=1.5,SRCW=VW/ZOOM,SRCH=VH/ZOOM,SRCY=360-SRCH;
 const PH=80,PW=Math.round(PH*FW/FH);
 let cur=null,raf=null;
