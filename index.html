@@ -24,6 +24,8 @@ h1{margin:.1em 0 .05em;font-size:clamp(28px,9vw,64px);font-weight:900;letter-spa
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
   filter:drop-shadow(1px 2px 0 #000);}
 .sub{color:var(--muted);margin:2px 0 16px;font-size:14px;}
+.warn{color:#ffb4a8;border:1px solid var(--accent);background:#2a1512;border-radius:10px;padding:10px 12px;margin:0 0 14px;font:600 12px/1.4 monospace;display:none;}
+.warn b{color:#fff;}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
 @media(max-width:480px){.grid{grid-template-columns:repeat(2,1fr);}}
 .card{background:var(--panel);border:1.5px solid var(--line);border-radius:16px;padding:16px 12px 13px;
@@ -95,6 +97,7 @@ canvas#cv{display:block;width:100%;height:auto;}
   <div class="eyebrow">Side-scroller</div>
   <h1><span class="word-broken">Broken</span><span class="word-britain">Britain</span></h1>
   <p class="sub">Pick your fighter.</p>
+  <div class="warn" id="warn"></div>
   <div class="grid" id="cards"></div>
   <p class="hint-text">Tap a fighter to drop into the world.</p>
 </section>
@@ -136,6 +139,9 @@ function groundAt(x){
   return GROUNDPTS[a]*(1-t)+GROUNDPTS[b]*t;
 }
 
+// ── helper: is this image actually usable? ──
+function imgOk(im){ return im && im.complete && im.naturalWidth>0; }
+
 // ── Asset loading with progress ──
 const ASSETS = [
   {key:'bg',   type:'img', src:'bg.jpg'},
@@ -148,6 +154,7 @@ const ASSETS = [
 // {key:'crusader', type:'img', src:'sprites/crusader.png'},
 
 const loaded={};
+const failed=[];          // <-- track assets that 404 / fail to decode
 let loadedCount=0;
 function onLoad(){
   loadedCount++;
@@ -155,12 +162,21 @@ function onLoad(){
   if(loadedCount>=ASSETS.length) onAllLoaded();
 }
 ASSETS.forEach(a=>{
-  const im=new Image(); im.onload=onLoad; im.onerror=onLoad; im.src=a.src;
+  const im=new Image();
+  im.onload=onLoad;
+  im.onerror=()=>{ failed.push(a.src); console.error('[BrokenBritain] failed to load:',a.src); onLoad(); };
+  im.src=a.src;
   loaded[a.key]=im;
 });
 function onAllLoaded(){
   document.getElementById('loading').style.display='none';
   document.getElementById('app').style.display='flex';
+  if(failed.length){
+    const w=document.getElementById('warn');
+    w.style.display='block';
+    w.innerHTML='<b>Missing files ('+failed.length+'):</b><br>'+failed.join('<br>')+
+      '<br><br>These need to be deployed next to index.html. The game can\u2019t render without them.';
+  }
   buildCards();
 }
 
@@ -177,13 +193,18 @@ function buildCards(){
   const grid=document.getElementById('cards');
   META.forEach(m=>{
     const c=document.createElement('button'); c.className='card';
-    if(!loaded[m.id]||!loaded[m.id].complete){ c.classList.add('crusader-soon'); }
     const thumbDiv=document.createElement('div'); thumbDiv.className='thumb';
     const cv2=document.createElement('canvas'); cv2.width=80; cv2.height=120;
     const ctx2=cv2.getContext('2d');
     ctx2.imageSmoothingEnabled=true;
     const dh=80/(FW/FH); const dy=(120-dh)/2;
-    ctx2.drawImage(loaded[m.id],0,0,FW,FH,0,dy,80,dh);
+    // Guard the draw so a broken sprite can never kill the whole card list.
+    if(imgOk(loaded[m.id])){
+      try{ ctx2.drawImage(loaded[m.id],0,0,FW,FH,0,dy,80,dh); }
+      catch(err){ drawPlaceholder(ctx2,dy,dh); }
+    }else{
+      drawPlaceholder(ctx2,dy,dh);
+    }
     thumbDiv.appendChild(cv2); c.appendChild(thumbDiv);
     const nameDiv=document.createElement('div'); nameDiv.className='name'; nameDiv.textContent=m.name;
     const flagDiv=document.createElement('div'); flagDiv.className='flagtag'; flagDiv.textContent=m.flag;
@@ -191,6 +212,13 @@ function buildCards(){
     c.onclick=()=>start(m);
     grid.appendChild(c);
   });
+}
+function drawPlaceholder(ctx2,dy,dh){
+  ctx2.fillStyle='#2a2d33'; ctx2.fillRect(0,dy,80,dh);
+  ctx2.strokeStyle='#c0392b'; ctx2.lineWidth=1.5; ctx2.strokeRect(2,dy+2,76,dh-4);
+  ctx2.fillStyle='#c0392b'; ctx2.font='700 11px monospace'; ctx2.textAlign='center';
+  ctx2.fillText('no img', 40, dy+dh/2+4);
+  ctx2.textAlign='start';
 }
 
 // ── GAME ──
@@ -285,6 +313,7 @@ function npcFrame(){
 }
 function drawNPC(camX){
   if(!npc.active)return;
+  if(!imgOk(loaded.photog))return;
   const sx=(npc.x-camX)*ZOOM,sy=(npc.y-SRCY)*ZOOM;
   if(sx<-NPCW*ZOOM*2||sx>VW+NPCW*ZOOM)return;
   const dw=NPCW*ZOOM,dh=NPCH*ZOOM;
@@ -296,7 +325,7 @@ function drawNPC(camX){
   ctx.save();
   if(facingLeft){ctx.translate(sx+dw,sy);ctx.scale(-1,1);}
   else{ctx.translate(sx,sy);}
-  ctx.drawImage(loaded.photog,npcFrame()*PFW,0,PFW,PFH,0,0,dw,dh);
+  try{ ctx.drawImage(loaded.photog,npcFrame()*PFW,0,PFW,PFH,0,0,dw,dh); }catch(e){}
   ctx.restore();
 }
 
@@ -377,17 +406,32 @@ function draw(){
   camX=Math.max(0,Math.min(BGW-SRCW,camX));
   ctx.clearRect(0,0,VW,VH);
   ctx.imageSmoothingEnabled=true;
-  ctx.drawImage(loaded.bg,camX,SRCY,SRCW,SRCH,0,0,VW,VH);
+  if(imgOk(loaded.bg)){
+    try{ ctx.drawImage(loaded.bg,camX,SRCY,SRCW,SRCH,0,0,VW,VH); }catch(e){ drawNoBg(); }
+  }else{ drawNoBg(); }
   drawNPC(camX);
   const fx=frameIndex();
   const bob=(player.onGround&&player.vx!==0)?Math.abs(Math.sin(player.anim*Math.PI))*1.5:0;
   const sx=(player.x-camX)*ZOOM,sy=(player.y+bob-SRCY)*ZOOM;
   const dw=PW*ZOOM,dh=PH*ZOOM;
-  ctx.save();
-  if(player.face<0){ctx.translate(sx+dw,sy);ctx.scale(-1,1);}
-  else{ctx.translate(sx,sy);}
-  ctx.drawImage(loaded[cur.id],fx*FW,0,FW,FH,0,0,dw,dh);
-  ctx.restore();
+  if(imgOk(loaded[cur.id])){
+    ctx.save();
+    if(player.face<0){ctx.translate(sx+dw,sy);ctx.scale(-1,1);}
+    else{ctx.translate(sx,sy);}
+    try{ ctx.drawImage(loaded[cur.id],fx*FW,0,FW,FH,0,0,dw,dh); }catch(e){}
+    ctx.restore();
+  }else{
+    // visible stand-in so you can still test movement without the sprite
+    ctx.fillStyle='#c0392b';
+    ctx.fillRect(sx,sy,dw,dh);
+  }
+}
+function drawNoBg(){
+  ctx.fillStyle='#0c0d10'; ctx.fillRect(0,0,VW,VH);
+  ctx.fillStyle='#3a3d44'; ctx.fillRect(0,VH*0.78,VW,VH); // crude ground
+  ctx.fillStyle='#666'; ctx.font='700 14px monospace'; ctx.textAlign='center';
+  ctx.fillText('bg.jpg not loaded', VW/2, 40);
+  ctx.textAlign='start';
 }
 function loop(){update();draw();raf=requestAnimationFrame(loop);}
 </script>
