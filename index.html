@@ -145,13 +145,13 @@ function imgOk(im){ return im && im.complete && im.naturalWidth>0; }
 // ── Asset loading with progress ──
 const ASSETS = [
   {key:'bg',   type:'img', src:'bg.jpg'},
-  {key:'uk',   type:'img', src:'sprites/uk.png'},
-  {key:'england',type:'img',src:'sprites/england.png'},
-  {key:'scotland',type:'img',src:'sprites/scotland.png'},
-  {key:'photog', type:'img', src:'sprites/photog.png'},
+  {key:'uk',   type:'img', src:'uk.png'},
+  {key:'england',type:'img',src:'england.png'},
+  {key:'scotland',type:'img',src:'scotland.png'},
+  {key:'photog', type:'img', src:'photog.png'},
 ];
 // Crusader slot — add when sprite is ready:
-// {key:'crusader', type:'img', src:'sprites/crusader.png'},
+// {key:'crusader', type:'img', src:'crusader.png'},
 
 const loaded={};
 const failed=[];          // <-- track assets that 404 / fail to decode
