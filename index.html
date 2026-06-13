@@ -177,12 +177,12 @@ const CLIPS_BRIT={
 };
 const CLIPS_CRU={
   idle:   {start:0,  count:5, fps:6,  loop:true},
-  walk:   {start:5,  count:6, fps:9,  loop:true},
-  run:    {start:11, count:5, fps:13, loop:true},
-  jump:   {start:16, count:2, fps:7,  loop:false},
-  punch:  {start:18, count:6, fps:15, loop:false},
-  headbutt:{start:24,count:4, fps:13, loop:false},
-  die:    {start:28, count:3, fps:8,  loop:false},
+  walk:   {start:5,  count:6, fps:11, loop:true},
+  run:    {start:5,  count:6, fps:16, loop:true},   // reuse walk frames, faster
+  jump:   {start:11, count:2, fps:8,  loop:false},  // sword-raise pose
+  punch:  {start:11, count:6, fps:14, loop:false},  // overhead raise -> thrust
+  headbutt:{start:17,count:4, fps:12, loop:false},  // forward lunge
+  die:    {start:21, count:3, fps:8,  loop:false},
 };
 let CLIPS=CLIPS_BRIT;       // current fighter's clips (set in start())
 const GSTEP=60;
@@ -233,7 +233,7 @@ function onAllLoaded(){
 // ── META ──
 const META=[
   {id:'brit',     name:'The Brawler',  flag:'GREAT BRITAIN', fw:181, fh:218, clips:CLIPS_BRIT},
-  {id:'crusader', name:'The Crusader', flag:'CHRISTENDOM',    fw:225, fh:224, clips:CLIPS_CRU},
+  {id:'crusader', name:'The Crusader', flag:'CHRISTENDOM',    fw:227, fh:234, clips:CLIPS_CRU},
 ];
 
 function buildCards(){
