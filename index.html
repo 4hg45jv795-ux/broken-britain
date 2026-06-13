@@ -235,8 +235,8 @@ function imgOk(im){ return im && im.complete && im.naturalWidth>0; }
 const SECTIONS=[
   {id:'street', name:'Southside &mdash; the street', bgKey:'bg',  BGW:4047, srcY:120, flatGround:null,
    enemies:[ {at:900,kind:0},{at:1600,kind:1},{at:2400,kind:0},{at:3050,kind:1},{at:3650,kind:0} ]},
-  {id:'park',   name:'Southside Park',               bgKey:'bg2', BGW:1773, srcY:0,   flatGround:196,
-   enemies:[ {at:520,kind:1},{at:900,kind:0},{at:1230,kind:1},{at:1520,kind:0} ]},
+  {id:'park',   name:'Southside Park &mdash; Grandview Hotel', bgKey:'bg2', BGW:1763, srcY:0, flatGround:196,
+   enemies:[ {at:430,kind:1},{at:760,kind:0},{at:1080,kind:1},{at:1480,kind:0} ]},
 ];
 let sectionIndex=0;
 let SRCY=120, BGW=4047;
@@ -258,7 +258,7 @@ const ASSETS = [
   {key:'brit',     type:'img', src:'brit2.png'},
   {key:'crusader', type:'img', src:'crusader2.png'},
   {key:'photog',   type:'img', src:'photog2.png'},
-  {key:'bg2',      type:'img', src:'bg2.jpg',     optional:true},
+  {key:'bg2',      type:'img', src:'park.jpg',    optional:true},
   {key:'enemy1',   type:'img', src:'enemy1.png',  optional:true},
   {key:'enemy2',   type:'img', src:'enemy2.png',  optional:true},
   {key:'athlete',  type:'img', src:'athlete.png', optional:true},
@@ -832,10 +832,54 @@ function draw(){
   } else { ctx.fillStyle='#c0392b'; ctx.fillRect(sx,sy,dw,dh); }
 }
 function drawNoBg(){
-  ctx.fillStyle='#0c0d10'; ctx.fillRect(0,0,VW,VH);
-  ctx.fillStyle='#3a3d44'; ctx.fillRect(0,VH*0.78,VW,VH);
-  ctx.fillStyle='#666'; ctx.font='700 14px monospace'; ctx.textAlign='center';
-  ctx.fillText(SECTIONS[sectionIndex].bgKey+' not loaded', VW/2, 40); ctx.textAlign='start';
+  const sec=SECTIONS[sectionIndex];
+  if(sec.flatGround!=null){ drawParkPlaceholder(); }
+  else {
+    ctx.fillStyle='#0c0d10'; ctx.fillRect(0,0,VW,VH);
+    ctx.fillStyle='#3a3d44'; ctx.fillRect(0,VH*0.78,VW,VH);
+  }
+}
+// deterministic pseudo-random so scenery doesn't flicker frame to frame
+function pr(n){ const s=Math.sin(n*127.1)*43758.5453; return s-Math.floor(s); }
+function drawParkPlaceholder(){
+  const sec=SECTIONS[sectionIndex];
+  const gY=(sec.flatGround/SRCH)*VH;            // sidewalk top in view space
+  const sky=ctx.createLinearGradient(0,0,0,gY);
+  sky.addColorStop(0,'#1a1d24'); sky.addColorStop(1,'#2b2f38');
+  ctx.fillStyle=sky; ctx.fillRect(0,0,VW,gY);
+  // distant skyline (parallax)
+  const par=camX*0.35;
+  ctx.fillStyle='#23262e';
+  for(let i=-1;i<24;i++){
+    const seed=i*3+1, bx=i*120-(par%120), bw=70+pr(seed)*46, bh=60+pr(seed+9)*90;
+    ctx.fillRect(bx,gY-bh,bw,bh);
+  }
+  // hotel block mid-level so Park–Hotel–Park still reads without the art
+  const hx=(BGW*0.5-camX);
+  if(hx>-260 && hx<VW+260){
+    const hw=240, hh=gY*0.92, hxx=hx-hw/2;
+    ctx.fillStyle='#3a2a22'; ctx.fillRect(hxx,gY-hh,hw,hh);
+    ctx.fillStyle='#caa15a';
+    for(let r=0;r<5;r++)for(let c=0;c<4;c++){ if(pr(r*7+c)>0.45) ctx.fillRect(hxx+18+c*54,gY-hh+22+r*34,26,20); }
+    ctx.fillStyle='#7a1f25'; ctx.fillRect(hxx+hw-26,gY-hh+10,16,hh*0.6);
+  }
+  // grass + railing
+  ctx.fillStyle='#243126'; ctx.fillRect(0,gY-VH*0.16,VW,VH*0.16);
+  ctx.strokeStyle='#15171c'; ctx.lineWidth=3;
+  const railTop=gY-VH*0.13;
+  ctx.beginPath(); ctx.moveTo(0,railTop); ctx.lineTo(VW,railTop); ctx.stroke();
+  for(let x=-(camX%26); x<VW; x+=26){ ctx.beginPath(); ctx.moveTo(x,railTop); ctx.lineTo(x,gY); ctx.stroke(); }
+  // trees
+  for(let i=0;i<60;i++){
+    const tx=i*150+40-camX; if(tx<-60||tx>VW+60) continue;
+    const ty=gY-VH*0.13, th=VH*0.34;
+    ctx.fillStyle='#2c241c'; ctx.fillRect(tx-4,ty-th*0.4,8,th*0.4);
+    ctx.fillStyle='#1f3322'; ctx.beginPath(); ctx.arc(tx,ty-th*0.5,VH*0.12,0,7); ctx.fill();
+  }
+  // sidewalk
+  ctx.fillStyle='#3a3d44'; ctx.fillRect(0,gY,VW,VH-gY);
+  ctx.strokeStyle='#2c2f36'; ctx.lineWidth=1;
+  for(let x=-(camX%48); x<VW; x+=48){ ctx.beginPath(); ctx.moveTo(x,gY); ctx.lineTo(x,VH); ctx.stroke(); }
 }
 function loop(){ if(!paused) update(); draw(); raf=requestAnimationFrame(loop); }
 </script>
