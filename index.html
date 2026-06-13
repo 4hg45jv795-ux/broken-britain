@@ -155,7 +155,7 @@ function imgOk(im){ return im && im.complete && im.naturalWidth>0; }
 // ── Asset loading with progress ──
 const ASSETS = [
   {key:'bg',   type:'img', src:'bg.jpg'},
-  {key:'brit', type:'img', src:'brit.png'},
+  {key:'brit', type:'img', src:'brit2.png'},
   {key:'photog', type:'img', src:'photog.png'},
 ];
 // Add more fighters later, e.g.:
@@ -451,6 +451,9 @@ function draw(){
     ctx.save();
     if(player.face<0){ctx.translate(sx+dw,sy);ctx.scale(-1,1);}
     else{ctx.translate(sx,sy);}
+    // Soft rim so the dark character separates from the dark background.
+    ctx.shadowColor='rgba(150,180,255,0.55)';
+    ctx.shadowBlur=7;
     try{ ctx.drawImage(loaded[cur.id],fx*FW,0,FW,FH,0,0,dw,dh); }catch(e){}
     ctx.restore();
   }else{
