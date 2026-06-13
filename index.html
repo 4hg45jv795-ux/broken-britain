@@ -130,7 +130,18 @@ canvas#cv{display:block;width:100%;height:auto;}
 <audio id="bgm" loop preload="none" src="music.mp3"></audio>
 
 <script>
-const FW=185,FH=180,PFW=43,PFH=92;
+const FW=352,FH=373,PFW=43,PFH=92;
+// Named animation clips packed into the single-row brit.png strip.
+// fps is frames-per-second within a ~60fps loop; loop=false clamps on the last frame.
+const CLIPS={
+  idle:   {start:0,  count:5, fps:7,  loop:true},
+  walk:   {start:5,  count:6, fps:10, loop:true},
+  run:    {start:11, count:6, fps:15, loop:true},
+  jump:   {start:17, count:6, fps:12, loop:false},
+  punch:  {start:23, count:6, fps:20, loop:false},
+  headbutt:{start:29,count:4, fps:16, loop:false},
+  die:    {start:33, count:3, fps:8,  loop:false},
+};
 const GSTEP=60;
 const GROUNDPTS=[322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,330.0,342.0,346,346,346,346,346,346,346,346,346,346,346,346,346,346,338.0,330.0,322,322,322,322,322,322,322,322,322,322];
 function groundAt(x){
@@ -144,13 +155,11 @@ function imgOk(im){ return im && im.complete && im.naturalWidth>0; }
 // ── Asset loading with progress ──
 const ASSETS = [
   {key:'bg',   type:'img', src:'bg.jpg'},
-  {key:'uk',   type:'img', src:'uk.png'},
-  {key:'england',type:'img',src:'england.png'},
-  {key:'scotland',type:'img',src:'scotland.png'},
+  {key:'brit', type:'img', src:'brit.png'},
   {key:'photog', type:'img', src:'photog.png'},
 ];
-// Crusader slot — add when sprite is ready:
-// {key:'crusader', type:'img', src:'crusader.png'},
+// Add more fighters later, e.g.:
+// {key:'scotbrit', type:'img', src:'scotbrit.png'},
 
 const loaded={};
 const failed=[];          // <-- track assets that 404 / fail to decode
@@ -181,11 +190,9 @@ function onAllLoaded(){
 
 // ── META ──
 const META=[
-  {id:'uk',      name:'The Union',   flag:'UNITED KINGDOM'},
-  {id:'england', name:'The Cross',   flag:'ENGLAND'},
-  {id:'scotland',name:'The Saltire', flag:'SCOTLAND'},
-  // Crusader: uncomment when sprites/crusader.png is added
-  // {id:'crusader',name:'The Crusader',flag:'ENGLAND (1099)'},
+  {id:'brit',    name:'The Brawler', flag:'GREAT BRITAIN'},
+  // Add more fighters here later (each needs its own entry in ASSETS):
+  // {id:'scotbrit',name:'The Saltire', flag:'SCOTLAND'},
 ];
 
 function buildCards(){
@@ -228,14 +235,14 @@ let BGW=4047;
 const ZOOM=1.5,SRCW=VW/ZOOM,SRCH=VH/ZOOM,SRCY=360-SRCH;
 const PH=80,PW=Math.round(PH*FW/FH);
 let cur=null,raf=null;
-const player={x:120,y:200,vx:0,vy:0,face:1,onGround:true,anim:0,atk:-1,atkT:0};
+const player={x:120,y:200,vx:0,vy:0,face:1,onGround:true,clip:'idle',ct:0};
 const keys={left:false,right:false,jump:false};
 let punchDown=false,punchEdge=false;
-const MOVES=[
-  {frames:[16,17,18,19,20,21],dur:13},
-  {frames:[6,7,8,9,10,11],   dur:19},
-];
-const SPEED=2.1,GRAV=0.55,JUMP=-9.6;
+let runHold=0;
+function setClip(name){ if(player.clip!==name){player.clip=name;player.ct=0;} }
+function clipDone(){ const c=CLIPS[player.clip]; return !c.loop && player.ct>=Math.ceil(c.count*60/c.fps); }
+function playerAttacking(){ return player.clip==='punch'||player.clip==='headbutt'; }
+const SPEED=2.1,RUNSPEED=3.4,GRAV=0.55,JUMP=-9.6;
 let bannerShown=false;
 
 // ── CUTSCENE ──
@@ -302,8 +309,8 @@ function updateNPC(){
     const gap=npc.x-targetX;
     if(gap>30){npc.x-=1.8;npc.anim+=0.16;npc.state='trail';}
     else if(gap<-20){npc.x+=2.3;npc.anim+=0.16;npc.state='trail';}
-    else npc.state=(player.atk>=0)?'photo':'trailIdle';
-    if(player.atk>=0&&npc.state==='photo'){npc.t++;if(npc.t>40)npc.t=0;}
+    else npc.state=playerAttacking()?'photo':'trailIdle';
+    if(playerAttacking()&&npc.state==='photo'){npc.t++;if(npc.t>40)npc.t=0;}
     else if(npc.state!=='photo')npc.t=0;
   }
   npc.x=Math.max(0,Math.min(BGW-NPCW,npc.x));
@@ -367,37 +374,65 @@ function start(m){
   document.getElementById('who').firstChild.textContent=m.name+' ';
   document.getElementById('flag').textContent=m.flag;
   player.x=120;player.y=groundAt(120+PW/2)-PH;player.vx=0;player.vy=0;
-  player.face=1;player.onGround=true;player.anim=0;player.atk=-1;player.atkT=0;
+  player.face=1;player.onGround=true;player.clip='idle';player.ct=0;runHold=0;
   bannerShown=false;csActive=false;csDone=false;
   initNPC();
   const bgm=document.getElementById('bgm');
-  bgm.currentTime=0;bgm.volume=0.3;bgm.play().catch(()=>{});
+  bgm.currentTime=0;bgm.volume=0.15;bgm.play().catch(()=>{});
   if(!raf)loop();
 }
 
 function update(){
   if(csActive)return;
-  if(punchEdge){punchEdge=false;if(player.atk<0){player.atk=0;player.atkT=0;}else if(player.atk<MOVES.length-1){player.atk++;player.atkT=0;}}
-  const atk=player.atk>=0;
-  player.vx=(!atk&&keys.left&&!keys.right)?-SPEED:(!atk&&keys.right&&!keys.left)?SPEED:0;
-  if(player.vx<0)player.face=-1;if(player.vx>0)player.face=1;
-  if(keys.jump&&player.onGround&&!atk){player.vy=JUMP;player.onGround=false;}
-  if(atk){const mv=MOVES[player.atk];player.atkT++;if(player.atkT>=mv.dur){player.atk=-1;player.atkT=0;}}
+
+  // ── attack input: punch, chain into headbutt on a second press ──
+  if(punchEdge){
+    punchEdge=false;
+    if(player.onGround){
+      if(!playerAttacking()) setClip('punch');
+      else if(player.clip==='punch') setClip('headbutt');
+    }
+  }
+  const attacking=playerAttacking() && !clipDone();
+
+  // ── horizontal movement (locked while attacking on the ground) ──
+  let moving=false;
+  if(!attacking){
+    if(keys.left&&!keys.right){player.face=-1;moving=true;}
+    else if(keys.right&&!keys.left){player.face=1;moving=true;}
+  }
+  runHold = moving ? Math.min(runHold+1,60) : 0;
+  const running = moving && runHold>28;
+  player.vx = attacking ? 0 : (moving ? player.face*(running?RUNSPEED:SPEED) : 0);
+
+  // ── jump ──
+  if(keys.jump&&player.onGround&&!attacking){player.vy=JUMP;player.onGround=false;}
+
+  // ── physics ──
   player.vy+=GRAV;player.x+=player.vx;player.y+=player.vy;
   player.x=Math.max(0,Math.min(BGW-PW,player.x));
   const g=groundAt(player.x+PW/2);
   if(player.y+PH>=g){player.y=g-PH;player.vy=0;player.onGround=true;}
-  if(Math.abs(player.vx)>0&&player.onGround)player.anim+=0.16;else player.anim=0;
+
+  // ── advance animation, then resolve which clip should play ──
+  player.ct++;
+  const stillAttacking = playerAttacking() && !clipDone();
+  if(!stillAttacking){
+    if(!player.onGround) setClip('jump');
+    else if(moving) setClip(running?'run':'walk');
+    else setClip('idle');
+  }
+
   updateNPC();
   const ban=document.getElementById('banner');
   if(player.x>BGW-PW-40){if(!bannerShown){ban.style.opacity=1;bannerShown=true;}}
   else if(bannerShown){ban.style.opacity=0;bannerShown=false;}
 }
 function frameIndex(){
-  if(player.atk>=0){const mv=MOVES[player.atk];return mv.frames[Math.min(mv.frames.length-1,Math.floor(player.atkT/mv.dur*mv.frames.length))];}
-  if(!player.onGround)return 3;
-  if(player.vx===0)return 0;
-  return [1,3,12,14][Math.floor(player.anim)%4];
+  const c=CLIPS[player.clip];
+  let f=Math.floor(player.ct*c.fps/60);
+  f = c.loop ? (f%c.count) : Math.min(f,c.count-1);
+  return c.start+f;
 }
 function draw(){
   let camX=player.x+PW/2-SRCW/2;
@@ -409,7 +444,7 @@ function draw(){
   }else{ drawNoBg(); }
   drawNPC(camX);
   const fx=frameIndex();
-  const bob=(player.onGround&&player.vx!==0)?Math.abs(Math.sin(player.anim*Math.PI))*1.5:0;
+  const bob=0;
   const sx=(player.x-camX)*ZOOM,sy=(player.y+bob-SRCY)*ZOOM;
   const dw=PW*ZOOM,dh=PH*ZOOM;
   if(imgOk(loaded[cur.id])){
