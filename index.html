@@ -2,12 +2,24 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Broken Britain</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#06070b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Broken Britain">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
 <style>
 :root{--ink:#e8e4db;--muted:#8a8278;--line:#22252b;--panel:#14161a;--panel2:#1e2026;--accent:#c0392b;--gold:#c9a84c;}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:#0b0c0f;color:var(--ink);font-family:'Arial Narrow','Roboto Condensed',system-ui,sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior:none;}
+@supports(padding:max(0px)){
+  #app{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right));
+       padding-top:max(8px,env(safe-area-inset-top));padding-bottom:max(8px,env(safe-area-inset-bottom));}
+}
 #app{min-height:100%;display:flex;align-items:center;justify-content:center;padding:14px;
   background:
     linear-gradient(180deg,rgba(6,8,12,.55),rgba(6,8,12,.30) 38%,rgba(6,8,12,.80)),
@@ -380,8 +392,15 @@ document.querySelectorAll('.btn').forEach(b=>{
 });
 
 // ── LOOP ──
+function goFullscreen(){
+  const el=document.documentElement;
+  const rq=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;
+  if(rq){ try{ rq.call(el); }catch(e){} }
+  if(screen.orientation&&screen.orientation.lock){ try{ screen.orientation.lock('landscape').catch(()=>{}); }catch(e){} }
+}
 function start(m){
   cur=m;
+  goFullscreen();
   document.getElementById('select').style.display='none';
   document.getElementById('kbhint').style.display='none';
   document.getElementById('game').style.display='block';
