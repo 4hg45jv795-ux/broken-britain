@@ -176,13 +176,13 @@ const CLIPS_BRIT={
   die:    {start:33, count:3, fps:8,  loop:false},
 };
 const CLIPS_CRU={
-  idle:   {start:0,  count:5, fps:6,  loop:true},
-  walk:   {start:5,  count:6, fps:11, loop:true},
-  run:    {start:5,  count:6, fps:16, loop:true},   // reuse walk frames, faster
-  jump:   {start:11, count:2, fps:8,  loop:false},  // sword-raise pose
-  punch:  {start:11, count:6, fps:13, loop:false},  // overhead raise -> thrust
-  headbutt:{start:17,count:4, fps:11, loop:false},  // forward lunge
-  die:    {start:21, count:3, fps:8,  loop:false},
+  idle:   {start:0,  count:4, fps:5,  loop:true},
+  walk:   {start:4,  count:8, fps:10, loop:true},
+  run:    {start:12, count:8, fps:14, loop:true},
+  jump:   {start:20, count:8, fps:12, loop:false},
+  punch:  {start:28, count:8, fps:14, loop:false},  // overhead chop
+  headbutt:{start:28,count:8, fps:14, loop:false},  // second tap replays the chop
+  die:    {start:36, count:3, fps:8,  loop:false},
 };
 let CLIPS=CLIPS_BRIT;       // current fighter's clips (set in start())
 const GSTEP=60;
@@ -233,7 +233,7 @@ function onAllLoaded(){
 // ── META ──
 const META=[
   {id:'brit',     name:'The Brawler',  flag:'GREAT BRITAIN', fw:181, fh:218, clips:CLIPS_BRIT},
-  {id:'crusader', name:'The Crusader', flag:'CHRISTENDOM',    fw:224, fh:233, clips:CLIPS_CRU},
+  {id:'crusader', name:'The Crusader', flag:'CHRISTENDOM',    fw:134, fh:179, clips:CLIPS_CRU},
 ];
 
 function buildCards(){
