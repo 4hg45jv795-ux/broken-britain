@@ -8,37 +8,47 @@
 :root{--ink:#e8e4db;--muted:#8a8278;--line:#22252b;--panel:#14161a;--panel2:#1e2026;--accent:#c0392b;--gold:#c9a84c;}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:#0b0c0f;color:var(--ink);font-family:'Arial Narrow','Roboto Condensed',system-ui,sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior:none;}
-#app{min-height:100%;display:flex;align-items:center;justify-content:center;padding:14px;}
+#app{min-height:100%;display:flex;align-items:center;justify-content:center;padding:14px;
+  background:
+    linear-gradient(180deg,rgba(6,8,12,.55),rgba(6,8,12,.30) 38%,rgba(6,8,12,.80)),
+    url('menu-bg.jpg') center/cover no-repeat fixed,
+    radial-gradient(120% 75% at 50% 0%, #16223e 0%, #0a0e18 52%, #06070b 100%);}
 .stage{width:100%;max-width:900px;}
 
 /* ── SELECT ── */
-#select{padding:4px 0 12px;}
-.eyebrow{font:700 11px/1 monospace;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
-h1{margin:.1em 0 .05em;font-size:clamp(28px,9vw,64px);font-weight:900;letter-spacing:-.02em;text-transform:uppercase;line-height:.9;}
-.word-broken{display:inline-block;position:relative;color:#e8e4db;
-  background:linear-gradient(135deg,#e8e4db 40%,#888 41%,#e8e4db 42%,#e8e4db 58%,#666 59%,#e8e4db 60%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  filter:drop-shadow(1px 2px 0 #000) drop-shadow(-1px -1px 0 #444);}
-.word-britain{display:inline-block;margin-left:.15em;
-  background:linear-gradient(135deg,#CF142B 0%,#CF142B 30%,#FFF 45%,#002868 55%,#002868 70%,#CF142B 85%,#CF142B 100%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  filter:drop-shadow(1px 2px 0 #000);}
-.sub{color:var(--muted);margin:2px 0 16px;font-size:14px;}
-.warn{color:#ffb4a8;border:1px solid var(--accent);background:#2a1512;border-radius:10px;padding:10px 12px;margin:0 0 14px;font:600 12px/1.4 monospace;display:none;}
+#select{padding:8px 0 18px;text-align:center;}
+.eyebrow{font:700 12px/1 monospace;letter-spacing:.34em;text-transform:uppercase;color:#9fb4d8;margin-bottom:8px;text-shadow:0 0 12px rgba(60,120,255,.45);}
+.title{margin:.04em 0 .14em;line-height:.94;}
+.title span{display:block;font-weight:900;letter-spacing:-.01em;text-transform:uppercase;line-height:.96;
+  font-size:clamp(40px,15vw,98px);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+  text-shadow:1px 1px 0 #15171c,2px 3px 0 rgba(0,0,0,.5),0 5px 10px rgba(0,0,0,.65);}
+.word-broken{background-image:linear-gradient(100deg,#ffffff 0%,#dfe6f4 34%,#8294c2 60%,#22407e 100%);}
+.word-britain{background-image:linear-gradient(100deg,#ff3b4d 0%,#cf142b 28%,#eef2ff 52%,#1f3f86 100%);}
+.sub{color:#eef1f7;margin:8px 0 20px;font-size:clamp(15px,4.6vw,21px);font-weight:700;text-shadow:0 1px 5px #000;}
+.warn{color:#ffb4a8;border:1px solid var(--accent);background:#2a1512;border-radius:10px;padding:10px 12px;margin:0 auto 16px;max-width:340px;font:600 12px/1.4 monospace;display:none;text-align:left;}
 .warn b{color:#fff;}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
-@media(max-width:480px){.grid{grid-template-columns:repeat(2,1fr);}}
-.card{background:var(--panel);border:1.5px solid var(--line);border-radius:16px;padding:16px 12px 13px;
-  cursor:pointer;text-align:center;transition:transform .12s,border-color .12s,background .12s;overflow:hidden;}
-.card:hover,.card:focus-visible{transform:translateY(-4px);border-color:var(--accent);background:var(--panel2);outline:none;}
-.thumb{width:80px;height:120px;margin:0 auto 10px;overflow:hidden;position:relative;}
-.thumb canvas{display:block;width:80px;height:120px;}
-.name{font-weight:900;letter-spacing:.06em;text-transform:uppercase;font-size:14px;margin-bottom:2px;}
-.flagtag{font:600 10px/1 monospace;color:var(--muted);letter-spacing:.14em;}
-.hint-text{text-align:center;color:var(--muted);font-size:12px;margin-top:10px;}
+.grid{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;align-items:flex-start;}
+.card{position:relative;width:min(74vw,262px);border-radius:20px;padding:20px 16px 17px;cursor:pointer;
+  background:linear-gradient(180deg,#0c1119,#06090f);
+  transition:transform .15s ease,box-shadow .15s ease;
+  box-shadow:0 0 22px rgba(40,140,255,.45),0 0 46px rgba(255,40,80,.22),inset 0 0 42px rgba(20,60,140,.20);}
+.card::before{content:'';position:absolute;inset:-2px;border-radius:22px;z-index:-1;
+  background:linear-gradient(135deg,#39d6ff 0%,#1f7bff 38%,#7a1730 60%,#ff2b4d 100%);}
+.card::after{content:'';position:absolute;inset:0;border-radius:20px;pointer-events:none;
+  background:radial-gradient(58% 40% at 50% 62%, rgba(60,130,255,.22), transparent 72%);}
+.card:hover,.card:focus-visible{transform:translateY(-5px);outline:none;
+  box-shadow:0 0 32px rgba(40,150,255,.75),0 0 62px rgba(255,40,80,.42),inset 0 0 48px rgba(20,60,140,.28);}
+.thumb{position:relative;margin:0 auto 14px;display:flex;justify-content:center;
+  filter:drop-shadow(0 8px 16px rgba(0,0,0,.7));}
+.thumb canvas{display:block;}
+.name{font-weight:900;letter-spacing:.06em;text-transform:uppercase;font-size:23px;color:#bfe4ff;
+  text-shadow:0 0 14px rgba(50,160,255,.9),0 0 5px rgba(50,160,255,.7);margin-bottom:3px;}
+.flagtag{font:700 12px/1 monospace;color:#9fb0cc;letter-spacing:.22em;}
+.hint-text{text-align:center;color:#c8d1e1;font-size:13px;margin-top:16px;text-shadow:0 1px 4px #000;}
 .crusader-soon{opacity:.45;cursor:default;}
-.crusader-badge{display:inline-block;margin-top:4px;font:700 9px monospace;letter-spacing:.1em;
-  color:var(--gold);border:1px solid var(--gold);border-radius:4px;padding:1px 5px;text-transform:uppercase;}
+#kbhint{display:block;width:max-content;max-width:90%;margin:18px auto 0;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:13px;padding:11px 18px;}
 
 /* ── GAME ── */
 .game{position:relative;display:none;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#0c0d10;touch-action:none;}
@@ -95,7 +105,7 @@ canvas#cv{display:block;width:100%;height:auto;}
 
 <section id="select">
   <div class="eyebrow">Side-scroller</div>
-  <h1><span class="word-broken">Broken</span><span class="word-britain">Britain</span></h1>
+  <div class="title"><span class="word-broken">Broken</span><span class="word-britain">Britain</span></div>
   <p class="sub">Pick your fighter.</p>
   <div class="warn" id="warn"></div>
   <div class="grid" id="cards"></div>
@@ -200,16 +210,17 @@ function buildCards(){
   META.forEach(m=>{
     const c=document.createElement('button'); c.className='card';
     const thumbDiv=document.createElement('div'); thumbDiv.className='thumb';
-    const cv2=document.createElement('canvas'); cv2.width=80; cv2.height=120;
+    const cv2=document.createElement('canvas');
+    const TW=150, dh=Math.round(TW*FH/FW);
+    cv2.width=TW; cv2.height=dh;
     const ctx2=cv2.getContext('2d');
     ctx2.imageSmoothingEnabled=true;
-    const dh=80/(FW/FH); const dy=(120-dh)/2;
     // Guard the draw so a broken sprite can never kill the whole card list.
     if(imgOk(loaded[m.id])){
-      try{ ctx2.drawImage(loaded[m.id],0,0,FW,FH,0,dy,80,dh); }
-      catch(err){ drawPlaceholder(ctx2,dy,dh); }
+      try{ ctx2.drawImage(loaded[m.id],0,0,FW,FH,0,0,TW,dh); }
+      catch(err){ drawThumbPlaceholder(ctx2,TW,dh); }
     }else{
-      drawPlaceholder(ctx2,dy,dh);
+      drawThumbPlaceholder(ctx2,TW,dh);
     }
     thumbDiv.appendChild(cv2); c.appendChild(thumbDiv);
     const nameDiv=document.createElement('div'); nameDiv.className='name'; nameDiv.textContent=m.name;
@@ -219,11 +230,11 @@ function buildCards(){
     grid.appendChild(c);
   });
 }
-function drawPlaceholder(ctx2,dy,dh){
-  ctx2.fillStyle='#2a2d33'; ctx2.fillRect(0,dy,80,dh);
-  ctx2.strokeStyle='#c0392b'; ctx2.lineWidth=1.5; ctx2.strokeRect(2,dy+2,76,dh-4);
-  ctx2.fillStyle='#c0392b'; ctx2.font='700 11px monospace'; ctx2.textAlign='center';
-  ctx2.fillText('no img', 40, dy+dh/2+4);
+function drawThumbPlaceholder(ctx2,w,h){
+  ctx2.fillStyle='#16202f'; ctx2.fillRect(0,0,w,h);
+  ctx2.strokeStyle='#2bd4ff'; ctx2.lineWidth=1.5; ctx2.strokeRect(2,2,w-4,h-4);
+  ctx2.fillStyle='#2bd4ff'; ctx2.font='700 13px monospace'; ctx2.textAlign='center';
+  ctx2.fillText('no img', w/2, h/2+4);
   ctx2.textAlign='start';
 }
 
