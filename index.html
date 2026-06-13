@@ -59,6 +59,14 @@ html,body{margin:0;height:100%;background:#0b0c0f;color:var(--ink);font-family:'
 .flagtag{font:700 12px/1 monospace;color:#9fb0cc;letter-spacing:.22em;}
 .hint-text{text-align:center;color:#c8d1e1;font-size:13px;margin-top:16px;text-shadow:0 1px 4px #000;}
 .crusader-soon{opacity:.45;cursor:default;}
+.iconbtn{pointer-events:auto;background:#0008;border:1px solid #fff3;color:var(--ink);border-radius:9px;
+  min-width:42px;padding:7px 10px;font:700 13px/1 sans-serif;cursor:pointer;letter-spacing:.04em;}
+.iconbtn:active{background:#fff2;transform:scale(.96);}
+#pausemenu{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#000b;z-index:16;}
+#pausemenu.on{display:flex;}
+.pausecard{font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#fff;text-align:center;
+  font-size:30px;text-shadow:0 2px 10px #000;}
+.pausecard span{display:block;font:600 13px monospace;color:#cdd3df;margin-top:10px;letter-spacing:.06em;text-transform:none;}
 #kbhint{display:block;width:max-content;max-width:90%;margin:18px auto 0;
   background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:13px;padding:11px 18px;}
 
@@ -128,8 +136,10 @@ canvas#cv{display:block;width:100%;height:auto;}
   <canvas id="cv" width="800" height="360"></canvas>
   <div class="topbar">
     <div class="who" id="who">—<small id="flag"></small></div>
+    <button class="iconbtn" id="pause" aria-label="Pause">&#10073;&#10073;</button>
   </div>
   <div class="banner" id="banner">St. Jude's Park — end of level</div>
+  <div id="pausemenu"><div class="pausecard">Paused<span>Tap to resume</span></div></div>
   <div id="cutscene">
     <div id="cs-lines" style="width:90%;max-height:90%;display:flex;flex-direction:column;justify-content:center;gap:2px;overflow:hidden;"></div>
     <div id="cutscene-skip">Tap to continue &#9654;</div>
@@ -152,10 +162,11 @@ canvas#cv{display:block;width:100%;height:auto;}
 <audio id="bgm" loop preload="none" src="music.mp3"></audio>
 
 <script>
-const FW=181,FH=218,PFW=124,PFH=214;
-// Named animation clips packed into the single-row brit.png strip.
-// fps is frames-per-second within a ~60fps loop; loop=false clamps on the last frame.
-const CLIPS={
+let FW=181,FH=218;          // current fighter's frame size (set in start())
+const PFW=124,PFH=214;      // photographer frame size
+// Per-fighter animation clips. fps = frames-per-second within a ~60fps loop;
+// loop=false clamps on the last frame.
+const CLIPS_BRIT={
   idle:   {start:0,  count:5, fps:7,  loop:true},
   walk:   {start:5,  count:6, fps:10, loop:true},
   run:    {start:11, count:6, fps:15, loop:true},
@@ -164,6 +175,16 @@ const CLIPS={
   headbutt:{start:29,count:4, fps:16, loop:false},
   die:    {start:33, count:3, fps:8,  loop:false},
 };
+const CLIPS_CRU={
+  idle:   {start:0,  count:5, fps:6,  loop:true},
+  walk:   {start:5,  count:6, fps:9,  loop:true},
+  run:    {start:11, count:5, fps:13, loop:true},
+  jump:   {start:16, count:2, fps:7,  loop:false},
+  punch:  {start:18, count:6, fps:15, loop:false},
+  headbutt:{start:24,count:4, fps:13, loop:false},
+  die:    {start:28, count:3, fps:8,  loop:false},
+};
+let CLIPS=CLIPS_BRIT;       // current fighter's clips (set in start())
 const GSTEP=60;
 const GROUNDPTS=[322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,330.0,342.0,346,346,346,346,346,346,346,346,346,346,346,346,346,346,338.0,330.0,322,322,322,322,322,322,322,322,322,322];
 function groundAt(x){
@@ -178,10 +199,9 @@ function imgOk(im){ return im && im.complete && im.naturalWidth>0; }
 const ASSETS = [
   {key:'bg',   type:'img', src:'bg.jpg'},
   {key:'brit', type:'img', src:'brit2.png'},
+  {key:'crusader', type:'img', src:'crusader.png'},
   {key:'photog', type:'img', src:'photog2.png'},
 ];
-// Add more fighters later, e.g.:
-// {key:'scotbrit', type:'img', src:'scotbrit.png'},
 
 const loaded={};
 const failed=[];          // <-- track assets that 404 / fail to decode
@@ -212,9 +232,8 @@ function onAllLoaded(){
 
 // ── META ──
 const META=[
-  {id:'brit',    name:'The Brawler', flag:'GREAT BRITAIN'},
-  // Add more fighters here later (each needs its own entry in ASSETS):
-  // {id:'scotbrit',name:'The Saltire', flag:'SCOTLAND'},
+  {id:'brit',     name:'The Brawler',  flag:'GREAT BRITAIN', fw:181, fh:218, clips:CLIPS_BRIT},
+  {id:'crusader', name:'The Crusader', flag:'CHRISTENDOM',    fw:225, fh:224, clips:CLIPS_CRU},
 ];
 
 function buildCards(){
@@ -223,13 +242,13 @@ function buildCards(){
     const c=document.createElement('button'); c.className='card';
     const thumbDiv=document.createElement('div'); thumbDiv.className='thumb';
     const cv2=document.createElement('canvas');
-    const TW=150, dh=Math.round(TW*FH/FW);
+    const TW=150, dh=Math.round(TW*m.fh/m.fw);
     cv2.width=TW; cv2.height=dh;
     const ctx2=cv2.getContext('2d');
     ctx2.imageSmoothingEnabled=true;
     // Guard the draw so a broken sprite can never kill the whole card list.
     if(imgOk(loaded[m.id])){
-      try{ ctx2.drawImage(loaded[m.id],0,0,FW,FH,0,0,TW,dh); }
+      try{ ctx2.drawImage(loaded[m.id],0,0,m.fw,m.fh,0,0,TW,dh); }
       catch(err){ drawThumbPlaceholder(ctx2,TW,dh); }
     }else{
       drawThumbPlaceholder(ctx2,TW,dh);
@@ -256,7 +275,7 @@ const VW=800,VH=360;
 let BGW=4047;
 // BGW default is 4047 — correct for our background
 const ZOOM=1.5,SRCW=VW/ZOOM,SRCH=VH/ZOOM,SRCY=360-SRCH;
-const PH=80,PW=Math.round(PH*FW/FH);
+const PH=80; let PW=Math.round(PH*FW/FH);
 let cur=null,raf=null;
 const player={x:120,y:200,vx:0,vy:0,face:1,onGround:true,clip:'idle',ct:0};
 const keys={left:false,right:false,jump:false};
@@ -270,8 +289,8 @@ let bannerShown=false;
 
 // ── CUTSCENE ──
 const DIALOGUE=[
-  {side:'left', label:'YOU',          text:'Who are you with?'},
-  {side:'right',label:'PHOTOGRAPHER', text:'Independent Media.'},
+  {side:'left', label:'YOU',          text:'Who are you?'},
+  {side:'right',label:'PHOTOGRAPHER', text:'Independence Media.'},
   {side:'left', label:'YOU',          text:'Well f#*k off home then.'},
   {side:'right',label:'PHOTOGRAPHER', text:"I'm just taking pictures. I won't get anybody's faces."},
   {side:'left', label:'YOU',          text:"Okay, f#*k it — tag along and take some pics of the mess I'm about to leave. Let's go."},
@@ -375,6 +394,7 @@ addEventListener('keydown',e=>{
   if((e.key===' '||e.key==='ArrowUp'||e.key==='w')&&!csActive){keys.jump=true;e.preventDefault();}
   if((e.key==='x'||e.key==='f')&&!punchDown){punchDown=true;punchEdge=true;}
   if(e.key==='Escape'&&csActive){clearTimeout(csTimeout);endCutscene();}
+  if((e.key==='p'||e.key==='P')&&cur&&!csActive)setPaused(!paused);
 });
 addEventListener('keyup',e=>{
   if(e.key==='ArrowLeft'||e.key==='a')keys.left=false;
@@ -400,6 +420,7 @@ function goFullscreen(){
 }
 function start(m){
   cur=m;
+  FW=m.fw; FH=m.fh; PW=Math.round(PH*FW/FH); CLIPS=m.clips;
   goFullscreen();
   document.getElementById('select').style.display='none';
   document.getElementById('kbhint').style.display='none';
@@ -409,11 +430,23 @@ function start(m){
   player.x=120;player.y=groundAt(120+PW/2)-PH;player.vx=0;player.vy=0;
   player.face=1;player.onGround=true;player.clip='idle';player.ct=0;runHold=0;
   bannerShown=false;csActive=false;csDone=false;
+  setPaused(false);
   initNPC();
   const bgm=document.getElementById('bgm');
   bgm.currentTime=0;bgm.volume=0.15;bgm.play().catch(()=>{});
   if(!raf)loop();
 }
+
+let paused=false;
+function setPaused(p){
+  paused=p;
+  document.getElementById('pausemenu').classList.toggle('on',p);
+  document.getElementById('pause').innerHTML=p?'&#9654;':'&#10073;&#10073;';
+  const bgm=document.getElementById('bgm');
+  if(p){ bgm.pause(); } else if(cur){ bgm.play().catch(()=>{}); }
+}
+document.getElementById('pause').onclick=(e)=>{ e.stopPropagation(); setPaused(!paused); };
+document.getElementById('pausemenu').onclick=()=>setPaused(false);
 
 function update(){
   if(csActive)return;
@@ -502,7 +535,7 @@ function drawNoBg(){
   ctx.fillText('bg.jpg not loaded', VW/2, 40);
   ctx.textAlign='start';
 }
-function loop(){update();draw();raf=requestAnimationFrame(loop);}
+function loop(){ if(!paused) update(); draw(); raf=requestAnimationFrame(loop); }
 </script>
 </body>
 </html>
