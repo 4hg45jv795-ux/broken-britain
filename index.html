@@ -109,7 +109,7 @@ canvas#cv{display:block;width:100%;height:auto;}
   </div>
   <div class="banner" id="banner">St. Jude's Park — end of level</div>
   <div id="cutscene">
-    <div id="cs-lines" style="width:90%;display:flex;flex-direction:column;gap:2px;"></div>
+    <div id="cs-lines" style="width:90%;max-height:90%;display:flex;flex-direction:column;justify-content:center;gap:2px;overflow:hidden;"></div>
     <div id="cutscene-skip">Tap to continue &#9654;</div>
   </div>
   <div class="controls">
@@ -272,6 +272,9 @@ function showNextLine(){
   b.style.cssText='opacity:0;transform:translateY(6px);transition:all .25s';
   lbl.style.cssText='opacity:0;transition:opacity .2s';
   lines.appendChild(lbl); lines.appendChild(b);
+  // Only keep the two most recent messages (4 elements) so the newest bubble
+  // is always fully visible, even on short landscape screens.
+  while(lines.children.length>4){ lines.removeChild(lines.firstChild); }
   requestAnimationFrame(()=>requestAnimationFrame(()=>{b.style.opacity='1';b.style.transform='translateY(0)';lbl.style.opacity='1';}));
   csTimeout=setTimeout(showNextLine,2200);
 }
