@@ -432,7 +432,7 @@ function drawEnemy(e){
   if(sx<-dw*2||sx>VW+dw*2) return;
   const k=ENEMY_KINDS[e.kind];
   ctx.save();
-  if(e.face>0){ ctx.translate(sx+dw,sy); ctx.scale(-1,1); } else { ctx.translate(sx,sy); }
+  if(e.face<0){ ctx.translate(sx+dw,sy); ctx.scale(-1,1); } else { ctx.translate(sx,sy); }
   if(e.state==='die'){ const p=Math.min(1,e.ct/26); ctx.globalAlpha=1-p*0.85; ctx.translate(0,dh*0.15*p); }
   if(imgOk(loaded[k.img])){
     let clip = e.state==='die'?k.clips.die:k.clips.walk;
