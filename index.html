@@ -246,16 +246,17 @@ const SECTIONS=[
    aliens:[ {at:700,kind:3},{at:1020,kind:3},{at:1360,kind:3},{at:1560,kind:3} ]},
   {id:'belfast', name:'Ballymacarrett &mdash; the loyal mile', bgKey:'bg3', BGW:2172, srcY:380, flatGround:560,
    enemies:[ {at:760,kind:5},{at:1120,kind:5},{at:1480,kind:5},{at:1800,kind:5},{at:2020,kind:5} ]},
-  {id:'pub',     name:'The Red Hand &mdash; loyalist till I die', bgKey:'pub', BGW:533, srcY:8, flatGround:212,
+  {id:'pub',     name:'The Red Hand &mdash; loyalist till I die', bgKey:'pub', BGW:533, srcY:8, flatGround:212, charScale:1.4,
    enemies:[ ]},
   {id:'dundee',  name:'Welcome to Dundee', bgKey:'dundee', BGW:560, srcY:65, flatGround:270,
    enemies:[ ]},
 ];
 let sectionIndex=0;
 let SRCY=120, BGW=4047;
+let CSCALE=1;
 function loadSectionConfig(){
   const s=SECTIONS[sectionIndex];
-  SRCY=s.srcY; BGW=s.BGW;
+  SRCY=s.srcY; BGW=s.BGW; CSCALE=s.charScale||1;
   document.getElementById('flag').textContent=' '+s.name.replace(/&mdash;/g,'—').toUpperCase();
 }
 function groundAt(x){
@@ -573,8 +574,8 @@ function updateSweep(){
 function drawHelper(){
   if(!helper.active) return;
   const h=HELPERS[helper.kind];
-  const dh=h.drawH*ZOOM;
-  const sx=(helper.x-camX)*ZOOM, sy=(helper.y-SRCY)*ZOOM, dw=helper.w*ZOOM;
+  const dh=h.drawH*ZOOM*CSCALE, dw=helper.w*ZOOM*CSCALE;
+  const sx=(helper.x-camX)*ZOOM-(dw-helper.w*ZOOM)/2, sy=(helper.y+h.drawH-SRCY)*ZOOM-dh;
   if(sx<-dw*2||sx>VW+dw*2) return;
   ctx.save();
   if(h.type==='fighter'){ ctx.shadowColor='rgba(120,255,200,0.85)'; ctx.shadowBlur=12; }
@@ -717,9 +718,9 @@ function npcFrame(){ if(npc.state==='walkin'||npc.state==='walk'||npc.state==='t
   if(npc.state==='photo'){ const p=npc.t/40; return p<0.3?6:p<0.6?7:8; } return 9; }
 function drawNPC(){
   if(!npc.active||!imgOk(loaded.photog))return;
-  const sx=(npc.x-camX)*ZOOM,sy=(npc.y-SRCY)*ZOOM;
+  const dw=NPCW*ZOOM*CSCALE,dh=NPCH*ZOOM*CSCALE;
+  const sx=(npc.x-camX)*ZOOM-(dw-NPCW*ZOOM)/2,sy=(npc.y+NPCH-SRCY)*ZOOM-dh;
   if(sx<-NPCW*ZOOM*2||sx>VW+NPCW*ZOOM)return;
-  const dw=NPCW*ZOOM,dh=NPCH*ZOOM;
   if(npc.state==='photo'&&npc.t>12&&npc.t<22){ ctx.save();ctx.globalAlpha=0.5*(1-Math.abs(npc.t-17)/5);ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(sx+(npc.x>player.x?dw*0.08:dw*0.92),sy+dh*0.3,18,0,7);ctx.fill();ctx.restore(); }
   const facingLeft=npc.x>player.x; ctx.save();
   if(facingLeft){ctx.translate(sx+dw,sy);ctx.scale(-1,1);}else{ctx.translate(sx,sy);}
@@ -853,7 +854,7 @@ function drawWanderer(){
 }
 
 /* ── PER-LEVEL MUSIC ── */
-const TRACKS={ select:'Character_selection_screen.mp3', street:'Street.mp3',
+const TRACKS={ select:'Character selection screen.mp3', street:'Street.mp3',
   park:'Park.mp3', belfast:'Belfast.mp3', pub:'Pub.mp3', dundee:'Dundee.mp3' };
 function playTrack(src){
   const bgm=document.getElementById('bgm');
@@ -949,7 +950,8 @@ function draw(){
 
   // player
   const fx=frameIndex();
-  const sx=(player.x-camX)*ZOOM,sy=(player.y-SRCY)*ZOOM,dw=PW*ZOOM,dh=PH*ZOOM;
+  const dw=PW*ZOOM*CSCALE,dh=PH*ZOOM*CSCALE;
+  const sx=(player.x-camX)*ZOOM-(dw-PW*ZOOM)/2,sy=(player.y+PH-SRCY)*ZOOM-dh;
   if(imgOk(loaded[cur.id])){
     ctx.save();
     if(player.face<0){ctx.translate(sx+dw,sy);ctx.scale(-1,1);}else{ctx.translate(sx,sy);}
