@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Broken Britain</title>
+<title>British Moments</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#06070b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Broken Britain">
+<meta name="apple-mobile-web-app-title" content="British Moments">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
 <style>
@@ -142,7 +142,7 @@ canvas#cv{display:block;width:100%;height:auto;}
 
 <section id="select">
   <div class="eyebrow">Side-scroller</div>
-  <div class="title"><span class="word-broken">Broken</span><span class="word-britain">Britain</span></div>
+  <div class="title"><span class="word-broken">British</span><span class="word-britain">Moments</span></div>
   <p class="sub">Pick your fighter.</p>
   <div class="warn" id="warn"></div>
   <div class="grid" id="cards"></div>
@@ -193,7 +193,7 @@ canvas#cv{display:block;width:100%;height:auto;}
 <p class="hint-text" id="kbhint">Keyboard: &larr; &rarr; walk &middot; Space/&uarr; jump &middot; X punch &middot; E summon.</p>
 </div></div>
 
-<audio id="bgm" loop preload="none" src="music.mp3"></audio>
+<audio id="bgm" loop preload="none"></audio>
 
 <script>
 /* ============================================================
@@ -241,10 +241,13 @@ function imgOk(im){ return im && im.complete && im.naturalWidth>0; }
 const SECTIONS=[
   {id:'street', name:'Southside &mdash; the street', bgKey:'bg',  BGW:4047, srcY:120, flatGround:null,
    enemies:[ {at:760,kind:0},{at:1200,kind:1},{at:1700,kind:2},{at:2300,kind:1},{at:2800,kind:0},{at:3300,kind:2},{at:3700,kind:1} ]},
+  {id:'park', name:'Southside Park &mdash; Grandview Hotel', bgKey:'park', BGW:1763, srcY:0, flatGround:196,
+   enemies:[ {at:520,kind:4},{at:880,kind:4},{at:1240,kind:4} ],
+   aliens:[ {at:700,kind:3},{at:1020,kind:3},{at:1360,kind:3},{at:1560,kind:3} ]},
   {id:'belfast', name:'Ballymacarrett &mdash; the loyal mile', bgKey:'bg3', BGW:2172, srcY:380, flatGround:560,
    enemies:[ {at:760,kind:0},{at:1080,kind:2},{at:1380,kind:1},{at:1650,kind:0},{at:1900,kind:2},{at:2050,kind:1} ]},
-  {id:'pub',     name:'The Red Hand &mdash; loyalist till I die', bgKey:'pub', BGW:760, srcY:40, flatGround:250,
-   enemies:[ {at:340,kind:1},{at:470,kind:0},{at:600,kind:2} ]},
+  {id:'pub',     name:'The Red Hand &mdash; loyalist till I die', bgKey:'pub', BGW:560, srcY:55, flatGround:265,
+   enemies:[ {at:230,kind:1},{at:330,kind:0},{at:430,kind:2} ]},
 ];
 let sectionIndex=0;
 let SRCY=120, BGW=4047;
@@ -273,6 +276,10 @@ const ASSETS = [
   {key:'police',   type:'img', src:'police.png', optional:true},
   {key:'hippie',   type:'img', src:'hippie.png', optional:true},
   {key:'binhelper',type:'img', src:'binhelper.png', optional:true},
+  {key:'park',     type:'img', src:'park.jpeg'},
+  {key:'alien',    type:'img', src:'alien.png', optional:true},
+  {key:'geezer',   type:'img', src:'geezer.png', optional:true},
+  {key:'ufo',      type:'img', src:'ufo.png', optional:true},
 ];
 const loaded={};
 const failed=[];
@@ -385,17 +392,26 @@ const ENEMY_KINDS=[
    clips:{walk:{start:0,count:6,fps:9,loop:true}, die:{start:6,count:2,fps:7,loop:false}}},
   {img:'hippie', fw:81, fh:128, color:'#7a5ad6', hair:'#3a6ad0',
    clips:{walk:{start:0,count:5,fps:9,loop:true}, die:{start:6,count:2,fps:7,loop:false}}},
+  {img:'alien', fw:71, fh:142, color:'#83a86a', hair:'#41603a',
+   clips:{walk:{start:0,count:8,fps:10,loop:true}, die:{start:8,count:6,fps:11,loop:false}}},
+  {img:'geezer', fw:63, fh:160, color:'#2f3238', hair:'#7a4a26',
+   clips:{walk:{start:0,count:7,fps:9,loop:true}, die:{start:7,count:4,fps:8,loop:false}}},
 ];
 const EH=78;
 let enemies=[];
+function pushEnemy(kind,at){
+  const k=ENEMY_KINDS[kind]; const w=Math.round(EH*k.fw/k.fh);
+  enemies.push({kind, x:at, w, h:EH, y:0, vx:0, face:-1,
+    hp:40, max:40, state:'walk', ct:0, hitId:-1, dmgCool:0, fade:1});
+}
 function spawnEnemiesForSection(){
   enemies=[];
-  SECTIONS[sectionIndex].enemies.forEach(e=>{
-    const k=ENEMY_KINDS[e.kind];
-    const w=Math.round(EH*k.fw/k.fh);
-    enemies.push({kind:e.kind, x:e.at, w, h:EH, y:0, vx:0, face:-1,
-      hp:40, max:40, state:'walk', ct:0, hitId:-1, dmgCool:0, fade:1});
-  });
+  SECTIONS[sectionIndex].enemies.forEach(e=> pushEnemy(e.kind, e.at));
+  if(SECTIONS[sectionIndex].id==='park' && parkInvaded) spawnParkAliens();
+}
+function spawnParkAliens(){
+  const a=SECTIONS[sectionIndex].aliens; if(!a) return;
+  a.forEach(x=> pushEnemy(x.kind, x.at));
 }
 const ESPEED=1.05, EAGGRO=560, EHIT_RANGE=42, EDMG=8;
 function enemyClipDone(e){ const c=ENEMY_KINDS[e.kind].clips.die; return e.ct>=Math.ceil(c.count*60/c.fps); }
@@ -642,8 +658,10 @@ function enterSection(){
   loadSectionConfig();
   player.x=120; player.y=groundAt(120+PW/2)-PH; player.vx=0; player.vy=0; player.onGround=true; setClip('idle');
   bannerShown=false; helper.active=false; helperCool=[0,0];
+  startParkIntro();
   spawnEnemiesForSection();
   refreshHelperBtns();
+  playSectionTrack();
 }
 
 /* ── CUTSCENE (unchanged intro chat) ─────────────────────── */
@@ -755,7 +773,7 @@ function start(m){
   spawnEnemiesForSection();
   setPaused(false);
   initNPC();
-  const bgm=document.getElementById('bgm'); bgm.currentTime=0;bgm.volume=0.15;bgm.muted=musicMuted;bgm.play().catch(()=>{});
+  startParkIntro(); playSectionTrack();
   if(!raf)loop();
 }
 
@@ -776,6 +794,48 @@ document.getElementById('mute').onclick=(e)=>{
   if(!musicMuted && cur && !paused) bgm.play().catch(()=>{});
   document.getElementById('mute').innerHTML = musicMuted ? '&#128263;' : '&#128266;';
 };
+
+/* ── UFO (park intro NPC: flies the sky, harmless) + PARK INVASION ─ */
+const UFO_FW=119, UFO_FH=90;
+const ufo={active:false, sx:0, sy:0, ct:0};
+let parkInvaded=false;
+function startParkIntro(){
+  const sec=SECTIONS[sectionIndex];
+  if(sec.id==='park'){ ufo.active=true; ufo.sx=-180; ufo.sy=VH*0.09; ufo.ct=0; parkInvaded=false; }
+  else { ufo.active=false; }
+}
+function updateUfo(){
+  if(!ufo.active) return;
+  ufo.ct++; ufo.sx += 2.7;                 // glide left -> right across the sky
+  if(!parkInvaded && ufo.sx>VW){ parkInvaded=true; spawnParkAliens(); }  // crossed -> aliens come
+  if(ufo.sx>VW+220) ufo.active=false;
+}
+function drawUfo(){
+  if(!ufo.active || !imgOk(loaded.ufo)) return;
+  const sc=1.3, dw=UFO_FW*sc, dh=UFO_FH*sc;
+  const f=Math.floor(ufo.ct*0.2)%8;
+  const bob=Math.sin(ufo.ct*0.05)*7;
+  try{ ctx.drawImage(loaded.ufo, f*UFO_FW,0,UFO_FW,UFO_FH, ufo.sx, ufo.sy+bob, dw,dh); }catch(_){}
+}
+
+/* ── PER-LEVEL MUSIC ── */
+const TRACKS={ select:'Character_selection_screen.mp3', street:'Street.mp3',
+  park:'Park.mp3', belfast:'Belfast.mp3', pub:'Pub.mp3' };
+function playTrack(src){
+  const bgm=document.getElementById('bgm');
+  if(!src){ bgm.pause(); return; }
+  if(bgm.getAttribute('data-src')!==src){ bgm.setAttribute('data-src',src); bgm.src=src; }
+  try{ bgm.currentTime=0; }catch(_){}
+  bgm.volume=0.35; bgm.muted=musicMuted;
+  if(!paused && !musicMuted) bgm.play().catch(()=>{});
+}
+function playSectionTrack(){ playTrack(TRACKS[SECTIONS[sectionIndex].id]); }
+let selectMusicStarted=false;
+function tryStartSelectMusic(){
+  if(selectMusicStarted || cur) return;
+  selectMusicStarted=true; playTrack(TRACKS.select);
+}
+document.addEventListener('pointerdown', tryStartSelectMusic);
 
 /* ── UPDATE / DRAW / LOOP ────────────────────────────────── */
 function update(){
@@ -826,6 +886,7 @@ function update(){
   updateEnemies();
   updateHelper();
   updateNPC();
+  updateUfo();
 
   // end of section -> transition
   if(player.x>BGW-PW-40){
@@ -844,6 +905,7 @@ function draw(){
   const bgKey=SECTIONS[sectionIndex].bgKey;
   if(imgOk(loaded[bgKey])){ try{ ctx.drawImage(loaded[bgKey],camX,SRCY,SRCW,SRCH,0,0,VW,VH); }catch(e){ drawNoBg(); } } else drawNoBg();
 
+  drawUfo();
   // enemies behind the player
   for(const e of enemies) drawEnemy(e);
   drawNPC();
