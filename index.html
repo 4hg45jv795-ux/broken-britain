@@ -246,7 +246,7 @@ const SECTIONS=[
    aliens:[ {at:700,kind:3},{at:1020,kind:3},{at:1360,kind:3},{at:1560,kind:3} ]},
   {id:'belfast', name:'Ballymacarrett &mdash; the loyal mile', bgKey:'bg3', BGW:2172, srcY:380, flatGround:560,
    enemies:[ {at:760,kind:5},{at:1120,kind:5},{at:1480,kind:5},{at:1800,kind:5},{at:2020,kind:5} ]},
-  {id:'pub',     name:'The Red Hand &mdash; loyalist till I die', bgKey:'pub', BGW:533, srcY:80, flatGround:300,
+  {id:'pub',     name:'The Red Hand &mdash; loyalist till I die', bgKey:'pub', BGW:533, srcY:8, flatGround:212,
    enemies:[ ]},
   {id:'dundee',  name:'Welcome to Dundee', bgKey:'dundee', BGW:560, srcY:65, flatGround:270,
    enemies:[ ]},
@@ -268,7 +268,7 @@ function groundAt(x){
 /* ── ASSETS ──────────────────────────────────────────────── */
 const ASSETS = [
   {key:'bg',       type:'img', src:'bg.jpg'},
-  {key:'pub',      type:'img', src:'pub.jpeg'},
+  {key:'pub',      type:'img', src:'pub2.jpeg'},
   {key:'dundee',   type:'img', src:'dundee.jpeg'},
   {key:'bg3',      type:'img', src:'bg3.jpeg'},
   {key:'brit',     type:'img', src:'brit2.png'},
@@ -828,7 +828,7 @@ function drawUfo(){
 }
 
 /* ── WANDERER (ambient background NPC, harmless) ── */
-const WAN_FW=118, WAN_FH=182, WAN_H=72;
+const WAN_FW=118, WAN_FH=182, WAN_H=58;
 const wanderer={active:false, x:0, face:1, anim:0};
 function startWanderer(){
   if(SECTIONS[sectionIndex].id==='dundee'){ wanderer.active=true; wanderer.x=BGW*0.62; wanderer.face=-1; wanderer.anim=0; }
