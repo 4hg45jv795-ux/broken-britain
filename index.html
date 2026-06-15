@@ -246,8 +246,10 @@ const SECTIONS=[
    aliens:[ {at:700,kind:3},{at:1020,kind:3},{at:1360,kind:3},{at:1560,kind:3} ]},
   {id:'belfast', name:'Ballymacarrett &mdash; the loyal mile', bgKey:'bg3', BGW:2172, srcY:380, flatGround:560,
    enemies:[ {at:760,kind:5},{at:1120,kind:5},{at:1480,kind:5},{at:1800,kind:5},{at:2020,kind:5} ]},
-  {id:'pub',     name:'The Red Hand &mdash; loyalist till I die', bgKey:'pub', BGW:560, srcY:55, flatGround:265,
+  {id:'pub',     name:'The Red Hand &mdash; loyalist till I die', bgKey:'pub', BGW:533, srcY:50, flatGround:253,
    enemies:[ ]},
+  {id:'dundee',  name:'Welcome to Dundee', bgKey:'dundee', BGW:560, srcY:65, flatGround:270,
+   enemies:[ {at:210,kind:0},{at:310,kind:1},{at:410,kind:2} ]},
 ];
 let sectionIndex=0;
 let SRCY=120, BGW=4047;
@@ -267,6 +269,7 @@ function groundAt(x){
 const ASSETS = [
   {key:'bg',       type:'img', src:'bg.jpg'},
   {key:'pub',      type:'img', src:'pub.jpeg'},
+  {key:'dundee',   type:'img', src:'dundee.jpeg'},
   {key:'bg3',      type:'img', src:'bg3.jpeg'},
   {key:'brit',     type:'img', src:'brit2.png'},
   {key:'crusader', type:'img', src:'crusader2.png'},
@@ -665,6 +668,7 @@ function enterSection(){
   spawnEnemiesForSection();
   refreshHelperBtns();
   playSectionTrack();
+  if(SECTIONS[sectionIndex].id==='pub'){ player.hp=player.max; document.getElementById('hpbar').style.width='100%'; flashBanner('FULL HEALTH &mdash; get a pint in ye'); }
 }
 
 /* ── CUTSCENE (unchanged intro chat) ─────────────────────── */
@@ -823,7 +827,7 @@ function drawUfo(){
 
 /* ── PER-LEVEL MUSIC ── */
 const TRACKS={ select:'Character_selection_screen.mp3', street:'Street.mp3',
-  park:'Park.mp3', belfast:'Belfast.mp3', pub:'Pub.mp3' };
+  park:'Park.mp3', belfast:'Belfast.mp3', pub:'Pub.mp3', dundee:'Dundee.mp3' };
 function playTrack(src){
   const bgm=document.getElementById('bgm');
   if(!src){ bgm.pause(); return; }
