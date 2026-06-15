@@ -285,6 +285,8 @@ const SECTIONS=[
    enemies:[ ]},
   {id:'dundee',  name:'Welcome to Dundee', bgKey:'dundee', BGW:560, srcY:65, flatGround:270,
    enemies:[ ]},
+  {id:'glasgow', name:'Glasgow &mdash; the Trongate', bgKey:'glasgow', BGW:2672, srcY:90, flatGround:296,
+   enemies:[ {at:520,kind:0},{at:900,kind:1},{at:1300,kind:2},{at:1750,kind:0},{at:2150,kind:1} ]},
 ];
 let sectionIndex=0;
 let SRCY=120, BGW=4047;
@@ -323,6 +325,7 @@ const ASSETS = [
   {key:'wanderer', type:'img', src:'wanderer.png', optional:true},
   {key:'food',     type:'img', src:'roast.png', optional:true},
   {key:'deliveroo',type:'img', src:'deliveroo.png', optional:true},
+  {key:'glasgow',  type:'img', src:'glasgow.jpg', optional:true},
 ];
 const loaded={};
 const failed=[];
@@ -952,7 +955,7 @@ function drawPickup(){
 
 /* ── PER-LEVEL MUSIC ── */
 const TRACKS={ select:'Character selection screen.mp3', street:'Street.mp3',
-  park:'Park.mp3', belfast:'Belfast.mp3', pub:'Pub.mp3', dundee:'Dundee.mp3' };
+  park:'Park.mp3', belfast:'Belfast.mp3', pub:'Pub.mp3', dundee:'Dundee.mp3', glasgow:'Glasgow.mp3' };
 function playTrack(src){
   const bgm=document.getElementById('bgm');
   if(!src){ bgm.pause(); return; }
