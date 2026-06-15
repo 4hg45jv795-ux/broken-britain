@@ -246,10 +246,10 @@ const SECTIONS=[
    aliens:[ {at:700,kind:3},{at:1020,kind:3},{at:1360,kind:3},{at:1560,kind:3} ]},
   {id:'belfast', name:'Ballymacarrett &mdash; the loyal mile', bgKey:'bg3', BGW:2172, srcY:380, flatGround:560,
    enemies:[ {at:760,kind:5},{at:1120,kind:5},{at:1480,kind:5},{at:1800,kind:5},{at:2020,kind:5} ]},
-  {id:'pub',     name:'The Red Hand &mdash; loyalist till I die', bgKey:'pub', BGW:533, srcY:50, flatGround:253,
+  {id:'pub',     name:'The Red Hand &mdash; loyalist till I die', bgKey:'pub', BGW:533, srcY:80, flatGround:300,
    enemies:[ ]},
   {id:'dundee',  name:'Welcome to Dundee', bgKey:'dundee', BGW:560, srcY:65, flatGround:270,
-   enemies:[ {at:210,kind:0},{at:310,kind:1},{at:410,kind:2} ]},
+   enemies:[ ]},
 ];
 let sectionIndex=0;
 let SRCY=120, BGW=4047;
@@ -284,6 +284,7 @@ const ASSETS = [
   {key:'geezer',   type:'img', src:'geezer.png', optional:true},
   {key:'ufo',      type:'img', src:'ufo.png', optional:true},
   {key:'knifeman', type:'img', src:'knifeman.png', optional:true},
+  {key:'wanderer', type:'img', src:'wanderer.png', optional:true},
 ];
 const loaded={};
 const failed=[];
@@ -665,10 +666,11 @@ function enterSection(){
   player.x=120; player.y=groundAt(120+PW/2)-PH; player.vx=0; player.vy=0; player.onGround=true; setClip('idle');
   bannerShown=false; helper.active=false; helperCool=[0,0];
   startParkIntro();
+  startWanderer();
   spawnEnemiesForSection();
   refreshHelperBtns();
   playSectionTrack();
-  if(SECTIONS[sectionIndex].id==='pub'){ player.hp=player.max; document.getElementById('hpbar').style.width='100%'; flashBanner('FULL HEALTH &mdash; get a pint in ye'); }
+  if(SECTIONS[sectionIndex].id==='pub'){ player.hp=player.max; document.getElementById('hpbar').style.width='100%'; }
 }
 
 /* ── CUTSCENE (unchanged intro chat) ─────────────────────── */
@@ -780,7 +782,7 @@ function start(m){
   spawnEnemiesForSection();
   setPaused(false);
   initNPC();
-  startParkIntro(); playSectionTrack();
+  startParkIntro(); startWanderer(); playSectionTrack();
   if(!raf)loop();
 }
 
@@ -823,6 +825,31 @@ function drawUfo(){
   const f=Math.floor(ufo.ct*0.2)%8;
   const bob=Math.sin(ufo.ct*0.05)*7;
   try{ ctx.drawImage(loaded.ufo, f*UFO_FW,0,UFO_FW,UFO_FH, ufo.sx, ufo.sy+bob, dw,dh); }catch(_){}
+}
+
+/* ── WANDERER (ambient background NPC, harmless) ── */
+const WAN_FW=118, WAN_FH=182, WAN_H=72;
+const wanderer={active:false, x:0, face:1, anim:0};
+function startWanderer(){
+  if(SECTIONS[sectionIndex].id==='dundee'){ wanderer.active=true; wanderer.x=BGW*0.62; wanderer.face=-1; wanderer.anim=0; }
+  else wanderer.active=false;
+}
+function updateWanderer(){
+  if(!wanderer.active) return;
+  wanderer.x += wanderer.face*0.6; wanderer.anim += 0.13;
+  if(wanderer.x > BGW-120) wanderer.face=-1; else if(wanderer.x < 80) wanderer.face=1;
+}
+function drawWanderer(){
+  if(!wanderer.active || !imgOk(loaded.wanderer)) return;
+  const w=Math.round(WAN_H*WAN_FW/WAN_FH);
+  const gy=groundAt(wanderer.x+w/2)-WAN_H;
+  const sx=(wanderer.x-camX)*ZOOM, sy=(gy-SRCY)*ZOOM, dw=w*ZOOM, dh=WAN_H*ZOOM;
+  if(sx<-dw*2||sx>VW+dw*2) return;
+  const f=Math.floor(wanderer.anim)%6;
+  ctx.save();
+  if(wanderer.face<0){ ctx.translate(sx+dw,sy); ctx.scale(-1,1); } else { ctx.translate(sx,sy); }
+  try{ ctx.drawImage(loaded.wanderer, f*WAN_FW,0,WAN_FW,WAN_FH, 0,0, dw,dh); }catch(_){}
+  ctx.restore();
 }
 
 /* ── PER-LEVEL MUSIC ── */
@@ -894,6 +921,7 @@ function update(){
   updateHelper();
   updateNPC();
   updateUfo();
+  updateWanderer();
 
   // end of section -> transition
   if(player.x>BGW-PW-40){
@@ -913,6 +941,7 @@ function draw(){
   if(imgOk(loaded[bgKey])){ try{ ctx.drawImage(loaded[bgKey],camX,SRCY,SRCW,SRCH,0,0,VW,VH); }catch(e){ drawNoBg(); } } else drawNoBg();
 
   drawUfo();
+  drawWanderer();
   // enemies behind the player
   for(const e of enemies) drawEnemy(e);
   drawNPC();
