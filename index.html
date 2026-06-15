@@ -275,7 +275,7 @@ function imgOk(im){ return im && im.complete && im.naturalWidth>0; }
 /* ── SECTIONS / LEVELS ───────────────────────────────────── */
 const SECTIONS=[
   {id:'street', name:'Southside &mdash; the street', bgKey:'bg',  BGW:4047, srcY:120, flatGround:null,
-   enemies:[ {at:760,kind:0},{at:1200,kind:1},{at:1700,kind:2},{at:2300,kind:1},{at:2800,kind:0},{at:3300,kind:2},{at:3700,kind:1} ]},
+   enemies:[ {at:760,kind:0},{at:980,kind:6},{at:1200,kind:1},{at:1700,kind:2},{at:2050,kind:6},{at:2300,kind:1},{at:2800,kind:0},{at:3300,kind:2},{at:3550,kind:6},{at:3700,kind:1} ]},
   {id:'park', name:'Southside Park &mdash; Grandview Hotel', bgKey:'park', BGW:1763, srcY:0, flatGround:196,
    enemies:[ {at:520,kind:4},{at:880,kind:4},{at:1240,kind:4} ],
    aliens:[ {at:700,kind:3},{at:1020,kind:3},{at:1360,kind:3},{at:1560,kind:3} ]},
@@ -321,6 +321,8 @@ const ASSETS = [
   {key:'ufo',      type:'img', src:'ufo.png', optional:true},
   {key:'knifeman', type:'img', src:'knifeman.png', optional:true},
   {key:'wanderer', type:'img', src:'wanderer.png', optional:true},
+  {key:'food',     type:'img', src:'roast.png', optional:true},
+  {key:'deliveroo',type:'img', src:'deliveroo.png', optional:true},
 ];
 const loaded={};
 const failed=[];
@@ -439,22 +441,25 @@ const ENEMY_KINDS=[
    clips:{walk:{start:0,count:7,fps:9,loop:true}, die:{start:7,count:4,fps:8,loop:false}}},
   {img:'knifeman', fw:89, fh:151, color:'#3a5a8a', hair:'#241712',
    clips:{walk:{start:0,count:8,fps:9,loop:true}, die:{start:8,count:6,fps:10,loop:false}}},
+  {img:'deliveroo', fw:134, fh:120, color:'#2c2f36', hair:'#101216',
+   clips:{walk:{start:0,count:6,fps:12,loop:true}, die:{start:6,count:4,fps:9,loop:false}}},
 ];
 const EH=78;
 let enemies=[];
-function pushEnemy(kind,at){
+const killedEnemies=new Set();          // ids of enemies killed this playthrough (don't respawn)
+function pushEnemy(kind,at,id){
   const k=ENEMY_KINDS[kind]; const w=Math.round(EH*k.fw/k.fh);
-  enemies.push({kind, x:at, w, h:EH, y:0, vx:0, face:-1,
+  enemies.push({kind, x:at, w, h:EH, y:0, vx:0, face:-1, id:id||null,
     hp:40, max:40, state:'walk', ct:0, hitId:-1, dmgCool:0, fade:1});
 }
 function spawnEnemiesForSection(){
   enemies=[];
-  SECTIONS[sectionIndex].enemies.forEach(e=> pushEnemy(e.kind, e.at));
+  SECTIONS[sectionIndex].enemies.forEach((e,i)=>{ const id=sectionIndex+'-e'+i; if(!killedEnemies.has(id)) pushEnemy(e.kind, e.at, id); });
   if(SECTIONS[sectionIndex].id==='park' && parkInvaded) spawnParkAliens();
 }
 function spawnParkAliens(){
   const a=SECTIONS[sectionIndex].aliens; if(!a) return;
-  a.forEach(x=> pushEnemy(x.kind, x.at));
+  a.forEach((x,i)=>{ const id=sectionIndex+'-a'+i; if(!killedEnemies.has(id)) pushEnemy(x.kind, x.at, id); });
 }
 const ESPEED=1.05, EAGGRO=560, EHIT_RANGE=42, EDMG=8;
 function enemyClipDone(e){ const c=ENEMY_KINDS[e.kind].clips.die; return e.ct>=Math.ceil(c.count*60/c.fps); }
@@ -463,7 +468,7 @@ function updateEnemies(){
   for(const e of enemies){
     e.y=groundAt(e.x+e.w/2)-e.h;
     if(e.state==='dead') continue;
-    if(e.state==='die'){ e.ct++; if(enemyClipDone(e)){ e.state='dead'; } else if(enemyClipDone(e)) {} continue; }
+    if(e.state==='die'){ e.ct++; if(enemyClipDone(e)){ e.state='dead'; if(e.id) killedEnemies.add(e.id); } continue; }
     // walking / chasing the player
     const dx=(player.x+PW/2)-(e.x+e.w/2);
     e.face = dx>0?1:-1;
@@ -685,7 +690,7 @@ function flashBanner(html){ const b=document.getElementById('banner'); b.innerHT
 function nextSection(){
   if(transitioning) return;
   if(sectionIndex>=SECTIONS.length-1){ // end of last section -> loop back with a beat
-    transitioning=true; doFade('THE END &mdash; for now', ()=>{ sectionIndex=0; enterSection(); transitioning=false; });
+    transitioning=true; doFade('THE END &mdash; for now', ()=>{ sectionIndex=0; killedEnemies.clear(); enterSection(); transitioning=false; });
     return;
   }
   const next=SECTIONS[sectionIndex+1];
@@ -731,7 +736,7 @@ function enterSection(from){
   spawnEnemiesForSection();
   refreshHelperBtns();
   playSectionTrack();
-  if(SECTIONS[sectionIndex].id==='pub'){ player.hp=player.max; document.getElementById('hpbar').style.width='100%'; }
+  initPickup();
 }
 
 /* ── CUTSCENE (unchanged intro chat) ─────────────────────── */
@@ -840,6 +845,7 @@ function start(m){
   document.getElementById('hpbar').style.width='100%';
   bannerShown=false;csActive=false;csDone=false;
   helper.active=false; helperCool=[0,0]; buildHelperThumbs(); refreshHelperBtns();
+  killedEnemies.clear(); pickup.active=false;
   spawnEnemiesForSection();
   setPaused(false);
   initNPC();
@@ -913,6 +919,37 @@ function drawWanderer(){
   ctx.restore();
 }
 
+/* ── FOOD PICKUP (pub heal — walk over the roast to refill) ── */
+const FOOD_H=30;
+const pickup={active:false,x:0,w:0,taken:false};
+function initPickup(){
+  if(SECTIONS[sectionIndex].id==='pub' && imgOk(loaded.food)){
+    const im=loaded.food; pickup.w=Math.round(FOOD_H*im.naturalWidth/im.naturalHeight);
+    pickup.x=Math.round(BGW*0.5 - pickup.w/2); pickup.taken=false; pickup.active=true;
+  } else { pickup.active=false; }
+}
+function updatePickup(){
+  if(!pickup.active||pickup.taken||player.dead) return;
+  const pc=player.x+PW/2, fc=pickup.x+pickup.w/2;
+  if(Math.abs(pc-fc) < PW/2 + pickup.w/2 - 6){
+    pickup.taken=true;
+    player.hp=player.max; document.getElementById('hpbar').style.width='100%';
+    [0,4,7,12].forEach((s,i)=>setTimeout(()=>blip(440*Math.pow(2,s/12),0,0.14,'triangle',0.16),i*70));
+    flashBanner('Proper scran &mdash; full health!');
+  }
+}
+function drawPickup(){
+  if(!pickup.active||pickup.taken||!imgOk(loaded.food)) return;
+  const im=loaded.food, w=pickup.w*CSCALE, h=FOOD_H*CSCALE;
+  const gy=groundAt(pickup.x+pickup.w/2);
+  const sx=(pickup.x-camX)*ZOOM-(w-pickup.w)*ZOOM/2, sy=(gy-SRCY-h)*ZOOM;
+  if(sx<-w*ZOOM*2||sx>VW+w*ZOOM*2) return;
+  const bob=Math.sin(performance.now()/400)*2;
+  ctx.save(); ctx.shadowColor='rgba(0,0,0,0.45)'; ctx.shadowBlur=6;
+  try{ ctx.drawImage(im, sx, sy+bob, w*ZOOM, h*ZOOM); }catch(_){}
+  ctx.restore();
+}
+
 /* ── PER-LEVEL MUSIC ── */
 const TRACKS={ select:'Character selection screen.mp3', street:'Street.mp3',
   park:'Park.mp3', belfast:'Belfast.mp3', pub:'Pub.mp3', dundee:'Dundee.mp3' };
@@ -983,6 +1020,7 @@ function update(){
   updateNPC();
   updateUfo();
   updateWanderer();
+  updatePickup();
 
   // section edges: right edge -> next level, left wall (while pressing left) -> previous level
   if(player.x>BGW-PW-40){
@@ -1005,6 +1043,7 @@ function draw(){
 
   drawUfo();
   drawWanderer();
+  drawPickup();
   // enemies behind the player
   for(const e of enemies) drawEnemy(e);
   drawNPC();
