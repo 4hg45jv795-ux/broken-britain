@@ -136,7 +136,12 @@ canvas#cv{display:block;width:100%;height:auto;}
   .topbar{padding-top:max(8px,env(safe-area-inset-top));}
   .btn{width:52px;height:52px;font-size:21px;}
   .btn.jump,.btn.punch{width:58px;height:58px;font-size:12px;}
-  .helperbtn{width:56px;height:66px;}
+  /* helper buttons → top-centre, small + semi-transparent, out of the player's way */
+  .helperbar{position:fixed;top:max(6px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);
+    gap:8px;z-index:7;opacity:.82;}
+  .helperbtn{width:46px;height:54px;padding:3px 2px 2px;}
+  .helperbtn .hname{font-size:7px;}
+  .helperbtn canvas{width:34px;height:30px;}
 }
 </style>
 </head>
