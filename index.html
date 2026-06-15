@@ -245,9 +245,9 @@ const SECTIONS=[
    enemies:[ {at:520,kind:4},{at:880,kind:4},{at:1240,kind:4} ],
    aliens:[ {at:700,kind:3},{at:1020,kind:3},{at:1360,kind:3},{at:1560,kind:3} ]},
   {id:'belfast', name:'Ballymacarrett &mdash; the loyal mile', bgKey:'bg3', BGW:2172, srcY:380, flatGround:560,
-   enemies:[ {at:760,kind:0},{at:1080,kind:2},{at:1380,kind:1},{at:1650,kind:0},{at:1900,kind:2},{at:2050,kind:1} ]},
+   enemies:[ {at:760,kind:5},{at:1120,kind:5},{at:1480,kind:5},{at:1800,kind:5},{at:2020,kind:5} ]},
   {id:'pub',     name:'The Red Hand &mdash; loyalist till I die', bgKey:'pub', BGW:560, srcY:55, flatGround:265,
-   enemies:[ {at:230,kind:1},{at:330,kind:0},{at:430,kind:2} ]},
+   enemies:[ ]},
 ];
 let sectionIndex=0;
 let SRCY=120, BGW=4047;
@@ -280,6 +280,7 @@ const ASSETS = [
   {key:'alien',    type:'img', src:'alien.png', optional:true},
   {key:'geezer',   type:'img', src:'geezer.png', optional:true},
   {key:'ufo',      type:'img', src:'ufo.png', optional:true},
+  {key:'knifeman', type:'img', src:'knifeman.png', optional:true},
 ];
 const loaded={};
 const failed=[];
@@ -396,6 +397,8 @@ const ENEMY_KINDS=[
    clips:{walk:{start:0,count:8,fps:10,loop:true}, die:{start:8,count:6,fps:11,loop:false}}},
   {img:'geezer', fw:63, fh:160, color:'#2f3238', hair:'#7a4a26',
    clips:{walk:{start:0,count:7,fps:9,loop:true}, die:{start:7,count:4,fps:8,loop:false}}},
+  {img:'knifeman', fw:89, fh:151, color:'#3a5a8a', hair:'#241712',
+   clips:{walk:{start:0,count:8,fps:9,loop:true}, die:{start:8,count:6,fps:10,loop:false}}},
 ];
 const EH=78;
 let enemies=[];
