@@ -276,7 +276,7 @@ function imgOk(im){ return im && im.complete && im.naturalWidth>0; }
 const SECTIONS=[
   {id:'street', name:'Southside &mdash; the street', bgKey:'bg',  BGW:4047, srcY:120, flatGround:null,
    enemies:[ {at:760,kind:0},{at:1200,kind:1},{at:1700,kind:2},{at:2300,kind:1},{at:2800,kind:0},{at:3300,kind:2},{at:3700,kind:1} ]},
-  {id:'park', name:'Southside Park &mdash; Grandview Hotel', bgKey:'park', BGW:1763, srcY:0, flatGround:196,
+  {id:'park', name:'Standard UK Park', bgKey:'park', BGW:1763, srcY:0, flatGround:196,
    enemies:[ {at:520,kind:4},{at:880,kind:4},{at:1240,kind:4} ],
    aliens:[ {at:700,kind:3},{at:1020,kind:3},{at:1360,kind:3},{at:1560,kind:3} ]},
   {id:'belfast', name:'Ballymacarrett &mdash; the loyal mile', bgKey:'bg3', BGW:2172, srcY:380, flatGround:560,
@@ -286,9 +286,9 @@ const SECTIONS=[
   {id:'dundee',  name:'Welcome to Dundee', bgKey:'dundee', BGW:560, srcY:65, flatGround:270,
    enemies:[ ]},
   {id:'glasgow', name:'Glasgow &mdash; the Trongate', bgKey:'glasgow', BGW:2672, srcY:90, flatGround:296,
-   enemies:[ {at:520,kind:0},{at:760,kind:6},{at:1080,kind:1},{at:1380,kind:6},{at:1700,kind:2},{at:2000,kind:6},{at:2300,kind:0},{at:2480,kind:6} ]},
+   enemies:[ {at:230,kind:7,hp:1,static:true},{at:520,kind:0},{at:760,kind:6},{at:1080,kind:1},{at:1380,kind:6},{at:1700,kind:2},{at:2000,kind:6},{at:2300,kind:0},{at:2480,kind:6} ]},
   {id:'southampton', name:'Southampton &mdash; Above Bar Street', bgKey:'southampton', BGW:1879, srcY:90, flatGround:296,
-   enemies:[ {at:480,kind:0},{at:820,kind:2},{at:1150,kind:1},{at:1480,kind:0},{at:1700,kind:2} ]},
+   enemies:[ {at:430,kind:1},{at:640,kind:1},{at:850,kind:1},{at:1050,kind:1},{at:1250,kind:1},{at:1450,kind:1},{at:1650,kind:1},{at:1800,kind:1} ]},
 ];
 let sectionIndex=0;
 let SRCY=120, BGW=4047;
@@ -316,8 +316,9 @@ const ASSETS = [
   {key:'photog',   type:'img', src:'photog2.png'},
   {key:'enemy1',   type:'img', src:'enemy1.png', optional:true},
   {key:'athlete',  type:'img', src:'athlete.png', optional:true},
-  {key:'police',   type:'img', src:'police.png', optional:true},
-  {key:'hippie',   type:'img', src:'hippie.png', optional:true},
+  {key:'police',   type:'img', src:'police3.png', optional:true},
+  {key:'clown',    type:'img', src:'clown2.png', optional:true},
+  {key:'bikeboy',  type:'img', src:'bikeboy2.png', optional:true},
   {key:'binhelper',type:'img', src:'binhelper.png', optional:true},
   {key:'park',     type:'img', src:'park.jpeg'},
   {key:'alien',    type:'img', src:'alien.png', optional:true},
@@ -437,10 +438,10 @@ let bannerShown=false;
 const ENEMY_KINDS=[
   {img:'enemy1', fw:115, fh:148, color:'#d63aa0', hair:'#ff5bd0',
    clips:{walk:{start:0,count:6,fps:9,loop:true}, die:{start:6,count:2,fps:7,loop:false}}},
-  {img:'police', fw:71, fh:103, color:'#d8e23a', hair:'#1a2233',
-   clips:{walk:{start:0,count:6,fps:9,loop:true}, die:{start:6,count:2,fps:7,loop:false}}},
-  {img:'hippie', fw:81, fh:128, color:'#7a5ad6', hair:'#3a6ad0',
-   clips:{walk:{start:0,count:5,fps:9,loop:true}, die:{start:6,count:2,fps:7,loop:false}}},
+  {img:'police', fw:168, fh:130, color:'#d8e23a', hair:'#1a2233',
+   clips:{walk:{start:0,count:6,fps:9,loop:true}, die:{start:6,count:1,fps:6,loop:false}}},
+  {img:'clown', fw:111, fh:130, color:'#e8c43a', hair:'#2f8a3a',
+   clips:{walk:{start:0,count:5,fps:9,loop:true}, die:{start:5,count:1,fps:6,loop:false}}},
   {img:'alien', fw:71, fh:142, color:'#83a86a', hair:'#41603a',
    clips:{walk:{start:0,count:8,fps:10,loop:true}, die:{start:8,count:6,fps:11,loop:false}}},
   {img:'geezer', fw:63, fh:160, color:'#2f3238', hair:'#7a4a26',
@@ -449,18 +450,21 @@ const ENEMY_KINDS=[
    clips:{walk:{start:0,count:8,fps:9,loop:true}, die:{start:8,count:6,fps:10,loop:false}}},
   {img:'deliveroo', fw:134, fh:120, color:'#2c2f36', hair:'#101216',
    clips:{walk:{start:0,count:6,fps:12,loop:true}, die:{start:6,count:4,fps:9,loop:false}}},
+  {img:'bikeboy', fw:175, fh:130, color:'#8a8f96', hair:'#2a2622',
+   clips:{walk:{start:0,count:2,fps:3,loop:true}, die:{start:2,count:2,fps:6,loop:false}}},
 ];
 const EH=78;
 let enemies=[];
 const killedEnemies=new Set();          // ids of enemies killed this playthrough (don't respawn)
-function pushEnemy(kind,at,id){
+function pushEnemy(kind,at,id,opts){
   const k=ENEMY_KINDS[kind]; const w=Math.round(EH*k.fw/k.fh);
-  enemies.push({kind, x:at, w, h:EH, y:0, vx:0, face:-1, id:id||null,
-    hp:40, max:40, state:'walk', ct:0, hitId:-1, dmgCool:0, fade:1});
+  const hp=(opts&&opts.hp)||40;
+  enemies.push({kind, x:at, w, h:EH, y:0, vx:0, face:-1, id:id||null, static:!!(opts&&opts.static),
+    hp, max:hp, state:'walk', ct:0, hitId:-1, dmgCool:0, fade:1});
 }
 function spawnEnemiesForSection(){
   enemies=[];
-  SECTIONS[sectionIndex].enemies.forEach((e,i)=>{ const id=sectionIndex+'-e'+i; if(!killedEnemies.has(id)) pushEnemy(e.kind, e.at, id); });
+  SECTIONS[sectionIndex].enemies.forEach((e,i)=>{ const id=sectionIndex+'-e'+i; if(!killedEnemies.has(id)) pushEnemy(e.kind, e.at, id, e); });
   if(SECTIONS[sectionIndex].id==='park' && parkInvaded) spawnParkAliens();
 }
 function spawnParkAliens(){
@@ -479,12 +483,12 @@ function updateEnemies(){
     const dx=(player.x+PW/2)-(e.x+e.w/2);
     e.face = dx>0?1:-1;
     if(!player.dead && Math.abs(dx)<EAGGRO && Math.abs(dx)>EHIT_RANGE){
-      e.x += e.face*ESPEED; e.ct++;
+      if(!e.static) e.x += e.face*ESPEED; e.ct++;
     } else { e.ct++; }
     e.x=Math.max(0,Math.min(BGW-e.w,e.x));
     // contact damage to player
     if(e.dmgCool>0) e.dmgCool--;
-    if(!player.dead && Math.abs(dx)<EHIT_RANGE+6 && e.dmgCool<=0){
+    if(!e.static && !player.dead && Math.abs(dx)<EHIT_RANGE+6 && e.dmgCool<=0){
       damagePlayer(EDMG); e.dmgCool=70;
       player.x += (dx>0?-10:10); // knockback
     }
