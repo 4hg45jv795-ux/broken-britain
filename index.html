@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>British Moments</title>
+<title>Enough Is Enough</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#06070b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="British Moments">
+<meta name="apple-mobile-web-app-title" content="Enough Is Enough">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
 <style>
@@ -171,7 +171,7 @@ canvas#cv{display:block;width:100%;height:auto;}
 
 <section id="select">
   <div class="eyebrow">Side-scroller</div>
-  <div class="title"><span class="word-broken">British</span><span class="word-britain">Moments</span></div>
+  <div class="title"><span class="word-broken">Enough</span><span class="word-britain">Is Enough</span></div>
   <p class="sub">Pick your fighter.</p>
   <p class="rotate-tip">On a phone? Turn it sideways &#8212; the game goes full screen in landscape.</p>
   <div class="warn" id="warn"></div>
@@ -232,18 +232,15 @@ canvas#cv{display:block;width:100%;height:auto;}
 
 <script>
 /* ============================================================
-   BROKEN BRITAIN
+   ENOUGH IS ENOUGH
    ------------------------------------------------------------
    SPRITE-SHEET FORMAT (all characters use the SAME convention):
    one single horizontal row of uniform FW x FH cells, real
    transparency (PNG alpha), frames laid out in clip order.
-   This matches brit2.png / crusader2.png. The new art you
-   uploaded are labelled poster mock-ups (baked-in checkerboard,
-   text labels) and must be re-exported into this strip format
-   before they will animate. Until then the engine draws a
-   stand-in figure so everything is testable. Required strips:
-     enemy1.png / enemy2.png  -> see ENEMY_KINDS below
-     athlete.png              -> see HELPERS below
+   This matches brit2.png / crusader2.png. New enemy/helper art
+   must be re-exported into this strip format before it will
+   animate. Until then the engine draws a stand-in figure so
+   everything is testable.
    ============================================================ */
 
 let FW=181,FH=218;          // current fighter's frame size (set in start())
@@ -274,21 +271,23 @@ function imgOk(im){ return im && im.complete && im.naturalWidth>0; }
 
 /* ── SECTIONS / LEVELS ───────────────────────────────────── */
 const SECTIONS=[
+  {id:'home', name:'DigiTown &mdash; the high street', bgKey:'home', BGW:2187, srcY:26, flatGround:245,
+   enemies:[ ]},
   {id:'street', name:'Southside &mdash; the street', bgKey:'bg',  BGW:4047, srcY:120, flatGround:null,
-   enemies:[ {at:760,kind:0},{at:1200,kind:1},{at:1700,kind:2},{at:2300,kind:1},{at:2800,kind:0},{at:3300,kind:2},{at:3700,kind:1} ]},
+   enemies:[ {at:1200,kind:0},{at:1700,kind:1},{at:2300,kind:0},{at:3300,kind:1},{at:3700,kind:0} ]},
   {id:'park', name:'Standard UK Park', bgKey:'park', BGW:1763, srcY:0, flatGround:196,
-   enemies:[ {at:520,kind:4},{at:880,kind:4},{at:1240,kind:4} ],
-   aliens:[ {at:700,kind:3},{at:1020,kind:3},{at:1360,kind:3},{at:1560,kind:3} ]},
+   enemies:[ {at:520,kind:3},{at:880,kind:3},{at:1240,kind:3} ],
+   aliens:[ {at:700,kind:2},{at:1020,kind:2},{at:1360,kind:2},{at:1560,kind:2} ]},
   {id:'belfast', name:'Ballymacarrett &mdash; the loyal mile', bgKey:'bg3', BGW:2172, srcY:380, flatGround:560,
-   enemies:[ {at:760,kind:5},{at:1120,kind:5},{at:1480,kind:5},{at:1800,kind:5},{at:2020,kind:5} ]},
+   enemies:[ {at:760,kind:4},{at:1120,kind:4},{at:1480,kind:4},{at:1800,kind:4},{at:2020,kind:4} ]},
   {id:'pub',     name:'The Red Hand &mdash; loyalist till I die', bgKey:'pub', BGW:533, srcY:8, flatGround:212, charScale:1.4,
    enemies:[ ]},
   {id:'dundee',  name:'Welcome to Dundee', bgKey:'dundee', BGW:560, srcY:65, flatGround:270,
    enemies:[ ]},
   {id:'glasgow', name:'Glasgow &mdash; the Trongate', bgKey:'glasgow', BGW:2672, srcY:90, flatGround:296,
-   enemies:[ {at:230,kind:7,hp:1,static:true},{at:520,kind:0},{at:760,kind:6},{at:1080,kind:1},{at:1380,kind:6},{at:1700,kind:2},{at:2000,kind:6},{at:2300,kind:0},{at:2480,kind:6} ]},
+   enemies:[ {at:230,kind:6,hp:1,static:true},{at:760,kind:5},{at:1080,kind:0},{at:1380,kind:5},{at:1700,kind:1},{at:2000,kind:5},{at:2480,kind:5} ]},
   {id:'southampton', name:'Southampton &mdash; Above Bar Street', bgKey:'southampton', BGW:1879, srcY:90, flatGround:296,
-   enemies:[ {at:430,kind:1},{at:640,kind:1},{at:850,kind:1},{at:1050,kind:1},{at:1250,kind:1},{at:1450,kind:1},{at:1650,kind:1},{at:1800,kind:1} ]},
+   enemies:[ {at:430,kind:0},{at:640,kind:0},{at:850,kind:0},{at:1050,kind:0},{at:1250,kind:0},{at:1450,kind:0},{at:1650,kind:0},{at:1800,kind:0} ]},
 ];
 let sectionIndex=0;
 let SRCY=120, BGW=4047;
@@ -307,6 +306,7 @@ function groundAt(x){
 
 /* ── ASSETS ──────────────────────────────────────────────── */
 const ASSETS = [
+  {key:'home',     type:'img', src:'home3.jpg', optional:true},
   {key:'bg',       type:'img', src:'bg.jpg'},
   {key:'pub',      type:'img', src:'pub2.jpeg'},
   {key:'dundee',   type:'img', src:'dundee.jpeg'},
@@ -314,7 +314,6 @@ const ASSETS = [
   {key:'brit',     type:'img', src:'brit2.png'},
   {key:'crusader', type:'img', src:'crusader2.png'},
   {key:'photog',   type:'img', src:'photog2.png'},
-  {key:'enemy1',   type:'img', src:'enemy1.png', optional:true},
   {key:'athlete',  type:'img', src:'athlete.png', optional:true},
   {key:'police',   type:'img', src:'police4.png', optional:true},
   {key:'clown',    type:'img', src:'clown4.png', optional:true},
@@ -342,7 +341,7 @@ function onLoad(){
 ASSETS.forEach(a=>{
   const im=new Image();
   im.onload=onLoad;
-  im.onerror=()=>{ if(!a.optional) failed.push(a.src); console.warn('[BrokenBritain] failed to load:',a.src); onLoad(); };
+  im.onerror=()=>{ if(!a.optional) failed.push(a.src); console.warn('[EnoughIsEnough] failed to load:',a.src); onLoad(); };
   im.src=a.src;
   loaded[a.key]=im;
 });
@@ -434,10 +433,8 @@ let bannerShown=false;
 
 /* ── ENEMIES ─────────────────────────────────────────────── */
 /* enemy strip layout (single horizontal row, uniform FWxFH cells):
-   walk: frames 0..5 (6) | attack: 6..8 (3) | die: 9..11 (3)      */
+   walk frames first (start:0), then die frames last.              */
 const ENEMY_KINDS=[
-  {img:'enemy1', fw:115, fh:148, color:'#d63aa0', hair:'#ff5bd0',
-   clips:{walk:{start:0,count:6,fps:9,loop:true}, die:{start:6,count:2,fps:7,loop:false}}},
   {img:'police', fw:167, fh:130, color:'#d8e23a', hair:'#1a2233',
    clips:{walk:{start:0,count:6,fps:9,loop:true}, die:{start:6,count:1,fps:6,loop:false}}},
   {img:'clown', fw:109, fh:130, color:'#e8c43a', hair:'#2f8a3a',
@@ -972,7 +969,7 @@ function drawPickup(){
 }
 
 /* ── PER-LEVEL MUSIC ── */
-const TRACKS={ select:'Character selection screen.mp3', street:'Street.mp3',
+const TRACKS={ select:'Character selection screen.mp3', home:'Home.mp3', street:'Street.mp3',
   park:'Park.mp3', belfast:'Belfast.mp3', pub:'Pub.mp3', dundee:'Dundee.mp3', glasgow:'Glasgow.mp3', southampton:'Southampton.mp3' };
 function playTrack(src){
   const bgm=document.getElementById('bgm');
