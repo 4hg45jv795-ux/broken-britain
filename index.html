@@ -272,22 +272,54 @@ function imgOk(im){ return im && im.complete && im.naturalWidth>0; }
 /* ── SECTIONS / LEVELS ───────────────────────────────────── */
 const SECTIONS=[
   {id:'home', name:'DigiTown &mdash; the high street', bgKey:'home', BGW:2187, srcY:26, flatGround:245,
-   enemies:[ ]},
-  {id:'street', name:'Southside &mdash; the street', bgKey:'bg',  BGW:4047, srcY:120, flatGround:null,
+   hub:true, enemies:[ ],
+   doors:[
+     {x:200,  w:80,  label:'My House',         target:'in_house'},
+     {x:365,  w:78,  label:'The Church',        target:'in_church'},
+     {x:540,  w:82,  label:'The Gun Store',     target:'in_gunstore'},
+     {x:740,  w:92,  label:'Restore Britain',   target:'in_restore'},
+     {x:910,  w:84,  label:'The Cinema',        target:'in_cinema'},
+     {x:1100, w:84,  label:'easyJet Holidays',  target:'in_easyjet'},
+     {x:1290, w:90,  label:'Train Station',     target:'in_trainstation'},
+     {x:1490, w:82,  label:'The Portal',        target:null},
+     {x:1740, w:112, label:'The Library',       target:'in_library'},
+     {x:2040, w:120, label:'The Winchester',    target:'in_winchester'}
+   ]},
+  {id:'street', name:'Southside &mdash; the street', bgKey:'bg',  BGW:4047, srcY:120, flatGround:null, chain:true, next:'park',
    enemies:[ {at:1200,kind:0},{at:1700,kind:1},{at:2300,kind:0},{at:3300,kind:1},{at:3700,kind:0} ]},
-  {id:'park', name:'Standard UK Park', bgKey:'park', BGW:1763, srcY:0, flatGround:196,
+  {id:'park', name:'Standard UK Park', bgKey:'park', BGW:1763, srcY:0, flatGround:196, chain:true, next:'belfast', prev:'street',
    enemies:[ {at:520,kind:3},{at:880,kind:3},{at:1240,kind:3} ],
    aliens:[ {at:700,kind:2},{at:1020,kind:2},{at:1360,kind:2},{at:1560,kind:2} ]},
-  {id:'belfast', name:'Ballymacarrett &mdash; the loyal mile', bgKey:'bg3', BGW:2172, srcY:380, flatGround:560,
+  {id:'belfast', name:'Ballymacarrett &mdash; the loyal mile', bgKey:'bg3', BGW:2172, srcY:380, flatGround:560, chain:true, next:'pub', prev:'park',
    enemies:[ {at:760,kind:4},{at:1120,kind:4},{at:1480,kind:4},{at:1800,kind:4},{at:2020,kind:4} ]},
-  {id:'pub',     name:'The Red Hand &mdash; loyalist till I die', bgKey:'pub', BGW:533, srcY:8, flatGround:212, charScale:1.4,
+  {id:'pub',     name:'The Red Hand &mdash; loyalist till I die', bgKey:'pub', BGW:533, srcY:8, flatGround:212, charScale:1.4, chain:true, next:'dundee', prev:'belfast',
    enemies:[ ]},
-  {id:'dundee',  name:'Welcome to Dundee', bgKey:'dundee', BGW:560, srcY:65, flatGround:270,
+  {id:'dundee',  name:'Welcome to Dundee', bgKey:'dundee', BGW:560, srcY:65, flatGround:270, chain:true, next:'glasgow', prev:'pub',
    enemies:[ ]},
-  {id:'glasgow', name:'Glasgow &mdash; the Trongate', bgKey:'glasgow', BGW:2672, srcY:90, flatGround:296,
+  {id:'glasgow', name:'Glasgow &mdash; the Trongate', bgKey:'glasgow', BGW:2672, srcY:90, flatGround:296, chain:true, next:'southampton', prev:'dundee',
    enemies:[ {at:230,kind:6,hp:1,static:true},{at:760,kind:5},{at:1080,kind:0},{at:1380,kind:5},{at:1700,kind:1},{at:2000,kind:5},{at:2480,kind:5} ]},
-  {id:'southampton', name:'Southampton &mdash; Above Bar Street', bgKey:'southampton', BGW:1879, srcY:90, flatGround:296,
+  {id:'southampton', name:'Southampton &mdash; Above Bar Street', bgKey:'southampton', BGW:1879, srcY:90, flatGround:296, chain:true, next:null, prev:'glasgow',
    enemies:[ {at:430,kind:0},{at:640,kind:0},{at:850,kind:0},{at:1050,kind:0},{at:1250,kind:0},{at:1450,kind:0},{at:1650,kind:0},{at:1800,kind:0} ]},
+
+  /* ── INTERIOR ROOMS (entered from the hub; EXIT door returns to the street) ── */
+  {id:'in_house', name:'Inside &mdash; My House', bgKey:'room_house', BGW:591, srcY:46, flatGround:277, charScale:1.3, interior:true, enemies:[],
+   doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
+  {id:'in_church', name:'Inside &mdash; The Church', bgKey:'room_church', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
+   doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
+  {id:'in_gunstore', name:'Inside &mdash; FAFO Ammo &amp; Arms', bgKey:'room_gunstore', BGW:591, srcY:46, flatGround:273, charScale:1.3, interior:true, enemies:[],
+   doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
+  {id:'in_restore', name:'Inside &mdash; Restore Britain', bgKey:'room_restore', BGW:580, srcY:46, flatGround:277, charScale:1.3, interior:true, enemies:[],
+   doors:[ {x:495, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
+  {id:'in_cinema', name:'Inside &mdash; The Cinema', bgKey:'room_cinema', BGW:591, srcY:46, flatGround:273, charScale:1.3, interior:true, enemies:[],
+   doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
+  {id:'in_easyjet', name:'Inside &mdash; easyJet Holidays', bgKey:'room_easyjet', BGW:580, srcY:46, flatGround:277, charScale:1.3, interior:true, enemies:[],
+   doors:[ {x:495, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
+  {id:'in_trainstation', name:'Inside &mdash; DigiTown Station', bgKey:'room_trainstation', BGW:580, srcY:46, flatGround:281, charScale:1.3, interior:true, enemies:[],
+   doors:[ {x:495, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
+  {id:'in_library', name:'Inside &mdash; The Library', bgKey:'room_library', BGW:591, srcY:46, flatGround:281, charScale:1.3, interior:true, enemies:[],
+   doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
+  {id:'in_winchester', name:'Inside &mdash; The Winchester', bgKey:'room_winchester', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
+   doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
 ];
 let sectionIndex=0;
 let SRCY=120, BGW=4047;
@@ -307,6 +339,15 @@ function groundAt(x){
 /* ── ASSETS ──────────────────────────────────────────────── */
 const ASSETS = [
   {key:'home',     type:'img', src:'home3.jpeg', optional:true},
+  {key:'room_house',        type:'img', src:'room_house.jpg', optional:true},
+  {key:'room_church',       type:'img', src:'room_church.jpg', optional:true},
+  {key:'room_gunstore',     type:'img', src:'room_gunstore.jpg', optional:true},
+  {key:'room_restore',      type:'img', src:'room_restore.jpg', optional:true},
+  {key:'room_cinema',       type:'img', src:'room_cinema.jpg', optional:true},
+  {key:'room_easyjet',      type:'img', src:'room_easyjet.jpg', optional:true},
+  {key:'room_trainstation', type:'img', src:'room_trainstation.jpg', optional:true},
+  {key:'room_library',      type:'img', src:'room_library.jpg', optional:true},
+  {key:'room_winchester',   type:'img', src:'room_winchester.jpg', optional:true},
   {key:'bg',       type:'img', src:'bg.jpg'},
   {key:'pub',      type:'img', src:'pub2.jpeg'},
   {key:'dundee',   type:'img', src:'dundee.jpeg'},
@@ -696,30 +737,37 @@ let transitioning=false;
 function flashBanner(html){ const b=document.getElementById('banner'); b.innerHTML=html; b.style.opacity=1; clearTimeout(b._t); b._t=setTimeout(()=>b.style.opacity=0,1600); }
 function nextSection(){
   if(transitioning) return;
-  if(sectionIndex>=SECTIONS.length-1){ // end of last section -> loop back with a beat
-    transitioning=true; doFade('THE END &mdash; for now', ()=>{ sectionIndex=0; killedEnemies.clear(); enterSection(); transitioning=false; });
+  const here=SECTIONS[sectionIndex];
+  if(!here.chain) return;                       // hub & interior rooms don't advance off the edge
+  const nextId=here.next;
+  if(!nextId){                                  // end of the chain -> pop back to the hub
+    transitioning=true;
+    doFade('THE END &mdash; back to the street', ()=>{ killedEnemies.clear(); gotoId('home',{x:120,face:1}); transitioning=false; });
     return;
   }
-  const next=SECTIONS[sectionIndex+1];
-  if(next.id==='dundee'){ // pub -> Dundee: flash the news card for ~3s
+  const next=SECTIONS.find(s=>s.id===nextId);
+  if(nextId==='dundee'){ // pub -> Dundee: flash the news card for ~3s
     transitioning=true;
     showCard({img:'dundee-news.jpeg', text:'Welcome to Dundee',
-      swap:()=>{ sectionIndex++; enterSection(); }, done:()=>{ transitioning=false; }});
+      swap:()=>{ gotoId('dundee'); }, done:()=>{ transitioning=false; }});
     return;
   }
-  if(next.id==='glasgow'){ // Dundee -> Glasgow: title card with a 3s cut-scene track
+  if(nextId==='glasgow'){ // Dundee -> Glasgow: title card with a 3s cut-scene track
     transitioning=true;
     showCard({text:next.name, sound:'Glasgowcut.mp3',
-      swap:()=>{ sectionIndex++; enterSection(); }, done:()=>{ transitioning=false; }});
+      swap:()=>{ gotoId('glasgow'); }, done:()=>{ transitioning=false; }});
     return;
   }
   transitioning=true;
-  doFade(next.name, ()=>{ sectionIndex++; enterSection(); transitioning=false; });
+  doFade(next.name, ()=>{ gotoId(nextId); transitioning=false; });
 }
 function prevSection(){
-  if(transitioning || sectionIndex<=0) return;   // can't go back past the first level
+  if(transitioning) return;
+  const here=SECTIONS[sectionIndex];
+  if(!here.chain || !here.prev) return;         // only chained levels with a prev can backtrack
+  const prev=SECTIONS.find(s=>s.id===here.prev);
   transitioning=true;
-  doFade(SECTIONS[sectionIndex-1].name, ()=>{ sectionIndex--; enterSection('right'); transitioning=false; });
+  doFade(prev.name, ()=>{ gotoId(here.prev,'right'); transitioning=false; });
 }
 function showCard(opts){
   const card=document.getElementById('dundeecard');
@@ -744,17 +792,82 @@ function doFade(txt, mid){
   setTimeout(()=>{ mid&&mid(); }, 650);
   setTimeout(()=>{ t.style.opacity=0; f.style.opacity=0; }, 1500);
 }
-function enterSection(from){
+function enterSection(opts){
   loadSectionConfig();
-  const ex=(from==='right')?(BGW-PW-60):120;
-  player.x=ex; player.y=groundAt(ex+PW/2)-PH; player.vx=0; player.vy=0; player.onGround=true; setClip('idle');
-  bannerShown=false; helper.active=false; helperCool=[0,0];
+  let ex;
+  if(opts && typeof opts.x==='number') ex=opts.x;
+  else if(opts==='right') ex=BGW-PW-60;
+  else ex=120;
+  player.x=Math.max(0,Math.min(BGW-PW,ex));
+  player.y=groundAt(player.x+PW/2)-PH; player.vx=0; player.vy=0; player.onGround=true; setClip('idle');
+  if(opts && typeof opts.face==='number') player.face=opts.face;
+  bannerShown=false; helper.active=false; helperCool=[0,0]; activeDoor=null;
+  if(typeof npc!=='undefined' && npc.active){ npc.x=Math.max(0,Math.min(BGW-NPCW, player.x-130)); npc.state='trail'; npc.y=groundAt(npc.x+NPCW/2)-NPCH; }
   startParkIntro();
   startWanderer();
   spawnEnemiesForSection();
   refreshHelperBtns();
   playSectionTrack();
   initPickup();
+}
+
+/* ── WORLD / DOORWAYS (hub <-> rooms) ────────────────────── */
+let activeDoor=null, hubReturnX=120;
+function gotoId(id, opts){
+  const idx=SECTIONS.findIndex(s=>s.id===id);
+  if(idx<0) return;
+  sectionIndex=idx; enterSection(opts);
+}
+function updateDoors(){
+  activeDoor=null;
+  const sec=SECTIONS[sectionIndex];
+  if(!sec.doors) return;
+  const cx=player.x+PW/2;
+  for(const d of sec.doors){ if(Math.abs(cx-d.x)<=d.w){ activeDoor=d; break; } }
+}
+function useDoor(d){
+  if(transitioning||!d) return;
+  if(d.target===null){ flashBanner('The portal is dormant&hellip; for now'); return; }
+  const sec=SECTIONS[sectionIndex];
+  if(d.target==='home'){                              // leaving a room -> back outside
+    transitioning=true;
+    doFade('Out to the street', ()=>{ gotoId('home',{x:hubReturnX,face:1}); transitioning=false; });
+  } else {                                            // entering a room (or a future linked level)
+    if(sec.hub) hubReturnX=d.x;                        // remember which building to pop back to
+    const dest=SECTIONS.find(s=>s.id===d.target);
+    transitioning=true;
+    doFade(dest?dest.name:'', ()=>{ gotoId(d.target,{x:90,face:1}); transitioning=false; });
+  }
+}
+function drawDoors(){
+  const sec=SECTIONS[sectionIndex];
+  if(!sec.doors || !activeDoor) return;
+  const d=activeDoor;
+  const x0=(d.x-d.w-camX)*ZOOM, x1=(d.x+d.w-camX)*ZOOM;
+  const pulse=0.5+0.5*Math.sin(performance.now()/300);
+  ctx.save();
+  ctx.globalAlpha=0.10+0.14*pulse; ctx.fillStyle='#fff3b0'; ctx.fillRect(x0,0,x1-x0,VH);
+  ctx.globalAlpha=0.5+0.35*pulse; ctx.strokeStyle='#ffe46b'; ctx.lineWidth=3;
+  ctx.strokeRect(x0+2,6,x1-x0-4,VH-12);
+  ctx.restore();
+  let txt;
+  if(d.target===null) txt='PUNCH \u25B6 '+d.label+' (locked)';
+  else if(sec.hub) txt='PUNCH \u25B6 ENTER \u00B7 '+d.label;
+  else txt='PUNCH \u25B6 '+d.label;
+  drawPrompt(txt.replace(/&mdash;/g,'\u2014'));
+}
+function drawPrompt(txt){
+  const px=(player.x+PW/2-camX)*ZOOM;
+  const py=(player.y-SRCY)*ZOOM-30;
+  ctx.save();
+  ctx.font='700 15px sans-serif'; ctx.textAlign='center';
+  const w=ctx.measureText(txt).width+22;
+  const bx=Math.max(6,Math.min(VW-w-6, px-w/2));
+  const by=Math.max(4, py);
+  ctx.globalAlpha=0.86; ctx.fillStyle='#0b0e14'; roundRect(bx,by,w,26,7); ctx.fill();
+  ctx.globalAlpha=1; ctx.strokeStyle='#ffe46b'; ctx.lineWidth=1.5; roundRect(bx,by,w,26,7); ctx.stroke();
+  ctx.fillStyle='#ffe46b'; ctx.fillText(txt, bx+w/2, by+18);
+  ctx.restore();
 }
 
 /* ── CUTSCENE (unchanged intro chat) ─────────────────────── */
@@ -991,6 +1104,7 @@ document.addEventListener('pointerdown', tryStartSelectMusic);
 function update(){
   if(csActive||transitioning)return;
   if(player.hurtCool>0) player.hurtCool--;
+  updateDoors();
 
   if(player.dead){
     player.ct++; player.vy+=GRAV; player.y+=player.vy;
@@ -1001,7 +1115,8 @@ function update(){
 
   if(punchEdge){
     punchEdge=false;
-    if(player.onGround){
+    if(activeDoor){ useDoor(activeDoor); }
+    else if(player.onGround){
       if(!playerAttacking()){ setClip('punch'); player.attackId++; sfxPunch(); }
       else if(player.clip==='punch'){ setClip('headbutt'); player.attackId++; sfxPunch(); }
     }
@@ -1040,12 +1155,14 @@ function update(){
   updateWanderer();
   updatePickup();
 
-  // section edges: right edge -> next level, left wall (while pressing left) -> previous level
-  if(player.x>BGW-PW-40){
-    if(!bannerShown){ bannerShown=true; nextSection(); }
-  } else if(player.x<=2 && keys.left && sectionIndex>0 && !transitioning){
-    prevSection();
-  } else if(bannerShown && player.x < BGW-PW-120){ bannerShown=false; }
+  // section edges: only chained levels advance/backtrack at the edges; the hub & rooms are locked (use doors)
+  if(SECTIONS[sectionIndex].chain){
+    if(player.x>BGW-PW-40){
+      if(!bannerShown){ bannerShown=true; nextSection(); }
+    } else if(player.x<=2 && keys.left && !transitioning){
+      prevSection();
+    } else if(bannerShown && player.x < BGW-PW-120){ bannerShown=false; }
+  }
 }
 function frameIndex(){
   const c=CLIPS[player.clip];
@@ -1079,9 +1196,12 @@ function draw(){
     try{ ctx.drawImage(loaded[cur.id],fx*FW,0,FW,FH,0,0,dw,dh); }catch(e){}
     ctx.restore();
   } else { ctx.fillStyle='#c0392b'; ctx.fillRect(sx,sy,dw,dh); }
+
+  drawDoors();
 }
 function drawNoBg(){
   const sec=SECTIONS[sectionIndex];
+  if(sec.interior){ ctx.fillStyle='#15110c'; ctx.fillRect(0,0,VW,VH); ctx.fillStyle='#241c14'; ctx.fillRect(0,VH*0.72,VW,VH-VH*0.72); return; }
   if(sec.flatGround!=null){ drawParkPlaceholder(); }
   else {
     ctx.fillStyle='#0c0d10'; ctx.fillRect(0,0,VW,VH);
