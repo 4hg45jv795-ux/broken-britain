@@ -339,15 +339,15 @@ function groundAt(x){
 /* ── ASSETS ──────────────────────────────────────────────── */
 const ASSETS = [
   {key:'home',     type:'img', src:'home3.jpeg', optional:true},
-  {key:'room_house',        type:'img', src:'room_house.jpg', optional:true},
-  {key:'room_church',       type:'img', src:'room_church.jpg', optional:true},
-  {key:'room_gunstore',     type:'img', src:'room_gunstore.jpg', optional:true},
-  {key:'room_restore',      type:'img', src:'room_restore.jpg', optional:true},
-  {key:'room_cinema',       type:'img', src:'room_cinema.jpg', optional:true},
-  {key:'room_easyjet',      type:'img', src:'room_easyjet.jpg', optional:true},
-  {key:'room_trainstation', type:'img', src:'room_trainstation.jpg', optional:true},
-  {key:'room_library',      type:'img', src:'room_library.jpg', optional:true},
-  {key:'room_winchester',   type:'img', src:'room_winchester.jpg', optional:true},
+  {key:'room_house',        type:'img', src:'room house.jpeg', optional:true},
+  {key:'room_church',       type:'img', src:'room church.jpeg', optional:true},
+  {key:'room_gunstore',     type:'img', src:'room gunstore.jpeg', optional:true},
+  {key:'room_restore',      type:'img', src:'room restore.jpeg', optional:true},
+  {key:'room_cinema',       type:'img', src:'room cinema.jpeg', optional:true},
+  {key:'room_easyjet',      type:'img', src:'room easyjet.jpeg', optional:true},
+  {key:'room_trainstation', type:'img', src:'room trainstation.jpeg', optional:true},
+  {key:'room_library',      type:'img', src:'room library.jpeg', optional:true},
+  {key:'room_winchester',   type:'img', src:'room winchester.jpeg', optional:true},
   {key:'bg',       type:'img', src:'bg.jpg'},
   {key:'pub',      type:'img', src:'pub2.jpeg'},
   {key:'dundee',   type:'img', src:'dundee.jpeg'},
@@ -843,30 +843,28 @@ function drawDoors(){
   const sec=SECTIONS[sectionIndex];
   if(!sec.doors || !activeDoor) return;
   const d=activeDoor;
-  const x0=(d.x-d.w-camX)*ZOOM, x1=(d.x+d.w-camX)*ZOOM;
-  const pulse=0.5+0.5*Math.sin(performance.now()/300);
-  ctx.save();
-  ctx.globalAlpha=0.10+0.14*pulse; ctx.fillStyle='#fff3b0'; ctx.fillRect(x0,0,x1-x0,VH);
-  ctx.globalAlpha=0.5+0.35*pulse; ctx.strokeStyle='#ffe46b'; ctx.lineWidth=3;
-  ctx.strokeRect(x0+2,6,x1-x0-4,VH-12);
-  ctx.restore();
-  let txt;
-  if(d.target===null) txt='PUNCH \u25B6 '+d.label+' (locked)';
-  else if(sec.hub) txt='PUNCH \u25B6 ENTER \u00B7 '+d.label;
-  else txt='PUNCH \u25B6 '+d.label;
-  drawPrompt(txt.replace(/&mdash;/g,'\u2014'));
+  const mx=(d.x-camX)*ZOOM;                       // screen x over the doorway
+  const bob=Math.sin(performance.now()/260)*4;
+  let name, hint;
+  if(d.target===null){ name=d.label.replace(/&mdash;/g,'\u2014').toUpperCase(); hint='locked for now'; }
+  else if(sec.hub){ name=d.label.replace(/&mdash;/g,'\u2014').toUpperCase(); hint='PUNCH to enter'; }
+  else { name='EXIT'; hint='PUNCH to leave'; }
+  drawMarker(mx, 30+bob, name, hint);
 }
-function drawPrompt(txt){
-  const px=(player.x+PW/2-camX)*ZOOM;
-  const py=(player.y-SRCY)*ZOOM-30;
-  ctx.save();
-  ctx.font='700 15px sans-serif'; ctx.textAlign='center';
-  const w=ctx.measureText(txt).width+22;
-  const bx=Math.max(6,Math.min(VW-w-6, px-w/2));
-  const by=Math.max(4, py);
-  ctx.globalAlpha=0.86; ctx.fillStyle='#0b0e14'; roundRect(bx,by,w,26,7); ctx.fill();
-  ctx.globalAlpha=1; ctx.strokeStyle='#ffe46b'; ctx.lineWidth=1.5; roundRect(bx,by,w,26,7); ctx.stroke();
-  ctx.fillStyle='#ffe46b'; ctx.fillText(txt, bx+w/2, by+18);
+function drawMarker(cx, cy, name, hint){
+  ctx.save(); ctx.textAlign='center';
+  ctx.font='800 15px sans-serif'; const w1=ctx.measureText(name).width;
+  ctx.font='700 11px sans-serif'; const w2=ctx.measureText(hint).width;
+  const w=Math.max(w1,w2)+26, h=42;
+  const bx=Math.max(6,Math.min(VW-w-6, cx-w/2)), by=cy;
+  const px=Math.max(bx+12,Math.min(bx+w-12,cx));        // pointer aimed at the door
+  ctx.globalAlpha=0.93; ctx.fillStyle='#0b0e14';
+  roundRect(bx,by,w,h,9); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(px-9,by+h-1); ctx.lineTo(px+9,by+h-1); ctx.lineTo(px,by+h+11); ctx.closePath(); ctx.fill();
+  ctx.globalAlpha=1; ctx.lineWidth=2; ctx.strokeStyle='#ffd34d';
+  roundRect(bx,by,w,h,9); ctx.stroke();
+  ctx.fillStyle='#ffe46b'; ctx.font='800 15px sans-serif'; ctx.fillText(name,bx+w/2,by+18);
+  ctx.fillStyle='#cdd6e6'; ctx.font='700 11px sans-serif'; ctx.fillText(hint,bx+w/2,by+34);
   ctx.restore();
 }
 
