@@ -841,7 +841,10 @@ function enterSection(opts){
   updateHelperBarVisibility();
   playSectionTrack();
   initPickup();
-  if(SECTIONS[sectionIndex].id==='in_house'){ tvEnter(); } else { tvPause(); }
+  if(SECTIONS[sectionIndex].interior){            // buildings are quiet: kill any street/hub music
+    const bgm=document.getElementById('bgm'); try{ bgm.pause(); bgm.currentTime=0; }catch(_){}
+  }
+  tvEnter();                                       // start this room's wall screen (or stop if none)
 }
 
 /* ── WORLD / DOORWAYS (hub <-> rooms) ────────────────────── */
@@ -904,68 +907,71 @@ function drawMarker(cx, cy, name, hint){
   ctx.restore();
 }
 
-/* ── HOUSE TV (5 looping video channels with sound) ──────────
-   The TV lives on the back wall of the in_house room. Its picture
-   is drawn straight onto the game canvas at TV.rect (measured in
-   the SAME pixel space as the "room house.jpeg" background image),
-   so it scrolls with the wall and sits behind the player.
+/* ── ROOM SCREENS (looping .mp4s with sound, painted onto wall screens) ──
+   Each room id below maps to a screen rectangle (measured in THAT room's
+   background-image pixels, same space as the room jpeg) plus the video
+   file(s) shown on it. The video is drawn straight onto the canvas so it
+   scrolls with the wall and sits behind the player.
 
-   >>> TO LINE IT UP WITH THE PAINTED TV: nudge the four numbers in
-       TV.rect below (x = left edge, y = top edge, w = width,
-       h = height, all in room-house image pixels). Set TV.debug
-       to true to draw a bright outline so you can see exactly where
-       the video lands, then set it back to false.
+   >>> ALIGNING A SCREEN: nudge its rect {x,y,w,h}. Flip that screen's
+       `debug` to true to draw a bright green outline, line it up with the
+       painted screen, then set it back to false.
 
-   >>> CHANNEL FILES: upload 5 videos to GitHub next to index.html,
-       named EXACTLY (lower-case, .mp4):
-         channel1.mp4  channel2.mp4  channel3.mp4  channel4.mp4  channel5.mp4
-       Use H.264/AAC .mp4 so iPhones can play them. Each plays on a
-       loop with sound; STRIKE in front of the TV flips to the next. */
-const TV = {
-  rect:{ x:222, y:66, w:146, h:82 },   // <-- NUDGE THESE to fit the painted TV
-  reach:120,                            // how close (px) the player must be to change channel
-  debug:false,                          // set true to show the outline while aligning
-  channels:['channel1.mp4','channel2.mp4','channel3.mp4','channel4.mp4','channel5.mp4'],
-  index:0
+   >>> VIDEO FILES: upload to GitHub next to index.html, EXACT lower-case
+       names, H.264/AAC .mp4 so iPhones can play them. Each loops with sound:
+         in_house   -> channel1.mp4 .. channel5.mp4  (STRIKE by the TV flips channel)
+         in_cinema  -> cinema.mp4
+         in_restore -> restore.mp4                                            */
+const SCREENS = {
+  in_house:   { rect:{ x:222, y:66, w:146, h:82 },                       // perfect already
+                files:['channel1.mp4','channel2.mp4','channel3.mp4','channel4.mp4','channel5.mp4'],
+                switchable:true, reach:120, idx:0, debug:false },
+  in_cinema:  { rect:{ x:183, y:73, w:240, h:120 },                      // measured to the painted cinema screen
+                files:['cinema.mp4'],  switchable:false, idx:0, debug:false },
+  in_restore: { rect:{ x:243, y:64, w:109, h:66 },                       // measured to the painted restore-room TV
+                files:['restore.mp4'], switchable:false, idx:0, debug:false },
 };
 let tvVideo=null, tvHot=false;
+function curScreen(){ return SCREENS[SECTIONS[sectionIndex].id] || null; }
 function tvEl(){
   if(!tvVideo){
     tvVideo=document.createElement('video');
     tvVideo.setAttribute('playsinline','');           // keep it inline on iPhone (no fullscreen takeover)
     tvVideo.setAttribute('webkit-playsinline','');
     tvVideo.loop=true; tvVideo.preload='auto';
-    tvVideo.muted=musicMuted;                          // the mute button controls the TV too
+    tvVideo.muted=musicMuted;                          // the mute button controls the screens too
     tvVideo.style.cssText='position:fixed;left:-9999px;top:-9999px;width:2px;height:2px;opacity:0;pointer-events:none;';
     document.body.appendChild(tvVideo);
   }
   return tvVideo;
 }
-function tvLoadChannel(playNow){
-  const v=tvEl(), src=TV.channels[TV.index];
+function screenLoad(playNow){
+  const sc=curScreen(); if(!sc){ tvPause(); return; }
+  const v=tvEl(), src=sc.files[sc.idx];
   if(v.getAttribute('data-src')!==src){ v.setAttribute('data-src',src); v.src=src; try{ v.load(); }catch(_){} }
   v.muted=musicMuted;
   if(playNow && !paused){ v.play().catch(()=>{}); }
 }
-function tvEnter(){ tvLoadChannel(true); }              // entering the house: start the current channel
+function tvEnter(){ if(curScreen()) screenLoad(true); else tvPause(); }   // start this room's screen (or stop)
 function tvPause(){ if(tvVideo){ try{ tvVideo.pause(); }catch(_){} } }
 function tvNextChannel(){
-  TV.index=(TV.index+1)%TV.channels.length;
-  tvLoadChannel(true);
+  const sc=curScreen(); if(!sc||!sc.switchable) return;
+  sc.idx=(sc.idx+1)%sc.files.length; screenLoad(true);
   blip(540,820,0.05,'square',0.12); blip(300,300,0.04,'square',0.08);  // little "channel-flip" click
-  flashBanner('Channel '+(TV.index+1));
+  flashBanner('Channel '+(sc.idx+1));
 }
-function tvCenterX(){ return TV.rect.x + TV.rect.w/2; }
+function screenCenterX(sc){ return sc.rect.x + sc.rect.w/2; }
 function updateTV(){
-  tvHot = (SECTIONS[sectionIndex].id==='in_house') &&
-          Math.abs((player.x+PW/2) - tvCenterX()) <= TV.reach;
+  const sc=curScreen();
+  tvHot = !!(sc && sc.switchable) &&
+          Math.abs((player.x+PW/2) - screenCenterX(sc)) <= (sc.reach||120);
 }
 function drawTV(){
-  if(SECTIONS[sectionIndex].id!=='in_house') return;
-  const r=TV.rect;
+  const sc=curScreen(); if(!sc) return;
+  const r=sc.rect;
   const sx=(r.x-camX)*ZOOM, sy=(r.y-SRCY)*ZOOM, sw=r.w*ZOOM, sh=r.h*ZOOM;
   const v=tvVideo;
-  if(v && v.readyState>=2 && v.videoWidth>0){
+  if(v && v.readyState>=2 && v.videoWidth>0 && v.getAttribute('data-src')===sc.files[sc.idx]){
     try{ ctx.drawImage(v, sx, sy, sw, sh); }catch(_){}
   } else {
     // no video uploaded yet (or still buffering): show a placeholder screen
@@ -973,18 +979,17 @@ function drawTV(){
     ctx.fillStyle='#05070b'; ctx.fillRect(sx,sy,sw,sh);
     ctx.fillStyle='#1d2b46'; for(let i=0;i<6;i++){ ctx.fillRect(sx, sy+sh*(i/6), sw, sh/12); }
     ctx.fillStyle='#9fb4d8'; ctx.textAlign='center';
-    ctx.font='800 13px monospace'; ctx.fillText('CH '+(TV.index+1), sx+sw/2, sy+sh/2-4);
-    ctx.font='700 9px monospace'; ctx.fillText(TV.channels[TV.index], sx+sw/2, sy+sh/2+12);
+    ctx.font='700 11px monospace'; ctx.fillText(sc.files[sc.idx], sx+sw/2, sy+sh/2+4);
     ctx.restore();
   }
-  if(TV.debug){ ctx.save(); ctx.strokeStyle='#00ff88'; ctx.lineWidth=2; ctx.strokeRect(sx,sy,sw,sh); ctx.restore(); }
+  if(sc.debug){ ctx.save(); ctx.strokeStyle='#00ff88'; ctx.lineWidth=2; ctx.strokeRect(sx,sy,sw,sh); ctx.restore(); }
 }
 function drawTVMarker(){
   if(!tvHot) return;
-  const r=TV.rect;
-  const cx=(tvCenterX()-camX)*ZOOM;
+  const sc=curScreen(); const r=sc.rect;
+  const cx=(screenCenterX(sc)-camX)*ZOOM;
   const cy=Math.max(8,(r.y-SRCY)*ZOOM-50) + Math.sin(performance.now()/260)*4;
-  drawMarker(cx, cy, 'TV \u00B7 CH '+(TV.index+1), 'STRIKE to change channel');
+  drawMarker(cx, cy, 'TV \u00B7 CH '+(sc.idx+1), 'STRIKE to change channel');
 }
 
 /* ── MONEY + FLOATING REWARDS ────────────────────────────── */
@@ -1162,7 +1167,11 @@ function setPaused(p){
   document.getElementById('pause').innerHTML=p?'&#9654;':'&#10073;&#10073;';
   const bgm=document.getElementById('bgm');
   if(p){ bgm.pause(); tvPause(); }
-  else if(cur){ if(!musicMuted) bgm.play().catch(()=>{}); if(SECTIONS[sectionIndex].id==='in_house') tvLoadChannel(true); }
+  else if(cur){
+    const interior=SECTIONS[sectionIndex].interior;
+    if(!musicMuted && !interior) bgm.play().catch(()=>{});   // buildings stay quiet
+    if(curScreen()) screenLoad(true);
+  }
 }
 document.getElementById('pause').onclick=(e)=>{ e.stopPropagation(); setPaused(!paused); };
 document.getElementById('pausemenu').onclick=()=>setPaused(false);
@@ -1172,7 +1181,7 @@ document.getElementById('mute').onclick=(e)=>{
   e.stopPropagation(); musicMuted=!musicMuted;
   const bgm=document.getElementById('bgm'); bgm.muted=musicMuted;
   if(tvVideo) tvVideo.muted=musicMuted;
-  if(!musicMuted && cur && !paused) bgm.play().catch(()=>{});
+  if(!musicMuted && cur && !paused && !SECTIONS[sectionIndex].interior) bgm.play().catch(()=>{});
   document.getElementById('mute').innerHTML = musicMuted ? '&#128263;' : '&#128266;';
 };
 
