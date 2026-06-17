@@ -239,13 +239,13 @@ canvas#cv{display:block;width:100%;height:auto;}
       </button>
     </div>
     <div class="pad">
-      <div class="btn punch" data-k="punch">PUNCH</div>
+      <div class="btn punch" data-k="punch">STRIKE</div>
       <div class="btn jump" data-k="jump">JUMP</div>
     </div>
   </div>
 </section>
 
-<p class="hint-text" id="kbhint">Keyboard: &larr; &rarr; walk &middot; Space/&uarr; jump &middot; X punch &middot; E summon.</p>
+<p class="hint-text" id="kbhint">Keyboard: &larr; &rarr; walk &middot; Space/&uarr; jump &middot; X strike &middot; E summon.</p>
 </div></div>
 
 <audio id="bgm" loop preload="none"></audio>
@@ -834,6 +834,7 @@ function enterSection(opts){
   refreshHelperBtns();
   playSectionTrack();
   initPickup();
+  if(SECTIONS[sectionIndex].id==='in_house'){ tvEnter(); } else { tvPause(); }
 }
 
 /* ── WORLD / DOORWAYS (hub <-> rooms) ────────────────────── */
@@ -874,9 +875,9 @@ function drawDoors(){
   const label=d.label.replace(/&mdash;/g,'\u2014').replace(/&amp;/g,'&').toUpperCase();
   let name, hint;
   if(d.target===null){ name=label; hint='locked for now'; }
-  else if(d.target==='home'){ name='EXIT'; hint='PUNCH to leave'; }
-  else if(d.target==='shop'){ name=label; hint='PUNCH to open'; }
-  else { name=label; hint='PUNCH to enter'; }
+  else if(d.target==='home'){ name='EXIT'; hint='STRIKE to leave'; }
+  else if(d.target==='shop'){ name=label; hint='STRIKE to open'; }
+  else { name=label; hint='STRIKE to enter'; }
   drawMarker(mx, 30+bob, name, hint);
 }
 function drawMarker(cx, cy, name, hint){
@@ -894,6 +895,89 @@ function drawMarker(cx, cy, name, hint){
   ctx.fillStyle='#ffe46b'; ctx.font='800 15px sans-serif'; ctx.fillText(name,bx+w/2,by+18);
   ctx.fillStyle='#cdd6e6'; ctx.font='700 11px sans-serif'; ctx.fillText(hint,bx+w/2,by+34);
   ctx.restore();
+}
+
+/* ── HOUSE TV (5 looping video channels with sound) ──────────
+   The TV lives on the back wall of the in_house room. Its picture
+   is drawn straight onto the game canvas at TV.rect (measured in
+   the SAME pixel space as the "room house.jpeg" background image),
+   so it scrolls with the wall and sits behind the player.
+
+   >>> TO LINE IT UP WITH THE PAINTED TV: nudge the four numbers in
+       TV.rect below (x = left edge, y = top edge, w = width,
+       h = height, all in room-house image pixels). Set TV.debug
+       to true to draw a bright outline so you can see exactly where
+       the video lands, then set it back to false.
+
+   >>> CHANNEL FILES: upload 5 videos to GitHub next to index.html,
+       named EXACTLY (lower-case, .mp4):
+         channel1.mp4  channel2.mp4  channel3.mp4  channel4.mp4  channel5.mp4
+       Use H.264/AAC .mp4 so iPhones can play them. Each plays on a
+       loop with sound; STRIKE in front of the TV flips to the next. */
+const TV = {
+  rect:{ x:206, y:80, w:178, h:116 },   // <-- NUDGE THESE to fit the painted TV
+  reach:120,                            // how close (px) the player must be to change channel
+  debug:false,                          // set true to show the outline while aligning
+  channels:['channel1.mp4','channel2.mp4','channel3.mp4','channel4.mp4','channel5.mp4'],
+  index:0
+};
+let tvVideo=null, tvHot=false;
+function tvEl(){
+  if(!tvVideo){
+    tvVideo=document.createElement('video');
+    tvVideo.setAttribute('playsinline','');           // keep it inline on iPhone (no fullscreen takeover)
+    tvVideo.setAttribute('webkit-playsinline','');
+    tvVideo.loop=true; tvVideo.preload='auto';
+    tvVideo.muted=musicMuted;                          // the mute button controls the TV too
+    tvVideo.style.cssText='position:fixed;left:-9999px;top:-9999px;width:2px;height:2px;opacity:0;pointer-events:none;';
+    document.body.appendChild(tvVideo);
+  }
+  return tvVideo;
+}
+function tvLoadChannel(playNow){
+  const v=tvEl(), src=TV.channels[TV.index];
+  if(v.getAttribute('data-src')!==src){ v.setAttribute('data-src',src); v.src=src; try{ v.load(); }catch(_){} }
+  v.muted=musicMuted;
+  if(playNow && !paused){ v.play().catch(()=>{}); }
+}
+function tvEnter(){ tvLoadChannel(true); }              // entering the house: start the current channel
+function tvPause(){ if(tvVideo){ try{ tvVideo.pause(); }catch(_){} } }
+function tvNextChannel(){
+  TV.index=(TV.index+1)%TV.channels.length;
+  tvLoadChannel(true);
+  blip(540,820,0.05,'square',0.12); blip(300,300,0.04,'square',0.08);  // little "channel-flip" click
+  flashBanner('Channel '+(TV.index+1));
+}
+function tvCenterX(){ return TV.rect.x + TV.rect.w/2; }
+function updateTV(){
+  tvHot = (SECTIONS[sectionIndex].id==='in_house') &&
+          Math.abs((player.x+PW/2) - tvCenterX()) <= TV.reach;
+}
+function drawTV(){
+  if(SECTIONS[sectionIndex].id!=='in_house') return;
+  const r=TV.rect;
+  const sx=(r.x-camX)*ZOOM, sy=(r.y-SRCY)*ZOOM, sw=r.w*ZOOM, sh=r.h*ZOOM;
+  const v=tvVideo;
+  if(v && v.readyState>=2 && v.videoWidth>0){
+    try{ ctx.drawImage(v, sx, sy, sw, sh); }catch(_){}
+  } else {
+    // no video uploaded yet (or still buffering): show a placeholder screen
+    ctx.save();
+    ctx.fillStyle='#05070b'; ctx.fillRect(sx,sy,sw,sh);
+    ctx.fillStyle='#1d2b46'; for(let i=0;i<6;i++){ ctx.fillRect(sx, sy+sh*(i/6), sw, sh/12); }
+    ctx.fillStyle='#9fb4d8'; ctx.textAlign='center';
+    ctx.font='800 13px monospace'; ctx.fillText('CH '+(TV.index+1), sx+sw/2, sy+sh/2-4);
+    ctx.font='700 9px monospace'; ctx.fillText(TV.channels[TV.index], sx+sw/2, sy+sh/2+12);
+    ctx.restore();
+  }
+  if(TV.debug){ ctx.save(); ctx.strokeStyle='#00ff88'; ctx.lineWidth=2; ctx.strokeRect(sx,sy,sw,sh); ctx.restore(); }
+}
+function drawTVMarker(){
+  if(!tvHot) return;
+  const r=TV.rect;
+  const cx=(tvCenterX()-camX)*ZOOM;
+  const cy=Math.max(8,(r.y-SRCY)*ZOOM-50) + Math.sin(performance.now()/260)*4;
+  drawMarker(cx, cy, 'TV \u00B7 CH '+(TV.index+1), 'STRIKE to change channel');
 }
 
 /* ── MONEY + FLOATING REWARDS ────────────────────────────── */
@@ -1070,7 +1154,8 @@ function setPaused(p){
   document.getElementById('pausemenu').classList.toggle('on',p);
   document.getElementById('pause').innerHTML=p?'&#9654;':'&#10073;&#10073;';
   const bgm=document.getElementById('bgm');
-  if(p){ bgm.pause(); } else if(cur){ if(!musicMuted) bgm.play().catch(()=>{}); }
+  if(p){ bgm.pause(); tvPause(); }
+  else if(cur){ if(!musicMuted) bgm.play().catch(()=>{}); if(SECTIONS[sectionIndex].id==='in_house') tvLoadChannel(true); }
 }
 document.getElementById('pause').onclick=(e)=>{ e.stopPropagation(); setPaused(!paused); };
 document.getElementById('pausemenu').onclick=()=>setPaused(false);
@@ -1079,6 +1164,7 @@ document.getElementById('shop').onclick=(e)=>{ if(e.target.id==='shop') closeSho
 document.getElementById('mute').onclick=(e)=>{
   e.stopPropagation(); musicMuted=!musicMuted;
   const bgm=document.getElementById('bgm'); bgm.muted=musicMuted;
+  if(tvVideo) tvVideo.muted=musicMuted;
   if(!musicMuted && cur && !paused) bgm.play().catch(()=>{});
   document.getElementById('mute').innerHTML = musicMuted ? '&#128263;' : '&#128266;';
 };
@@ -1186,6 +1272,7 @@ function update(){
   if(csActive||transitioning||shopOpen)return;
   if(player.hurtCool>0) player.hurtCool--;
   updateDoors();
+  updateTV();
 
   if(player.dead){
     player.ct++; player.vy+=GRAV; player.y+=player.vy;
@@ -1196,7 +1283,8 @@ function update(){
 
   if(punchEdge){
     punchEdge=false;
-    if(activeDoor){ useDoor(activeDoor); }
+    if(tvHot){ tvNextChannel(); }
+    else if(activeDoor){ useDoor(activeDoor); }
     else if(player.onGround){
       if(!playerAttacking()){ setClip('punch'); player.attackId++; sfxPunch(); }
       else if(player.clip==='punch'){ setClip('headbutt'); player.attackId++; sfxPunch(); }
@@ -1258,6 +1346,8 @@ function draw(){
   const bgKey=SECTIONS[sectionIndex].bgKey;
   if(imgOk(loaded[bgKey])){ try{ ctx.drawImage(loaded[bgKey],camX,SRCY,SRCW,SRCH,0,0,VW,VH); }catch(e){ drawNoBg(); } } else drawNoBg();
 
+  drawTV();
+
   drawUfo();
   drawWanderer();
   drawPickup();
@@ -1280,6 +1370,7 @@ function draw(){
   } else { ctx.fillStyle='#c0392b'; ctx.fillRect(sx,sy,dw,dh); }
 
   drawDoors();
+  drawTVMarker();
   drawFloaters();
 }
 function drawNoBg(){
