@@ -728,6 +728,12 @@ function buildHelperThumbs(){
     if(h.type!=='sweep'){ c.fillStyle=h.skin; c.beginPath(); c.arc(cvt.width/2,12,8,0,7); c.fill(); }
   });
 }
+function updateHelperBarVisibility(){
+  const s=SECTIONS[sectionIndex];
+  const noFoes=(!s.enemies||s.enemies.length===0)&&(!s.aliens||s.aliens.length===0);
+  const bar=document.querySelector('.helperbar');
+  if(bar) bar.style.display=(s.interior && noFoes) ? 'none' : '';
+}
 function refreshHelperBtns(){
   document.querySelectorAll('.helperbtn').forEach(btn=>{
     const idx=+btn.dataset.h; const cool=btn.querySelector('.cool');
@@ -832,6 +838,7 @@ function enterSection(opts){
   startWanderer();
   spawnEnemiesForSection();
   refreshHelperBtns();
+  updateHelperBarVisibility();
   playSectionTrack();
   initPickup();
   if(SECTIONS[sectionIndex].id==='in_house'){ tvEnter(); } else { tvPause(); }
@@ -915,7 +922,7 @@ function drawMarker(cx, cy, name, hint){
        Use H.264/AAC .mp4 so iPhones can play them. Each plays on a
        loop with sound; STRIKE in front of the TV flips to the next. */
 const TV = {
-  rect:{ x:222, y:82, w:146, h:82 },   // <-- NUDGE THESE to fit the painted TV
+  rect:{ x:222, y:74, w:146, h:82 },   // <-- NUDGE THESE to fit the painted TV
   reach:120,                            // how close (px) the player must be to change channel
   debug:false,                          // set true to show the outline while aligning
   channels:['channel1.mp4','channel2.mp4','channel3.mp4','channel4.mp4','channel5.mp4'],
