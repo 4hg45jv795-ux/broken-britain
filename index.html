@@ -70,6 +70,20 @@ html,body{margin:0;height:100%;background:#0b0c0f;color:var(--ink);font-family:'
 .iconbtn:active{background:#fff2;transform:scale(.96);}
 .topbtns{display:flex;gap:8px;pointer-events:auto;}
 #pausemenu{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#000b;z-index:16;}
+.money{margin-top:5px;font:900 15px/1 monospace;letter-spacing:.04em;color:#ffe46b;text-shadow:0 1px 3px #000;}
+#shop{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#000c;z-index:19;}
+#shop.on{display:flex;}
+.shopcard{width:min(86%,360px);background:#12100a;border:2px solid #ffd34d;border-radius:14px;padding:14px 14px 16px;box-shadow:0 10px 40px #000a;}
+.shophead{display:flex;justify-content:space-between;align-items:baseline;font:900 17px/1 sans-serif;letter-spacing:.02em;color:#ffe46b;text-transform:uppercase;margin-bottom:12px;}
+.shophead #shopmoney{font:900 16px monospace;color:#9fe0a0;}
+.shoprow{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid #2a2418;}
+.shoprow .sname{flex:1;font:700 14px sans-serif;color:#ece6d6;}
+.shoprow .sprice{font:800 14px monospace;color:#ffd34d;min-width:54px;text-align:right;}
+.sbtn{background:#1f7a2e;border:0;color:#fff;font:800 12px sans-serif;letter-spacing:.04em;padding:8px 14px;border-radius:8px;cursor:pointer;}
+.sbtn:active{transform:scale(.95);}
+.sbtn.owned{background:#3a3d44;color:#9aa0ab;}
+#shopclose{display:block;width:100%;margin-top:14px;background:#7a1f25;border:0;color:#fff;font:800 14px sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:11px;border-radius:9px;cursor:pointer;}
+#shopclose:active{transform:scale(.98);}
 #pausemenu.on{display:flex;}
 .pausecard{font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#fff;text-align:center;
   font-size:30px;text-shadow:0 2px 10px #000;}
@@ -189,6 +203,7 @@ canvas#cv{display:block;width:100%;height:auto;}
     <div>
       <div class="who" id="who">&mdash;<small id="flag"></small></div>
       <div class="hpwrap"><div class="hpbar" id="hpbar"></div></div>
+      <div class="money" id="money">&pound;0</div>
     </div>
     <div class="topbtns">
       <button class="iconbtn" id="mute" aria-label="Mute music">&#128266;</button>
@@ -197,6 +212,11 @@ canvas#cv{display:block;width:100%;height:auto;}
   </div>
   <div class="banner" id="banner">end of level</div>
   <div id="pausemenu"><div class="pausecard">Paused<span>Tap to resume</span></div></div>
+  <div id="shop"><div class="shopcard">
+    <div class="shophead"><span>FAFO Ammo &amp; Arms</span><span id="shopmoney">&pound;0</span></div>
+    <div id="shoplist"></div>
+    <button id="shopclose">Close</button>
+  </div></div>
   <div id="fade"><div class="ftxt" id="ftxt"></div></div>
   <div id="dundeecard"><img id="dundeecard-img" alt=""><div class="dtxt">Welcome to Dundee</div></div>
   <div id="cutscene">
@@ -281,7 +301,7 @@ const SECTIONS=[
      {x:910,  w:84,  label:'The Cinema',        target:'in_cinema'},
      {x:1100, w:84,  label:'easyJet Holidays',  target:'in_easyjet'},
      {x:1290, w:90,  label:'Train Station',     target:'in_trainstation'},
-     {x:1490, w:82,  label:'The Portal',        target:null},
+     {x:1490, w:82,  label:'The Portal',        target:'street'},
      {x:1740, w:112, label:'The Library',       target:'in_library'},
      {x:2040, w:120, label:'The Winchester',    target:'in_winchester'}
    ]},
@@ -307,8 +327,8 @@ const SECTIONS=[
   {id:'in_church', name:'Inside &mdash; The Church', bgKey:'room_church', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
   {id:'in_gunstore', name:'Inside &mdash; FAFO Ammo &amp; Arms', bgKey:'room_gunstore', BGW:591, srcY:46, flatGround:273, charScale:1.3, interior:true, enemies:[],
-   doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
-  {id:'in_restore', name:'Inside &mdash; Restore Britain', bgKey:'room_restore', BGW:580, srcY:46, flatGround:277, charScale:1.3, interior:true, enemies:[],
+   doors:[ {x:250, w:95, label:'Buy weapons', target:'shop'}, {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
+  {id:'in_restore', name:'Inside &mdash; Restore Britain', bgKey:'room_restore', BGW:580, srcY:46, flatGround:277, charScale:1.7, interior:true, enemies:[],
    doors:[ {x:495, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
   {id:'in_cinema', name:'Inside &mdash; The Cinema', bgKey:'room_cinema', BGW:591, srcY:46, flatGround:273, charScale:1.3, interior:true, enemies:[],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
@@ -318,7 +338,7 @@ const SECTIONS=[
    doors:[ {x:495, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
   {id:'in_library', name:'Inside &mdash; The Library', bgKey:'room_library', BGW:591, srcY:46, flatGround:281, charScale:1.3, interior:true, enemies:[],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
-  {id:'in_winchester', name:'Inside &mdash; The Winchester', bgKey:'room_winchester', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
+  {id:'in_winchester', name:'Inside &mdash; The Winchester', bgKey:'room_winchester', BGW:591, srcY:46, flatGround:275, charScale:1.8, interior:true, enemies:[],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
 ];
 let sectionIndex=0;
@@ -511,7 +531,8 @@ function spawnParkAliens(){
 }
 const ESPEED=1.05, EAGGRO=560, EHIT_RANGE=42, EDMG=8;
 function enemyClipDone(e){ const c=ENEMY_KINDS[e.kind].clips.die; return e.ct>=Math.ceil(c.count*60/c.fps); }
-function killEnemy(e,ko){ if(e.state==='die'||e.state==='dead')return; e.state='die'; e.ct=0; (ko?sfxKO:sfxHit)(); }
+function killEnemy(e,ko){ if(e.state==='die'||e.state==='dead')return; e.state='die'; e.ct=0; (ko?sfxKO:sfxHit)();
+  const reward=e.static?25:10; addMoney(reward); addFloater(e.x+e.w/2, e.y, '+\u00A3'+reward); }
 function updateEnemies(){
   for(const e of enemies){
     e.y=groundAt(e.x+e.w/2)-e.h;
@@ -742,7 +763,7 @@ function nextSection(){
   const nextId=here.next;
   if(!nextId){                                  // end of the chain -> pop back to the hub
     transitioning=true;
-    doFade('THE END &mdash; back to the street', ()=>{ killedEnemies.clear(); gotoId('home',{x:120,face:1}); transitioning=false; });
+    doFade('THE END &mdash; back to the street', ()=>{ killedEnemies.clear(); gotoId('home',{x:hubReturnX,face:1}); transitioning=false; });
     return;
   }
   const next=SECTIONS.find(s=>s.id===nextId);
@@ -802,7 +823,11 @@ function enterSection(opts){
   player.y=groundAt(player.x+PW/2)-PH; player.vx=0; player.vy=0; player.onGround=true; setClip('idle');
   if(opts && typeof opts.face==='number') player.face=opts.face;
   bannerShown=false; helper.active=false; helperCool=[0,0]; activeDoor=null;
-  if(typeof npc!=='undefined' && npc.active){ npc.x=Math.max(0,Math.min(BGW-NPCW, player.x-130)); npc.state='trail'; npc.y=groundAt(npc.x+NPCW/2)-NPCH; }
+  if(SECTIONS[sectionIndex].id==='home' && !photographerMet){
+    photographerMet=true; initNPC();              // first time on the street: the photographer turns up
+  } else if(typeof npc!=='undefined' && npc.active){
+    npc.x=Math.max(0,Math.min(BGW-NPCW, player.x-130)); npc.state='trail'; npc.y=groundAt(npc.x+NPCW/2)-NPCH;
+  }
   startParkIntro();
   startWanderer();
   spawnEnemiesForSection();
@@ -812,7 +837,7 @@ function enterSection(opts){
 }
 
 /* ── WORLD / DOORWAYS (hub <-> rooms) ────────────────────── */
-let activeDoor=null, hubReturnX=120;
+let activeDoor=null, hubReturnX=120, photographerMet=false;
 function gotoId(id, opts){
   const idx=SECTIONS.findIndex(s=>s.id===id);
   if(idx<0) return;
@@ -828,6 +853,7 @@ function updateDoors(){
 function useDoor(d){
   if(transitioning||!d) return;
   if(d.target===null){ flashBanner('The portal is dormant&hellip; for now'); return; }
+  if(d.target==='shop'){ openShop(); return; }
   const sec=SECTIONS[sectionIndex];
   if(d.target==='home'){                              // leaving a room -> back outside
     transitioning=true;
@@ -845,10 +871,12 @@ function drawDoors(){
   const d=activeDoor;
   const mx=(d.x-camX)*ZOOM;                       // screen x over the doorway
   const bob=Math.sin(performance.now()/260)*4;
+  const label=d.label.replace(/&mdash;/g,'\u2014').replace(/&amp;/g,'&').toUpperCase();
   let name, hint;
-  if(d.target===null){ name=d.label.replace(/&mdash;/g,'\u2014').toUpperCase(); hint='locked for now'; }
-  else if(sec.hub){ name=d.label.replace(/&mdash;/g,'\u2014').toUpperCase(); hint='PUNCH to enter'; }
-  else { name='EXIT'; hint='PUNCH to leave'; }
+  if(d.target===null){ name=label; hint='locked for now'; }
+  else if(d.target==='home'){ name='EXIT'; hint='PUNCH to leave'; }
+  else if(d.target==='shop'){ name=label; hint='PUNCH to open'; }
+  else { name=label; hint='PUNCH to enter'; }
   drawMarker(mx, 30+bob, name, hint);
 }
 function drawMarker(cx, cy, name, hint){
@@ -866,6 +894,60 @@ function drawMarker(cx, cy, name, hint){
   ctx.fillStyle='#ffe46b'; ctx.font='800 15px sans-serif'; ctx.fillText(name,bx+w/2,by+18);
   ctx.fillStyle='#cdd6e6'; ctx.font='700 11px sans-serif'; ctx.fillText(hint,bx+w/2,by+34);
   ctx.restore();
+}
+
+/* ── MONEY + FLOATING REWARDS ────────────────────────────── */
+let money=0;
+function updateMoneyHUD(){ const m=document.getElementById('money'); if(m) m.textContent='\u00A3'+money; }
+function addMoney(n){ money+=n; updateMoneyHUD(); }
+let floaters=[];
+function addFloater(x,y,txt){ floaters.push({x,y,txt,t:0}); }
+function updateFloaters(){ for(const f of floaters) f.t++; floaters=floaters.filter(f=>f.t<55); }
+function drawFloaters(){
+  ctx.save(); ctx.textAlign='center'; ctx.font='800 16px sans-serif';
+  for(const f of floaters){ const a=Math.max(0,1-f.t/55); const sx=(f.x-camX)*ZOOM, sy=(f.y-SRCY)*ZOOM-f.t*0.9;
+    ctx.globalAlpha=a; ctx.lineWidth=3; ctx.strokeStyle='#000'; ctx.strokeText(f.txt,sx,sy);
+    ctx.fillStyle='#ffe46b'; ctx.fillText(f.txt,sx,sy); }
+  ctx.restore();
+}
+
+/* ── RETURN TO HUB (run off the left edge of a level) ─────── */
+function returnToHub(){
+  if(transitioning) return;
+  transitioning=true;
+  doFade('Back to the high street', ()=>{ killedEnemies.clear(); gotoId('home',{x:hubReturnX,face:1}); transitioning=false; });
+}
+
+/* ── GUN SHOP ────────────────────────────────────────────── */
+const SHOP=[
+  {id:'pistol',  name:'Pistol',           price:50},
+  {id:'shotgun', name:'Shotgun',          price:150},
+  {id:'rifle',   name:'Assault Rifle',    price:350},
+  {id:'vest',    name:'Bulletproof Vest', price:250},
+  {id:'grenade', name:'Grenade x3',       price:120},
+];
+const owned=new Set();
+let shopOpen=false;
+function openShop(){ shopOpen=true; renderShop(); document.getElementById('shop').classList.add('on'); }
+function closeShop(){ shopOpen=false; document.getElementById('shop').classList.remove('on'); }
+function renderShop(){
+  const mm=document.getElementById('shopmoney'); if(mm) mm.textContent='\u00A3'+money;
+  const list=document.getElementById('shoplist'); if(!list) return; list.innerHTML='';
+  SHOP.forEach(w=>{
+    const row=document.createElement('div'); row.className='shoprow';
+    const nm=document.createElement('span'); nm.className='sname'; nm.textContent=w.name;
+    const pr=document.createElement('span'); pr.className='sprice'; pr.textContent='\u00A3'+w.price;
+    const btn=document.createElement('button');
+    if(owned.has(w.id)){ btn.textContent='OWNED'; btn.disabled=true; btn.className='sbtn owned'; }
+    else { btn.textContent='BUY'; btn.className='sbtn'; btn.onclick=()=>buyWeapon(w); }
+    row.appendChild(nm); row.appendChild(pr); row.appendChild(btn); list.appendChild(row);
+  });
+}
+function buyWeapon(w){
+  if(owned.has(w.id)) return;
+  if(money>=w.price){ money-=w.price; owned.add(w.id); updateMoneyHUD(); renderShop();
+    [0,4,7,12].forEach((s,i)=>setTimeout(()=>blip(440*Math.pow(2,s/12),0,0.12,'triangle',0.15),i*60)); }
+  else { flashBanner('Not enough money for the '+w.name); blip(200,110,0.12,'square',0.16); }
 }
 
 /* ── CUTSCENE (unchanged intro chat) ─────────────────────── */
@@ -967,18 +1049,17 @@ function start(m){
   document.getElementById('kbhint').style.display='none';
   document.getElementById('game').style.display='block';
   document.getElementById('who').firstChild.textContent=m.name+' ';
-  sectionIndex=0; loadSectionConfig();
-  player.x=120;player.y=groundAt(120+PW/2)-PH;player.vx=0;player.vy=0;
-  player.face=1;player.onGround=true;player.clip='idle';player.ct=0;runHold=0;
+  player.face=1;player.clip='idle';player.ct=0;runHold=0;
   player.hp=player.max;player.dead=false;player.deadT=0;player.hurtCool=0;
   document.getElementById('hpbar').style.width='100%';
   bannerShown=false;csActive=false;csDone=false;
+  photographerMet=false; npc.active=false;
+  money=0; owned.clear(); updateMoneyHUD(); closeShop(); floaters=[];
+  hubReturnX=200;                                  // first time out, pop up by the house
   helper.active=false; helperCool=[0,0]; buildHelperThumbs(); refreshHelperBtns();
   killedEnemies.clear(); pickup.active=false;
-  spawnEnemiesForSection();
   setPaused(false);
-  initNPC();
-  startParkIntro(); startWanderer(); playSectionTrack();
+  gotoId('in_house', {x:90, face:1});              // the game begins inside the house
   if(!raf)loop();
 }
 
@@ -993,6 +1074,8 @@ function setPaused(p){
 }
 document.getElementById('pause').onclick=(e)=>{ e.stopPropagation(); setPaused(!paused); };
 document.getElementById('pausemenu').onclick=()=>setPaused(false);
+document.getElementById('shopclose').onclick=(e)=>{ e.stopPropagation(); closeShop(); };
+document.getElementById('shop').onclick=(e)=>{ if(e.target.id==='shop') closeShop(); };
 document.getElementById('mute').onclick=(e)=>{
   e.stopPropagation(); musicMuted=!musicMuted;
   const bgm=document.getElementById('bgm'); bgm.muted=musicMuted;
@@ -1100,7 +1183,7 @@ document.addEventListener('pointerdown', tryStartSelectMusic);
 
 /* ── UPDATE / DRAW / LOOP ────────────────────────────────── */
 function update(){
-  if(csActive||transitioning)return;
+  if(csActive||transitioning||shopOpen)return;
   if(player.hurtCool>0) player.hurtCool--;
   updateDoors();
 
@@ -1152,13 +1235,14 @@ function update(){
   updateUfo();
   updateWanderer();
   updatePickup();
+  updateFloaters();
 
-  // section edges: only chained levels advance/backtrack at the edges; the hub & rooms are locked (use doors)
+  // section edges: chained levels advance to the right; running off the LEFT returns to the hub
   if(SECTIONS[sectionIndex].chain){
     if(player.x>BGW-PW-40){
       if(!bannerShown){ bannerShown=true; nextSection(); }
     } else if(player.x<=2 && keys.left && !transitioning){
-      prevSection();
+      returnToHub();
     } else if(bannerShown && player.x < BGW-PW-120){ bannerShown=false; }
   }
 }
@@ -1196,6 +1280,7 @@ function draw(){
   } else { ctx.fillStyle='#c0392b'; ctx.fillRect(sx,sy,dw,dh); }
 
   drawDoors();
+  drawFloaters();
 }
 function drawNoBg(){
   const sec=SECTIONS[sectionIndex];
