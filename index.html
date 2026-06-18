@@ -378,6 +378,14 @@ const SECTIONS=[
   {id:'southampton', name:'Southampton &mdash; Above Bar Street', bgKey:'southampton', BGW:1879, srcY:90, flatGround:296, chain:true, next:null, prev:'glasgow',
    enemies:[ {at:430,kind:0},{at:640,kind:0},{at:850,kind:0},{at:1050,kind:0},{at:1250,kind:0},{at:1450,kind:0},{at:1650,kind:0},{at:1800,kind:0} ]},
 
+  /* ── MORTAL KOMBAT (entered from the hub Portal -> travel menu) ──
+     Standalone fight arena: the UMK3 "Blue Portal" bridge. Background
+     mortalkombat.png is 1432x240, floor surface ~196 (nudge flatGround).
+     chain:true so the helper bar + combat work; next:null so the right
+     edge gives the "THE END" exit and the left edge returns to the hub. */
+  {id:'mk', name:'The Portal &mdash; Mortal Kombat', bgKey:'mk', BGW:1432, srcY:0, flatGround:198, chain:true, next:null, prev:null,
+   enemies:[ {at:360,kind:4},{at:620,kind:0},{at:880,kind:1},{at:1120,kind:4},{at:1340,kind:0} ]},
+
   /* ── INTERIOR ROOMS (entered from the hub; EXIT door returns to the street) ── */
   {id:'in_house', name:'Inside &mdash; My House', bgKey:'room_house', BGW:591, srcY:46, flatGround:277, charScale:1.3, interior:true, enemies:[],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
@@ -455,6 +463,7 @@ const ASSETS = [
   {key:'deliveroo',type:'img', src:'deliveroo2.png', optional:true},
   {key:'glasgow',  type:'img', src:'glasgow.jpeg', optional:true},
   {key:'southampton', type:'img', src:'southampton.jpeg', optional:true},
+  {key:'mk',       type:'img', src:'mortalkombat.png', optional:true},
   {key:'weapons',  type:'img', src:'weapons.png', optional:true},
   {key:'priest',   type:'img', src:'priest.png', optional:true},
   {key:'burgerking', type:'img', src:'burgerking.png', optional:true},
@@ -493,7 +502,7 @@ const META=[
   {id:'brit',     name:'The Patriot',  flag:'GREAT BRITAIN', fw:181, fh:218, clips:CLIPS_BRIT},
   {id:'crusader', name:'The Crusader', flag:'CHRISTENDOM',   fw:134, fh:179, clips:CLIPS_CRU},
   {id:'dog',      name:'K-9 Unit',     flag:'ARMED RESPONSE',fw:224, fh:240, clips:CLIPS_DOG,
-                  noWeaponArt:true, muzzle:{fwd:0.62, yfac:0.46}},
+                  noWeaponArt:true, muzzle:{fwd:0.62, yfac:0.34}},
 ];
 function buildCards(){
   const grid=document.getElementById('cards');
@@ -1119,6 +1128,7 @@ function closeShop(){ shopOpen=false; document.getElementById('shop').classList.
 const TRAVEL_MENUS={
   portal: { title:'The Portal', dests:[
     {label:'The Streets', target:'street'},          // already wired to the original level chain
+    {label:'Mortal Kombat', target:'mk'},            // the UMK3 "Blue Portal" bridge arena
   ]},
   easyjet: { title:'easyJet Holidays', dests:[
     {label:'America',   target:'lvl_america'},
