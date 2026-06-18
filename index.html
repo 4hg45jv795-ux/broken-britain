@@ -209,7 +209,14 @@ canvas#cv{display:block;width:100%;height:auto;}
 <section id="select">
   <div class="eyebrow">Side-scroller</div>
   <div class="title"><span class="word-broken">Enough</span><span class="word-britain">Is Enough</span></div>
-  <p class="sub">Pick your fighter.</p>
+  <p class="sub">Britain's gone to the dogs.</p>
+  <p class="rotate-tip" style="max-width:640px;margin:0 auto 10px;opacity:.85;">
+    A side-scrolling brawl through a country that's lost the plot. Explore the town hub &#8212;
+    church, gun shop, library, the Winchester, cinema, airport and station &#8212; kit yourself out,
+    then take the portal to the streets and battle on through Belfast, Dundee, Glasgow and beyond.
+    Buy guns at FAFO Ammo &amp; Arms, summon mates like the Hurler and the flaming wheelie-bin,
+    and keep an eye on the skies. Pick your fighter to drop in.
+  </p>
   <p class="rotate-tip">On a phone? Turn it sideways &#8212; the game goes full screen in landscape.</p>
   <div class="warn" id="warn"></div>
   <div class="grid" id="cards"></div>
@@ -313,25 +320,25 @@ const CLIPS_CRU={
   headbutt:{start:28,count:8, fps:14, loop:false},
   die:    {start:36, count:3, fps:8,  loop:false},
 };
-/* New fighters 3 & 4: these start as copies of the Patriot layout.
-   Retune start/count/fps to match each new sprite sheet's real frame order. */
-const CLIPS_CHAR3={
-  idle:   {start:0,  count:5, fps:7,  loop:true},
-  walk:   {start:5,  count:6, fps:10, loop:true},
-  run:    {start:11, count:6, fps:15, loop:true},
-  jump:   {start:17, count:6, fps:12, loop:false},
-  punch:  {start:23, count:6, fps:20, loop:false},
-  headbutt:{start:29,count:4, fps:16, loop:false},
-  die:    {start:33, count:3, fps:8,  loop:false},
-};
-const CLIPS_CHAR4={
-  idle:   {start:0,  count:5, fps:7,  loop:true},
-  walk:   {start:5,  count:6, fps:10, loop:true},
-  run:    {start:11, count:6, fps:15, loop:true},
-  jump:   {start:17, count:6, fps:12, loop:false},
-  punch:  {start:23, count:6, fps:20, loop:false},
-  headbutt:{start:29,count:4, fps:16, loop:false},
-  die:    {start:33, count:3, fps:8,  loop:false},
+/* ── K-9 dog gunner ───────────────────────────────────────────
+   Single row of 19 frames, repacked from his 4-col sheet in order:
+     0-3   walk (rifle slung on back)
+     4-7   walk/run (second cycle)
+     8-9   stand, rifle ready   10-11 rifle raised
+     12-15 aim -> FIRE  (frame 15 has the muzzle flash + shell)
+     16-18 on all fours (currently UNUSED — wire later if you want
+           a four-legged sprint, etc.)
+   He carries the rifle IN the sprite, so his held-weapon overlay is
+   suppressed (noWeaponArt) and bullets leave his own barrel (muzzle). */
+const CLIPS_DOG={
+  idle:   {start:8,  count:2, fps:3,  loop:true},
+  walk:   {start:0,  count:4, fps:9,  loop:true},
+  run:    {start:4,  count:4, fps:12, loop:true},
+  jump:   {start:10, count:2, fps:8,  loop:false},
+  punch:  {start:12, count:4, fps:16, loop:false},   // melee when unarmed = rifle motion
+  headbutt:{start:12,count:4, fps:16, loop:false},
+  die:    {start:8,  count:1, fps:6,  loop:false},    // no death art yet; freezes on idle
+  shoot:  {start:12, count:4, fps:18, loop:false},    // aim -> fire; holds on the flash frame
 };
 let CLIPS=CLIPS_BRIT;
 const GSTEP=60;
@@ -431,8 +438,7 @@ const ASSETS = [
   {key:'bg3',      type:'img', src:'bg3.jpeg'},
   {key:'brit',     type:'img', src:'brit2.png'},
   {key:'crusader', type:'img', src:'crusader2.png'},
-  {key:'char3',    type:'img', src:'char3.png', optional:true},
-  {key:'char4',    type:'img', src:'char4.png', optional:true},
+  {key:'dog',      type:'img', src:'dog.png', optional:true},
   {key:'photog',   type:'img', src:'photog2.png'},
   {key:'athlete',  type:'img', src:'athlete.png', optional:true},
   {key:'police',   type:'img', src:'police4.png', optional:true},
@@ -486,8 +492,8 @@ function onAllLoaded(){
 const META=[
   {id:'brit',     name:'The Patriot',  flag:'GREAT BRITAIN', fw:181, fh:218, clips:CLIPS_BRIT},
   {id:'crusader', name:'The Crusader', flag:'CHRISTENDOM',   fw:134, fh:179, clips:CLIPS_CRU},
-  {id:'char3',    name:'Fighter Three',flag:'TBD',           fw:181, fh:218, clips:CLIPS_CHAR3},
-  {id:'char4',    name:'Fighter Four', flag:'TBD',           fw:181, fh:218, clips:CLIPS_CHAR4},
+  {id:'dog',      name:'K-9 Unit',     flag:'ARMED RESPONSE',fw:224, fh:240, clips:CLIPS_DOG,
+                  noWeaponArt:true, muzzle:{fwd:0.62, yfac:0.46}},
 ];
 function buildCards(){
   const grid=document.getElementById('cards');
@@ -1249,7 +1255,8 @@ function refreshWeaponBtn(){
 function updateArmourHUD(){ const el=document.getElementById('armour'); if(el) el.textContent = player.armour>0 ? ('ARMOUR \u00D7'+player.armour) : ''; }
 
 function muzzlePoint(){
-  return { x: player.x+PW/2 + player.face*(PW*0.55+6), y: player.y+PH*0.46 };
+  const mz=(cur&&cur.muzzle)||{fwd:0.55,yfac:0.46};
+  return { x: player.x+PW/2 + player.face*(PW*mz.fwd+6), y: player.y+PH*mz.yfac };
 }
 /* ── WEAPON IN HAND (drawn on the player whenever a gun is equipped) ──
    No per-frame hand bone on the sprite, so each weapon gets hand-tuned
@@ -1267,6 +1274,7 @@ const HELD_WEAPON={
 };
 function drawHeldWeapon(){
   if(player.dead || !isArmed()) return;
+  if(cur && cur.noWeaponArt) return;                  // sprite already includes the weapon
   const id=weaponList[weaponSel];
   if(id==='grenade') return;                          // grenade shows only when thrown
   const cfg=HELD_WEAPON[id], art=WEAPON_ART[id], img=loaded.weapons;
@@ -1307,6 +1315,7 @@ function tryFire(){
   const w=curWeapon(); if(!w) return;
   if(shootCool>0) return;
   fireWeapon(w); shootCool=w.cooldown;
+  if(CLIPS.shoot){ if(player.clip!=='shoot') setClip('shoot'); player.shootPoseT=14; }  // hold the fire pose
 }
 function explodeGrenade(b){
   vfx.push({type:'boom', x:b.x, y:b.y, t:0, life:26, r:b.radius});
@@ -1491,7 +1500,7 @@ function start(m){
   document.getElementById('kbhint').style.display='none';
   document.getElementById('game').style.display='block';
   document.getElementById('who').firstChild.textContent=m.name+' ';
-  player.face=1;player.clip='idle';player.ct=0;runHold=0;
+  player.face=1;player.clip='idle';player.ct=0;runHold=0;player.shootPoseT=0;
   player.hp=player.max;player.dead=false;player.deadT=0;player.hurtCool=0;
   document.getElementById('hpbar').style.width='100%';
   bannerShown=false;csActive=false;csDone=false;
@@ -1514,7 +1523,7 @@ function setPaused(p){
   document.getElementById('pausemenu').classList.toggle('on',p);
   document.getElementById('pause').innerHTML=p?'&#9654;':'&#10073;&#10073;';
   const bgm=document.getElementById('bgm');
-  if(p){ bgm.pause(); tvPause(); }
+  if(p){ bgm.pause(); tvPause(); pauseAllProxAudio(); }
   else if(cur){
     if(!musicMuted && sectionMusic()) bgm.play().catch(()=>{});   // rooms with a music track resume
     if(curScreen()) screenLoad(true);
@@ -1529,6 +1538,7 @@ document.getElementById('travel').onclick=(e)=>{ if(e.target.id==='travel') clos
 document.getElementById('mute').onclick=(e)=>{
   e.stopPropagation(); musicMuted=!musicMuted;
   const bgm=document.getElementById('bgm'); bgm.muted=musicMuted;
+  if(musicMuted) pauseAllProxAudio();
   if(tvVideo) tvVideo.muted=musicMuted;
   if(!musicMuted && cur && !paused && sectionMusic()) bgm.play().catch(()=>{});
   document.getElementById('mute').innerHTML = musicMuted ? '&#128263;' : '&#128266;';
@@ -1775,6 +1785,41 @@ function tryStartSelectMusic(){
 }
 document.addEventListener('pointerdown', tryStartSelectMusic);
 
+/* ── PROXIMITY NPC AUDIO ───────────────────────────────────────
+   A looping mp3 tied to a specific NPC that fades IN when the player
+   gets near and OUT when they leave. It layers on top of the room
+   music (separate audio element). Upload each file next to index.html
+   with the EXACT name below; any missing file just stays silent.
+   range = how close, in room pixels, before it begins.              */
+const PROX_AUDIO=[
+  {section:'in_church',  src:'Priest.mp3',     range:180, getX:()=>priestNpc?priestNpc.x:null},
+  {section:'in_library', src:'Burgerking.mp3', range:180, getX:()=>bkNpc?bkNpc.x:null},
+  {section:'home',       src:'Captain.mp3',    range:180,
+     getX:()=>{ const c=hubNpcs.find(n=>n.def&&n.def.key==='captain'); return c?c.x:null; }},
+];
+const _proxEls={};
+function _proxEl(src){
+  if(!_proxEls[src]){ const a=new Audio(src); a.loop=true; a.volume=0; a.preload='auto'; _proxEls[src]=a; }
+  return _proxEls[src];
+}
+function pauseAllProxAudio(){ for(const k in _proxEls){ try{ _proxEls[k].pause(); }catch(_){} } }
+function updateProxAudio(){
+  const secId=SECTIONS[sectionIndex].id;
+  for(const p of PROX_AUDIO){
+    const a=_proxEl(p.src);
+    let want=false, vol=0;
+    if(!musicMuted && !paused && cur && !player.dead && secId===p.section){
+      const nx=p.getX();
+      if(nx!=null){
+        const d=Math.abs((player.x+PW/2)-nx);
+        if(d<p.range){ want=true; vol=0.25 + 0.55*(1-d/p.range); }   // louder up close
+      }
+    }
+    if(want){ a.muted=musicMuted; a.volume=Math.max(0,Math.min(0.8,vol)); if(a.paused) a.play().catch(()=>{}); }
+    else if(!a.paused){ a.pause(); }
+  }
+}
+
 /* ── UPDATE / DRAW / LOOP ────────────────────────────────── */
 function update(){
   if(csActive||transitioning||shopOpen||travelOpen)return;
@@ -1822,13 +1867,15 @@ function update(){
   if(player.y+PH>=g){player.y=g-PH;player.vy=0;player.onGround=true;}
 
   player.ct++;
+  if(player.shootPoseT>0) player.shootPoseT--;
   const stillAttacking = playerAttacking() && !clipDone();
   if(stillAttacking) applyPlayerHits();
-  if(!stillAttacking){
+  const shootingPose = player.shootPoseT>0 && CLIPS.shoot;     // only chars with a shoot clip
+  if(!stillAttacking && !shootingPose){
     if(!player.onGround) setClip('jump');
     else if(moving) setClip(running?'run':'walk');
     else setClip('idle');
-  }
+  } else if(shootingPose && player.clip!=='shoot'){ setClip('shoot'); }
 
   updateEnemies();
   updateHelper();
@@ -1842,6 +1889,7 @@ function update(){
   updateWanderer();
   updatePickup();
   updateFloaters();
+  updateProxAudio();
 
   // section edges: chained levels advance to the right; running off the LEFT returns to the hub
   if(SECTIONS[sectionIndex].chain){
