@@ -864,11 +864,8 @@ function enterSection(opts){
   spawnEnemiesForSection();
   refreshHelperBtns();
   updateHelperBarVisibility();
-  playSectionTrack();
+  playSectionTrack();   // plays this room's track, or silence for screen rooms / trackless interiors
   initPickup();
-  if(SECTIONS[sectionIndex].interior){            // buildings are quiet: kill any street/hub music
-    const bgm=document.getElementById('bgm'); try{ bgm.pause(); bgm.currentTime=0; }catch(_){}
-  }
   tvEnter();                                       // start this room's wall screen (or stop if none)
 }
 
@@ -944,12 +941,12 @@ function drawMarker(cx, cy, name, hint){
 
    >>> VIDEO FILES: upload to GitHub next to index.html, EXACT lower-case
        names, H.264/AAC .mp4 so iPhones can play them. Each loops with sound:
-         in_house   -> channel1.mp4 .. channel5.mp4  (STRIKE by the TV flips channel)
+         in_house   -> channel1.mp4 .. channel8.mp4  (STRIKE by the TV flips channel)
          in_cinema  -> cinema.mp4
          in_restore -> restore.mp4                                            */
 const SCREENS = {
   in_house:   { rect:{ x:222, y:66, w:146, h:82 },                       // perfect already
-                files:['channel1.mp4','channel2.mp4','channel3.mp4','channel4.mp4','channel5.mp4','channel6.mp4','channel7.mp4'],
+                files:['channel1.mp4','channel2.mp4','channel3.mp4','channel4.mp4','channel5.mp4','channel6.mp4','channel7.mp4','channel8.mp4'],
                 switchable:true, reach:120, idx:0, debug:false },
   in_cinema:  { rect:{ x:183, y:61, w:240, h:120 },                      // measured to the painted cinema screen
                 files:['cinema.mp4'],  switchable:false, idx:0, debug:false },
@@ -1410,8 +1407,7 @@ function setPaused(p){
   const bgm=document.getElementById('bgm');
   if(p){ bgm.pause(); tvPause(); }
   else if(cur){
-    const interior=SECTIONS[sectionIndex].interior;
-    if(!musicMuted && !interior) bgm.play().catch(()=>{});   // buildings stay quiet
+    if(!musicMuted && sectionMusic()) bgm.play().catch(()=>{});   // rooms with a music track resume
     if(curScreen()) screenLoad(true);
   }
 }
@@ -1423,7 +1419,7 @@ document.getElementById('mute').onclick=(e)=>{
   e.stopPropagation(); musicMuted=!musicMuted;
   const bgm=document.getElementById('bgm'); bgm.muted=musicMuted;
   if(tvVideo) tvVideo.muted=musicMuted;
-  if(!musicMuted && cur && !paused && !SECTIONS[sectionIndex].interior) bgm.play().catch(()=>{});
+  if(!musicMuted && cur && !paused && sectionMusic()) bgm.play().catch(()=>{});
   document.getElementById('mute').innerHTML = musicMuted ? '&#128263;' : '&#128266;';
 };
 
@@ -1592,7 +1588,19 @@ function drawPickup(){
 
 /* ── PER-LEVEL MUSIC ── */
 const TRACKS={ select:'Character selection screen.mp3', home:'Home.mp3', street:'Street.mp3',
-  park:'Park.mp3', belfast:'Belfast.mp3', pub:'Pub.mp3', dundee:'Dundee.mp3', glasgow:'Glasgow.mp3', southampton:'Southampton.mp3' };
+  park:'Park.mp3', belfast:'Belfast.mp3', pub:'Pub.mp3', dundee:'Dundee.mp3', glasgow:'Glasgow.mp3', southampton:'Southampton.mp3',
+  /* ── INTERIOR AUDIO SLOTS ─────────────────────────────────────────────
+     One looping .mp3 per building that has NO video screen. Upload each
+     file to GitHub next to index.html with the EXACT name below (Vercel is
+     case-sensitive). Any slot whose file isn't uploaded just stays silent —
+     nothing breaks. Buildings WITH a screen (house, cinema, restore) get
+     their sound from the .mp4 instead and are deliberately left out here.  */
+  in_church:'Church.mp3', in_gunstore:'Gunstore.mp3', in_easyjet:'Easyjet.mp3',
+  in_trainstation:'Trainstation.mp3', in_library:'Library.mp3', in_winchester:'Winchester.mp3' };
+function sectionMusic(){
+  const id=SECTIONS[sectionIndex].id;
+  return (!SCREENS[id] && TRACKS[id]) ? TRACKS[id] : null;   // a video screen always wins over a music track
+}
 function playTrack(src){
   const bgm=document.getElementById('bgm');
   if(!src){ bgm.pause(); return; }
@@ -1601,7 +1609,7 @@ function playTrack(src){
   bgm.volume=0.35; bgm.muted=musicMuted;
   if(!paused && !musicMuted) bgm.play().catch(()=>{});
 }
-function playSectionTrack(){ playTrack(TRACKS[SECTIONS[sectionIndex].id]); }
+function playSectionTrack(){ playTrack(sectionMusic()); }
 let selectMusicStarted=false;
 function tryStartSelectMusic(){
   if(selectMusicStarted || cur) return;
