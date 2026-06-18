@@ -313,6 +313,26 @@ const CLIPS_CRU={
   headbutt:{start:28,count:8, fps:14, loop:false},
   die:    {start:36, count:3, fps:8,  loop:false},
 };
+/* New fighters 3 & 4: these start as copies of the Patriot layout.
+   Retune start/count/fps to match each new sprite sheet's real frame order. */
+const CLIPS_CHAR3={
+  idle:   {start:0,  count:5, fps:7,  loop:true},
+  walk:   {start:5,  count:6, fps:10, loop:true},
+  run:    {start:11, count:6, fps:15, loop:true},
+  jump:   {start:17, count:6, fps:12, loop:false},
+  punch:  {start:23, count:6, fps:20, loop:false},
+  headbutt:{start:29,count:4, fps:16, loop:false},
+  die:    {start:33, count:3, fps:8,  loop:false},
+};
+const CLIPS_CHAR4={
+  idle:   {start:0,  count:5, fps:7,  loop:true},
+  walk:   {start:5,  count:6, fps:10, loop:true},
+  run:    {start:11, count:6, fps:15, loop:true},
+  jump:   {start:17, count:6, fps:12, loop:false},
+  punch:  {start:23, count:6, fps:20, loop:false},
+  headbutt:{start:29,count:4, fps:16, loop:false},
+  die:    {start:33, count:3, fps:8,  loop:false},
+};
 let CLIPS=CLIPS_BRIT;
 const GSTEP=60;
 const GROUNDPTS=[322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,330.0,342.0,346,346,346,346,346,346,346,346,346,346,346,346,346,346,338.0,330.0,322,322,322,322,322,322,322,322,322,322];
@@ -411,6 +431,8 @@ const ASSETS = [
   {key:'bg3',      type:'img', src:'bg3.jpeg'},
   {key:'brit',     type:'img', src:'brit2.png'},
   {key:'crusader', type:'img', src:'crusader2.png'},
+  {key:'char3',    type:'img', src:'char3.png', optional:true},
+  {key:'char4',    type:'img', src:'char4.png', optional:true},
   {key:'photog',   type:'img', src:'photog2.png'},
   {key:'athlete',  type:'img', src:'athlete.png', optional:true},
   {key:'police',   type:'img', src:'police4.png', optional:true},
@@ -429,6 +451,7 @@ const ASSETS = [
   {key:'southampton', type:'img', src:'southampton.jpeg', optional:true},
   {key:'weapons',  type:'img', src:'weapons.png', optional:true},
   {key:'priest',   type:'img', src:'priest.png', optional:true},
+  {key:'burgerking', type:'img', src:'burgerking.png', optional:true},
   {key:'captain',  type:'img', src:'captain.png', optional:true},
 ];
 const loaded={};
@@ -463,6 +486,8 @@ function onAllLoaded(){
 const META=[
   {id:'brit',     name:'The Patriot',  flag:'GREAT BRITAIN', fw:181, fh:218, clips:CLIPS_BRIT},
   {id:'crusader', name:'The Crusader', flag:'CHRISTENDOM',   fw:134, fh:179, clips:CLIPS_CRU},
+  {id:'char3',    name:'Fighter Three',flag:'TBD',           fw:181, fh:218, clips:CLIPS_CHAR3},
+  {id:'char4',    name:'Fighter Four', flag:'TBD',           fw:181, fh:218, clips:CLIPS_CHAR4},
 ];
 function buildCards(){
   const grid=document.getElementById('cards');
@@ -885,6 +910,7 @@ function enterSection(opts){
   startWanderer();
   initHubNpcs();
   initChurchNpc();
+  initLibraryNpc();
   spawnEnemiesForSection();
   refreshHelperBtns();
   updateHelperBarVisibility();
@@ -1645,6 +1671,48 @@ function drawChurchNpc(){
   ctx.restore();
 }
 
+/* ── LIBRARY NPC: "Burger King guy" ──────────────────────────
+   Lives only inside the in_library room. He does NOT walk: he
+   stands in place and loops his baton-strike, turning to face the
+   other way every few seconds so he strikes in BOTH directions.
+   He is purely decorative — his swings never touch the player and
+   he takes no damage. Uses row 5 of his sheet = 6 strike frames.
+   Tunables (safe to nudge on the phone):
+     x         = where he stands, in room pixels (room is BGW wide)
+     lift      = pixels his feet sit ABOVE the floor (0 = on the floor)
+     height    = drawn height before the room's charScale is applied
+     animSpd   = strike playback speed (higher = faster swings)
+     flipEvery = ticks between turning to face the other direction   */
+const BK_DEF={ key:'burgerking', fw:170, fh:170, frames:6 };
+const BK={ x:280, lift:0, height:84, animSpd:0.16, flipEvery:80 };
+let bkNpc=null;
+function initLibraryNpc(){
+  bkNpc=null;
+  if(SECTIONS[sectionIndex].id!=='in_library') return;
+  bkNpc={ x:BK.x, face:1, anim:Math.random()*BK_DEF.frames, flipT:BK.flipEvery };
+}
+function updateLibraryNpc(){
+  if(!bkNpc) return;
+  const n=bkNpc;
+  n.anim += BK.animSpd;                                     // loop the strike, in place
+  if(--n.flipT<=0){ n.face*=-1; n.flipT=BK.flipEvery; }     // then strike the other way
+}
+function drawLibraryNpc(){
+  if(!bkNpc) return;
+  const im=loaded[BK_DEF.key]; if(!imgOk(im)) return;
+  const d=BK_DEF, n=bkNpc;
+  const h=BK.height*CSCALE, w=Math.round(h*d.fw/d.fh);
+  const leftX=n.x - w/2;                                    // n.x is his centre
+  const gy=groundAt(n.x)-BK.lift-h;
+  const sx=(leftX-camX)*ZOOM, sy=(gy-SRCY)*ZOOM, dw=w*ZOOM, dh=h*ZOOM;
+  if(sx<-dw*2||sx>VW+dw*2) return;
+  const f=Math.floor(n.anim)%d.frames;
+  ctx.save();
+  if(n.face<0){ ctx.translate(sx+dw,sy); ctx.scale(-1,1); } else { ctx.translate(sx,sy); }
+  try{ ctx.drawImage(im, f*d.fw,0,d.fw,d.fh, 0,0, dw,dh); }catch(_){}
+  ctx.restore();
+}
+
 /* ── FOOD PICKUP (pub heal — walk over the roast to refill) ── */
 const FOOD_H=30;
 const pickup={active:false,x:0,w:0,taken:false};
@@ -1769,6 +1837,7 @@ function update(){
   updateNPC();
   updateHubNpcs();
   updateChurchNpc();
+  updateLibraryNpc();
   updateUfo();
   updateWanderer();
   updatePickup();
@@ -1805,6 +1874,7 @@ function draw(){
   drawNPC();
   drawHubNpcs();
   drawChurchNpc();
+  drawLibraryNpc();
   drawHelper();
 
   // player
