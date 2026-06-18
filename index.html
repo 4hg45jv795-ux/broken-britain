@@ -1362,10 +1362,10 @@ function drawVfx(){
 /* ── CUTSCENE (unchanged intro chat) ─────────────────────── */
 const DIALOGUE=[
   {side:'left', label:'YOU',          text:'Who are you?'},
-  {side:'right',label:'PHOTOGRAPHER', text:'Independence Media.'},
-  {side:'left', label:'YOU',          text:'Well f#*k off home then.'},
-  {side:'right',label:'PHOTOGRAPHER', text:"I'm just taking pictures. I won't get anybody's faces."},
-  {side:'left', label:'YOU',          text:"Okay, f#*k it — tag along and take some pics of the mess I'm about to leave. Let's go."},
+  {side:'right',label:'PHOTOGRAPHER', text:'A YouTuber.'},
+  {side:'left', label:'YOU',          text:'F#*k off before I smash your camera.'},
+  {side:'right',label:'PHOTOGRAPHER', text:"Don't worry, I won't get anybody's faces."},
+  {side:'left', label:'YOU',          text:"Okay, f#*k it, the people need to see this, but remember, NO FACES!!."},
 ];
 let csActive=false,csDone=false,csStep=0,csTimeout=null;
 function startCutscene(){ csActive=true; csStep=0; document.getElementById('cutscene').classList.add('active'); document.getElementById('cs-lines').innerHTML=''; showNextLine(); }
