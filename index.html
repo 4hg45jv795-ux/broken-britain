@@ -348,7 +348,8 @@ function imgOk(im){ return im && im.complete && im.naturalWidth>0; }
 
 /* ── SECTIONS / LEVELS ───────────────────────────────────── */
 const SECTIONS=[
-  {id:'home', name:'DigiTown &mdash; the high street', bgKey:'home', BGW:2187, srcY:26, flatGround:245,
+  {id:'home', name:'DigiTown &mdash; the high street', bgKey:'home', BGW:3012, srcY:26, flatGround:245,
+   bgSegments:[ {key:'home', x:0, w:2187}, {key:'hub2', x:2187, w:825} ],
    hub:true, enemies:[ ],
    doors:[
      {x:200,  w:80,  label:'My House',         target:'in_house'},
@@ -383,7 +384,7 @@ const SECTIONS=[
      mortalkombat.png is 1432x240, floor surface ~196 (nudge flatGround).
      chain:true so the helper bar + combat work; next:null so the right
      edge gives the "THE END" exit and the left edge returns to the hub. */
-  {id:'mk', name:'The Portal &mdash; Mortal Kombat', bgKey:'mk', BGW:1432, srcY:0, flatGround:198, chain:true, next:null, prev:null,
+  {id:'mk', name:'The Portal &mdash; Mortal Kombat', bgKey:'mk', BGW:1432, srcY:0, flatGround:206, chain:true, next:null, prev:null,
    enemies:[ {at:360,kind:4},{at:620,kind:0},{at:880,kind:1},{at:1120,kind:4},{at:1340,kind:0} ]},
 
   /* ── INTERIOR ROOMS (entered from the hub; EXIT door returns to the street) ── */
@@ -431,6 +432,7 @@ function groundAt(x){
 /* ── ASSETS ──────────────────────────────────────────────── */
 const ASSETS = [
   {key:'home',     type:'img', src:'home3.jpeg', optional:true},
+  {key:'hub2',     type:'img', src:'hub2.png', optional:true},
   {key:'room_house',        type:'img', src:'room house.jpeg', optional:true},
   {key:'room_church',       type:'img', src:'room church.jpeg', optional:true},
   {key:'room_gunstore',     type:'img', src:'room gunstore.jpeg', optional:true},
@@ -1026,6 +1028,23 @@ const SCREENS = {
                 files:['restore.mp4'], switchable:false, idx:0, debug:false },
 };
 let tvVideo=null, tvHot=false;
+/* ── KEEP-AWAKE: hold a screen wake lock while a room video is playing so the
+   phone doesn't dim/lock if it isn't touched. Released when the video stops.
+   The OS drops the lock whenever the tab is hidden, so we re-acquire it when
+   the page becomes visible again and a video is still rolling.              */
+let wakeLock=null;
+async function requestWakeLock(){
+  try{
+    if('wakeLock' in navigator && !wakeLock){
+      wakeLock=await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release',()=>{ wakeLock=null; });
+    }
+  }catch(_){}
+}
+function releaseWakeLock(){ try{ if(wakeLock){ wakeLock.release(); wakeLock=null; } }catch(_){} }
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible' && tvVideo && !tvVideo.paused) requestWakeLock();
+});
 function curScreen(){ return SCREENS[SECTIONS[sectionIndex].id] || null; }
 function tvEl(){
   if(!tvVideo){
@@ -1044,10 +1063,10 @@ function screenLoad(playNow){
   const v=tvEl(), src=sc.files[sc.idx];
   if(v.getAttribute('data-src')!==src){ v.setAttribute('data-src',src); v.src=src; try{ v.load(); }catch(_){} }
   v.muted=musicMuted;
-  if(playNow && !paused){ v.play().catch(()=>{}); }
+  if(playNow && !paused){ v.play().catch(()=>{}); requestWakeLock(); }
 }
 function tvEnter(){ if(curScreen()) screenLoad(true); else tvPause(); }   // start this room's screen (or stop)
-function tvPause(){ if(tvVideo){ try{ tvVideo.pause(); }catch(_){} } }
+function tvPause(){ if(tvVideo){ try{ tvVideo.pause(); }catch(_){} } releaseWakeLock(); }   // stop this room's screen + let the phone sleep again
 function tvNextChannel(){
   const sc=curScreen(); if(!sc||!sc.switchable) return;
   sc.idx=(sc.idx+1)%sc.files.length; screenLoad(true);
@@ -1607,8 +1626,8 @@ function drawWanderer(){
    dropping entries here (each needs a single-row walk strip png).        */
 const HUB_NPCS=[
   // home = the hub x he hangs around; range = how far he paces each way from it.
-  // The train-station door is at x:1290, so the captain patrols right outside it.
-  {key:'captain', fw:110, fh:221, frames:6,  h:84, home:1290, range:140},
+  // The Winchester door is at x:2040, so the captain patrols right outside it.
+  {key:'captain', fw:110, fh:221, frames:6,  h:84, home:2010, range:120},
 ];
 let hubNpcs=[];
 function initHubNpcs(){
@@ -1917,11 +1936,29 @@ function frameIndex(){
   f = c.loop ? (f%c.count) : Math.min(f,c.count-1);
   return c.start+f;
 }
+function drawBg(){
+  const sec=SECTIONS[sectionIndex];
+  if(sec.bgSegments){                                   // end-to-end images (the extended hub)
+    let anyDrawn=false;
+    for(const seg of sec.bgSegments){
+      const segL=seg.x, segR=seg.x+seg.w;
+      const left=Math.max(segL,camX), right=Math.min(segR,camX+SRCW);
+      if(right<=left) continue;                          // this image isn't on screen right now
+      const im=loaded[seg.key]; if(!imgOk(im)) continue;
+      const srcX=left-segL, srcW=right-left;             // 1 world px == 1 image px
+      const dstX=(left-camX)*ZOOM, dstW=srcW*ZOOM;
+      try{ ctx.drawImage(im, srcX, SRCY, srcW, SRCH, dstX, 0, dstW, VH); anyDrawn=true; }catch(e){}
+    }
+    if(!anyDrawn) drawNoBg();
+    return;
+  }
+  const bgKey=sec.bgKey;
+  if(imgOk(loaded[bgKey])){ try{ ctx.drawImage(loaded[bgKey],camX,SRCY,SRCW,SRCH,0,0,VW,VH); }catch(e){ drawNoBg(); } } else drawNoBg();
+}
 function draw(){
   camX=player.x+PW/2-SRCW/2; camX=Math.max(0,Math.min(BGW-SRCW,camX));
   ctx.clearRect(0,0,VW,VH); ctx.imageSmoothingEnabled=true;
-  const bgKey=SECTIONS[sectionIndex].bgKey;
-  if(imgOk(loaded[bgKey])){ try{ ctx.drawImage(loaded[bgKey],camX,SRCY,SRCW,SRCH,0,0,VW,VH); }catch(e){ drawNoBg(); } } else drawNoBg();
+  drawBg();
 
   drawTV();
 
