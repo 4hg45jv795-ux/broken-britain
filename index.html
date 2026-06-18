@@ -860,6 +860,7 @@ function enterSection(opts){
   startParkIntro();
   startWanderer();
   initHubNpcs();
+  initChurchNpc();
   spawnEnemiesForSection();
   refreshHelperBtns();
   updateHelperBarVisibility();
@@ -1144,21 +1145,24 @@ function updateArmourHUD(){ const el=document.getElementById('armour'); if(el) e
 function muzzlePoint(){
   return { x: player.x+PW/2 + player.face*(PW*0.55+6), y: player.y+PH*0.46 };
 }
-/* ── WEAPON IN HAND (drawn on the player whenever a weapon is equipped) ──
+/* ── WEAPON IN HAND (drawn on the player whenever a gun is equipped) ──
    No per-frame hand bone on the sprite, so each weapon gets hand-tuned
    offsets below. fwd/up are fractions of the player's DRAWN size measured
-   from the player's centre; scale = weapon width as a multiple of the
-   player's drawn width. If a gun ever points the wrong way, flip the
-   `player.face<0` test in the scale(-1,1) line.                          */
+   from the player's centre; a POSITIVE up raises the weapon, NEGATIVE drops
+   it toward the hands. scale = weapon width as a multiple of the player's
+   drawn width. If a gun ever points the wrong way, flip the `player.face<0`
+   test in the scale(-1,1) line.
+   NOTE: the grenade is intentionally NOT drawn in-hand — it's only shown
+   once it's actually thrown (see drawBullets).                            */
 const HELD_WEAPON={
-  pistol:  {fwd:0.20, up:0.06, scale:0.55},
-  shotgun: {fwd:0.10, up:0.08, scale:1.05},
-  rifle:   {fwd:0.06, up:0.07, scale:1.18},
-  grenade: {fwd:0.22, up:0.14, scale:0.34},
+  pistol:  {fwd:0.24, up:-0.14, scale:0.50},
+  shotgun: {fwd:0.16, up:-0.12, scale:1.00},
+  rifle:   {fwd:0.12, up:-0.12, scale:1.12},
 };
 function drawHeldWeapon(){
   if(player.dead || !isArmed()) return;
   const id=weaponList[weaponSel];
+  if(id==='grenade') return;                          // grenade shows only when thrown
   const cfg=HELD_WEAPON[id], art=WEAPON_ART[id], img=loaded.weapons;
   if(!cfg||!art||!imgOk(img)) return;
   const dw=PW*ZOOM*CSCALE, dh=PH*ZOOM*CSCALE;
@@ -1475,7 +1479,6 @@ function drawWanderer(){
    One of each, they just stroll back and forth on the hub. Add more by
    dropping entries here (each needs a single-row walk strip png).        */
 const HUB_NPCS=[
-  {key:'priest',  fw:117, fh:161, frames:12, h:72},
   {key:'captain', fw:110, fh:221, frames:6,  h:84},
 ];
 let hubNpcs=[];
@@ -1511,6 +1514,49 @@ function drawHubNpcs(){
     try{ ctx.drawImage(im, f*d.fw,0,d.fw,d.fh, 0,0, dw,dh); }catch(_){}
     ctx.restore();
   }
+}
+
+/* ── CHURCH PRIEST (paces the stage at the back-centre of the church) ──
+   Lives only inside the in_church room. He walks left/right within a
+   centred band — the stage — and is clamped so he never steps off it.
+   PRIEST.x is treated as his CENTRE in room pixels (the room is BGW wide).
+   All four numbers are hand-tunable on the phone:
+     centre  = middle of the stage, in room pixels
+     halfRun = how far each way he paces from the centre (stage half-width)
+     lift    = pixels his feet sit ABOVE the floor (raises him onto the stage)
+     height  = his drawn height before the room's charScale is applied      */
+const PRIEST_DEF={ key:'priest', fw:117, fh:161, frames:12 };
+const PRIEST={ centre:296, halfRun:80, lift:46, height:66 };
+let priestNpc=null;
+function initChurchNpc(){
+  priestNpc=null;
+  if(SECTIONS[sectionIndex].id!=='in_church') return;
+  priestNpc={ x:PRIEST.centre, face:-1, anim:Math.random()*10, pauseT:0, speed:0.4 };
+}
+function updateChurchNpc(){
+  if(!priestNpc) return;
+  const n=priestNpc;
+  if(n.pauseT>0){ n.pauseT--; return; }
+  n.x += n.face*n.speed; n.anim += 0.13;
+  const left=PRIEST.centre-PRIEST.halfRun, right=PRIEST.centre+PRIEST.halfRun;
+  if(n.x<left){ n.x=left; n.face=1; }                       // turn back at the stage edges
+  else if(n.x>right){ n.x=right; n.face=-1; }
+  else { if(Math.random()<0.004) n.face*=-1; if(Math.random()<0.003) n.pauseT=40+Math.floor(Math.random()*90); }
+}
+function drawChurchNpc(){
+  if(!priestNpc) return;
+  const im=loaded[PRIEST_DEF.key]; if(!imgOk(im)) return;
+  const d=PRIEST_DEF, n=priestNpc;
+  const h=PRIEST.height*CSCALE, w=Math.round(h*d.fw/d.fh);
+  const leftX=n.x - w/2;                                    // n.x is his centre
+  const gy=groundAt(n.x)-PRIEST.lift-h;                     // feet raised onto the stage
+  const sx=(leftX-camX)*ZOOM, sy=(gy-SRCY)*ZOOM, dw=w*ZOOM, dh=h*ZOOM;
+  if(sx<-dw*2||sx>VW+dw*2) return;
+  const f = n.pauseT>0 ? 0 : Math.floor(n.anim)%d.frames;
+  ctx.save();
+  if(n.face<0){ ctx.translate(sx+dw,sy); ctx.scale(-1,1); } else { ctx.translate(sx,sy); }
+  try{ ctx.drawImage(im, f*d.fw,0,d.fw,d.fh, 0,0, dw,dh); }catch(_){}
+  ctx.restore();
 }
 
 /* ── FOOD PICKUP (pub heal — walk over the roast to refill) ── */
@@ -1624,6 +1670,7 @@ function update(){
   updateVfx();
   updateNPC();
   updateHubNpcs();
+  updateChurchNpc();
   updateUfo();
   updateWanderer();
   updatePickup();
@@ -1659,6 +1706,7 @@ function draw(){
   for(const e of enemies) drawEnemy(e);
   drawNPC();
   drawHubNpcs();
+  drawChurchNpc();
   drawHelper();
 
   // player
