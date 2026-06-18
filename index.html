@@ -85,6 +85,18 @@ html,body{margin:0;height:100%;background:#0b0c0f;color:var(--ink);font-family:'
 .sbtn.owned{background:#3a3d44;color:#9aa0ab;}
 #shopclose{display:block;width:100%;margin-top:14px;background:#7a1f25;border:0;color:#fff;font:800 14px sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:11px;border-radius:9px;cursor:pointer;}
 #shopclose:active{transform:scale(.98);}
+#travel{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#000c;z-index:19;}
+#travel.on{display:flex;}
+.travelcard{width:min(86%,360px);background:#0a0f14;border:2px solid #ffd34d;border-radius:14px;padding:14px 14px 16px;box-shadow:0 10px 40px #000a;}
+.travelhead{font:900 17px/1 sans-serif;letter-spacing:.02em;color:#ffe46b;text-transform:uppercase;margin-bottom:12px;text-align:center;}
+.trow{display:flex;align-items:center;justify-content:space-between;width:100%;gap:10px;margin:7px 0;padding:12px 14px;background:#13202e;border:1px solid #284055;border-radius:9px;cursor:pointer;}
+.trow:active{transform:scale(.98);}
+.trow .tname{font:800 15px sans-serif;color:#ece6d6;letter-spacing:.02em;}
+.trow .ttag{font:800 11px monospace;color:#0a0f14;background:#5ec46a;border-radius:5px;padding:3px 8px;letter-spacing:.04em;}
+.trow.soon{opacity:.7;}
+.trow.soon .ttag{background:#5a6472;color:#dfe6ef;}
+#travel-close{display:block;width:100%;margin-top:14px;background:#7a1f25;border:0;color:#fff;font:800 14px sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:11px;border-radius:9px;cursor:pointer;}
+#travel-close:active{transform:scale(.98);}
 #pausemenu.on{display:flex;}
 .pausecard{font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#fff;text-align:center;
   font-size:30px;text-shadow:0 2px 10px #000;}
@@ -229,6 +241,11 @@ canvas#cv{display:block;width:100%;height:auto;}
     <div id="shoplist"></div>
     <button id="shopclose">Close</button>
   </div></div>
+  <div id="travel"><div class="travelcard">
+    <div class="travelhead"><span id="travel-title">Travel</span></div>
+    <div id="travel-list"></div>
+    <button id="travel-close">Close</button>
+  </div></div>
   <div id="fade"><div class="ftxt" id="ftxt"></div></div>
   <div id="dundeecard"><img id="dundeecard-img" alt=""><div class="dtxt">Welcome to Dundee</div></div>
   <div id="cutscene">
@@ -314,7 +331,7 @@ const SECTIONS=[
      {x:910,  w:84,  label:'The Cinema',        target:'in_cinema'},
      {x:1100, w:84,  label:'easyJet Holidays',  target:'in_easyjet'},
      {x:1290, w:90,  label:'Train Station',     target:'in_trainstation'},
-     {x:1490, w:82,  label:'The Portal',        target:'street'},
+     {x:1490, w:82,  label:'The Portal',        menu:'portal'},
      {x:1740, w:112, label:'The Library',       target:'in_library'},
      {x:2040, w:120, label:'The Winchester',    target:'in_winchester'}
    ]},
@@ -346,13 +363,20 @@ const SECTIONS=[
   {id:'in_cinema', name:'Inside &mdash; The Cinema', bgKey:'room_cinema', BGW:591, srcY:46, flatGround:273, charScale:1.3, interior:true, enemies:[],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
   {id:'in_easyjet', name:'Inside &mdash; easyJet Holidays', bgKey:'room_easyjet', BGW:580, srcY:46, flatGround:277, charScale:1.3, interior:true, enemies:[],
-   doors:[ {x:495, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
+   doors:[ {x:290, w:74, label:'Departures', menu:'easyjet'}, {x:495, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
   {id:'in_trainstation', name:'Inside &mdash; DigiTown Station', bgKey:'room_trainstation', BGW:580, srcY:46, flatGround:281, charScale:1.3, interior:true, enemies:[],
-   doors:[ {x:495, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
+   doors:[ {x:290, w:74, label:'Departures', menu:'trainstation'}, {x:495, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
   {id:'in_library', name:'Inside &mdash; The Library', bgKey:'room_library', BGW:591, srcY:46, flatGround:281, charScale:1.3, interior:true, enemies:[],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
   {id:'in_winchester', name:'Inside &mdash; The Winchester', bgKey:'room_winchester', BGW:591, srcY:46, flatGround:275, charScale:1.8, interior:true, enemies:[],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
+
+  /* Placeholder for travel destinations that aren't built yet (easyJet / train
+     station locations). When you create a real level, give it its own id and
+     point the travel menu entry at it — anything still pointing at a missing
+     id lands here.                                                          */
+  {id:'empty', name:'Under construction', bgKey:'__empty__', BGW:1000, srcY:26, flatGround:245, interior:true, enemies:[],
+   doors:[ {x:500, w:130, label:'EXIT &mdash; back', target:'home'} ]},
 ];
 let sectionIndex=0;
 let SRCY=120, BGW=4047;
@@ -885,6 +909,12 @@ function updateDoors(){
 }
 function useDoor(d){
   if(transitioning||!d) return;
+  if(d.menu){                                         // travel point (portal / departures): open its menu
+    const sec=SECTIONS[sectionIndex];
+    if(sec.hub) hubReturnX=d.x;                        // pop back to this spot when returning to the hub
+    openTravel(d.menu);
+    return;
+  }
   if(d.target===null){ flashBanner('The portal is dormant&hellip; for now'); return; }
   if(d.target==='shop'){ openShop(); return; }
   const sec=SECTIONS[sectionIndex];
@@ -906,7 +936,8 @@ function drawDoors(){
   const bob=Math.sin(performance.now()/260)*4;
   const label=d.label.replace(/&mdash;/g,'\u2014').replace(/&amp;/g,'&').toUpperCase();
   let name, hint;
-  if(d.target===null){ name=label; hint='locked for now'; }
+  if(d.menu){ name=label; hint='STRIKE to travel'; }
+  else if(d.target===null){ name=label; hint='locked for now'; }
   else if(d.target==='home'){ name='EXIT'; hint='STRIKE to leave'; }
   else if(d.target==='shop'){ name=label; hint='STRIKE to open'; }
   else { name=label; hint='STRIKE to enter'; }
@@ -1048,6 +1079,58 @@ const owned=new Set();
 let shopOpen=false;
 function openShop(){ shopOpen=true; renderShop(); document.getElementById('shop').classList.add('on'); }
 function closeShop(){ shopOpen=false; document.getElementById('shop').classList.remove('on'); }
+
+/* ── TRAVEL MENUS (the portal + departure boards) ─────────────────────────
+   Each menu = a title and a list of destinations. `target` is the section id
+   to travel to; if that section doesn't exist yet you land on the 'empty'
+   placeholder. Add/replace destinations here as new levels are built.       */
+const TRAVEL_MENUS={
+  portal: { title:'The Portal', dests:[
+    {label:'The Streets', target:'street'},          // already wired to the original level chain
+  ]},
+  easyjet: { title:'easyJet Holidays', dests:[
+    {label:'America',   target:'lvl_america'},
+    {label:'Australia', target:'lvl_australia'},
+    {label:'Japan',     target:'lvl_japan'},
+    {label:'Europe',    target:'lvl_europe'},
+  ]},
+  trainstation: { title:'DigiTown Station', dests:[
+    {label:'England',          target:'lvl_england'},
+    {label:'Scotland',         target:'lvl_scotland'},
+    {label:'Northern Ireland', target:'lvl_nireland'},
+    {label:'Wales',            target:'lvl_wales'},
+  ]},
+};
+let travelOpen=false;
+function openTravel(menuId){
+  const m=TRAVEL_MENUS[menuId]; if(!m) return;
+  travelOpen=true;
+  document.getElementById('travel-title').textContent=m.title;
+  const list=document.getElementById('travel-list'); list.innerHTML='';
+  m.dests.forEach(dst=>{
+    const exists=SECTIONS.some(s=>s.id===dst.target);
+    const b=document.createElement('button'); b.className='trow';
+    const nm=document.createElement('span'); nm.className='tname'; nm.textContent=dst.label;
+    const tag=document.createElement('span'); tag.className='ttag'; tag.textContent=exists?'GO':'SOON';
+    if(!exists) b.classList.add('soon');
+    b.appendChild(nm); b.appendChild(tag);
+    b.onclick=(e)=>{ e.stopPropagation(); travelTo(dst.target, dst.label); };
+    list.appendChild(b);
+  });
+  document.getElementById('travel').classList.add('on');
+}
+function closeTravel(){ travelOpen=false; document.getElementById('travel').classList.remove('on'); }
+function travelTo(target, label){
+  closeTravel();
+  if(transitioning) return;
+  const dest=SECTIONS.find(s=>s.id===target);
+  const goId = dest ? target : 'empty';               // not built yet -> placeholder
+  transitioning=true;
+  doFade(dest?dest.name:label, ()=>{
+    gotoId(goId,{x:90,face:1}); transitioning=false;
+    if(!dest) flashBanner(label+' &mdash; coming soon');
+  });
+}
 function renderShop(){
   const mm=document.getElementById('shopmoney'); if(mm) mm.textContent='\u00A3'+money;
   const list=document.getElementById('shoplist'); if(!list) return; list.innerHTML='';
@@ -1415,6 +1498,8 @@ document.getElementById('pause').onclick=(e)=>{ e.stopPropagation(); setPaused(!
 document.getElementById('pausemenu').onclick=()=>setPaused(false);
 document.getElementById('shopclose').onclick=(e)=>{ e.stopPropagation(); closeShop(); };
 document.getElementById('shop').onclick=(e)=>{ if(e.target.id==='shop') closeShop(); };
+document.getElementById('travel-close').onclick=(e)=>{ e.stopPropagation(); closeTravel(); };
+document.getElementById('travel').onclick=(e)=>{ if(e.target.id==='travel') closeTravel(); };
 document.getElementById('mute').onclick=(e)=>{
   e.stopPropagation(); musicMuted=!musicMuted;
   const bgm=document.getElementById('bgm'); bgm.muted=musicMuted;
@@ -1475,24 +1560,29 @@ function drawWanderer(){
    One of each, they just stroll back and forth on the hub. Add more by
    dropping entries here (each needs a single-row walk strip png).        */
 const HUB_NPCS=[
-  {key:'captain', fw:110, fh:221, frames:6,  h:84},
+  // home = the hub x he hangs around; range = how far he paces each way from it.
+  // The train-station door is at x:1290, so the captain patrols right outside it.
+  {key:'captain', fw:110, fh:221, frames:6,  h:84, home:1290, range:140},
 ];
 let hubNpcs=[];
 function initHubNpcs(){
   hubNpcs=[];
   if(SECTIONS[sectionIndex].id!=='home') return;
   HUB_NPCS.forEach((d,i)=>{
-    hubNpcs.push({ def:d, x: 350+i*620, face:(i%2?-1:1), anim:Math.random()*10, pauseT:0, speed:0.45+Math.random()*0.35 });
+    const startX = (d.home!=null) ? d.home : 350+i*620;
+    hubNpcs.push({ def:d, x:startX, face:(i%2?-1:1), anim:Math.random()*10, pauseT:0, speed:0.45+Math.random()*0.35 });
   });
 }
 function updateHubNpcs(){
   if(SECTIONS[sectionIndex].id!=='home') return;
   for(const n of hubNpcs){
     const w=Math.round(n.def.h*n.def.fw/n.def.fh);
+    const lo = (n.def.home!=null) ? n.def.home-n.def.range : 60;
+    const hi = (n.def.home!=null) ? n.def.home+n.def.range : BGW-w-60;
     if(n.pauseT>0){ n.pauseT--; continue; }
     n.x += n.face*n.speed; n.anim += 0.14;
-    if(n.x < 60){ n.x=60; n.face=1; }
-    else if(n.x > BGW-w-60){ n.x=BGW-w-60; n.face=-1; }
+    if(n.x < lo){ n.x=lo; n.face=1; }
+    else if(n.x > hi){ n.x=hi; n.face=-1; }
     else { if(Math.random()<0.004) n.face*=-1; if(Math.random()<0.003) n.pauseT=40+Math.floor(Math.random()*90); }
   }
 }
@@ -1522,7 +1612,7 @@ function drawHubNpcs(){
      lift    = pixels his feet sit ABOVE the floor (raises him onto the stage)
      height  = his drawn height before the room's charScale is applied      */
 const PRIEST_DEF={ key:'priest', fw:117, fh:161, frames:12 };
-const PRIEST={ centre:296, halfRun:80, lift:46, height:66 };
+const PRIEST={ centre:296, halfRun:72, lift:46, height:66 };
 let priestNpc=null;
 function initChurchNpc(){
   priestNpc=null;
@@ -1619,7 +1709,7 @@ document.addEventListener('pointerdown', tryStartSelectMusic);
 
 /* ── UPDATE / DRAW / LOOP ────────────────────────────────── */
 function update(){
-  if(csActive||transitioning||shopOpen)return;
+  if(csActive||transitioning||shopOpen||travelOpen)return;
   if(player.hurtCool>0) player.hurtCool--;
   updateDoors();
   updateTV();
