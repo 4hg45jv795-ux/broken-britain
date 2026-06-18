@@ -335,10 +335,10 @@ const CLIPS_DOG={
   walk:   {start:0,  count:4, fps:9,  loop:true},
   run:    {start:4,  count:4, fps:12, loop:true},
   jump:   {start:10, count:2, fps:8,  loop:false},
-  punch:  {start:12, count:4, fps:16, loop:false},   // melee when unarmed = rifle motion
-  headbutt:{start:12,count:4, fps:16, loop:false},
+  punch:  {start:12, count:3, fps:16, loop:false},   // melee when unarmed = rifle motion
+  headbutt:{start:12,count:3, fps:16, loop:false},
   die:    {start:8,  count:1, fps:6,  loop:false},    // no death art yet; freezes on idle
-  shoot:  {start:12, count:4, fps:18, loop:false},    // aim -> fire; holds on the flash frame
+  shoot:  {start:12, count:3, fps:18, loop:false},    // aim -> fire; holds on frame 14 (gun up, muzzle flash)
 };
 let CLIPS=CLIPS_BRIT;
 const GSTEP=60;
