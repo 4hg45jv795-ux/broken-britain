@@ -404,6 +404,8 @@ const ASSETS = [
   {key:'glasgow',  type:'img', src:'glasgow.jpeg', optional:true},
   {key:'southampton', type:'img', src:'southampton.jpeg', optional:true},
   {key:'weapons',  type:'img', src:'weapons.png', optional:true},
+  {key:'priest',   type:'img', src:'priest.png', optional:true},
+  {key:'captain',  type:'img', src:'captain.png', optional:true},
 ];
 const loaded={};
 const failed=[];
@@ -746,9 +748,9 @@ function buildHelperThumbs(){
 }
 function updateHelperBarVisibility(){
   const s=SECTIONS[sectionIndex];
-  const noFoes=(!s.enemies||s.enemies.length===0)&&(!s.aliens||s.aliens.length===0);
   const bar=document.querySelector('.helperbar');
-  if(bar) bar.style.display=(s.interior && noFoes) ? 'none' : '';
+  // only the portal levels (street, park, belfast, pub, dundee, glasgow, southampton)
+  if(bar) bar.style.display = s.chain ? '' : 'none';
 }
 function refreshHelperBtns(){
   document.querySelectorAll('.helperbtn').forEach(btn=>{
@@ -857,6 +859,7 @@ function enterSection(opts){
   }
   startParkIntro();
   startWanderer();
+  initHubNpcs();
   spawnEnemiesForSection();
   refreshHelperBtns();
   updateHelperBarVisibility();
@@ -1354,7 +1357,7 @@ function start(m){
   document.getElementById('hpbar').style.width='100%';
   bannerShown=false;csActive=false;csDone=false;
   photographerMet=false; npc.active=false;
-  money=0; owned.clear(); updateMoneyHUD(); closeShop(); floaters=[];
+  money=1000; owned.clear(); updateMoneyHUD(); closeShop(); floaters=[];  // TESTING: start with £1000 (set back to 0 later)
   weaponList=[]; weaponSel=-1; shootCool=0; bullets=[]; vfx=[];
   player.armour=0; updateArmourHUD(); refreshWeaponBtn();
   hubReturnX=200;                                  // first time out, pop up by the house
@@ -1437,6 +1440,48 @@ function drawWanderer(){
   if(wanderer.face<0){ ctx.translate(sx+dw,sy); ctx.scale(-1,1); } else { ctx.translate(sx,sy); }
   try{ ctx.drawImage(loaded.wanderer, f*WAN_FW,0,WAN_FW,WAN_FH, 0,0, dw,dh); }catch(_){}
   ctx.restore();
+}
+
+/* ── HUB WANDERERS (ambient NPCs on the high street, can't hit / be hit) ──
+   One of each, they just stroll back and forth on the hub. Add more by
+   dropping entries here (each needs a single-row walk strip png).        */
+const HUB_NPCS=[
+  {key:'priest',  fw:117, fh:161, frames:12, h:72},
+  {key:'captain', fw:110, fh:221, frames:6,  h:84},
+];
+let hubNpcs=[];
+function initHubNpcs(){
+  hubNpcs=[];
+  if(SECTIONS[sectionIndex].id!=='home') return;
+  HUB_NPCS.forEach((d,i)=>{
+    hubNpcs.push({ def:d, x: 350+i*620, face:(i%2?-1:1), anim:Math.random()*10, pauseT:0, speed:0.45+Math.random()*0.35 });
+  });
+}
+function updateHubNpcs(){
+  if(SECTIONS[sectionIndex].id!=='home') return;
+  for(const n of hubNpcs){
+    const w=Math.round(n.def.h*n.def.fw/n.def.fh);
+    if(n.pauseT>0){ n.pauseT--; continue; }
+    n.x += n.face*n.speed; n.anim += 0.14;
+    if(n.x < 60){ n.x=60; n.face=1; }
+    else if(n.x > BGW-w-60){ n.x=BGW-w-60; n.face=-1; }
+    else { if(Math.random()<0.004) n.face*=-1; if(Math.random()<0.003) n.pauseT=40+Math.floor(Math.random()*90); }
+  }
+}
+function drawHubNpcs(){
+  if(SECTIONS[sectionIndex].id!=='home') return;
+  for(const n of hubNpcs){
+    const d=n.def, im=loaded[d.key]; if(!imgOk(im)) continue;
+    const w=Math.round(d.h*d.fw/d.fh);
+    const gy=groundAt(n.x+w/2)-d.h;
+    const sx=(n.x-camX)*ZOOM, sy=(gy-SRCY)*ZOOM, dw=w*ZOOM, dh=d.h*ZOOM;
+    if(sx<-dw*2||sx>VW+dw*2) continue;
+    const f = n.pauseT>0 ? 0 : Math.floor(n.anim)%d.frames;
+    ctx.save();
+    if(n.face<0){ ctx.translate(sx+dw,sy); ctx.scale(-1,1); } else { ctx.translate(sx,sy); }
+    try{ ctx.drawImage(im, f*d.fw,0,d.fw,d.fh, 0,0, dw,dh); }catch(_){}
+    ctx.restore();
+  }
 }
 
 /* ── FOOD PICKUP (pub heal — walk over the roast to refill) ── */
@@ -1549,6 +1594,7 @@ function update(){
   updateBullets();
   updateVfx();
   updateNPC();
+  updateHubNpcs();
   updateUfo();
   updateWanderer();
   updatePickup();
@@ -1583,6 +1629,7 @@ function draw(){
   // enemies behind the player
   for(const e of enemies) drawEnemy(e);
   drawNPC();
+  drawHubNpcs();
   drawHelper();
 
   // player
