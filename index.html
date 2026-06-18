@@ -1144,6 +1144,35 @@ function updateArmourHUD(){ const el=document.getElementById('armour'); if(el) e
 function muzzlePoint(){
   return { x: player.x+PW/2 + player.face*(PW*0.55+6), y: player.y+PH*0.46 };
 }
+/* ── WEAPON IN HAND (drawn on the player whenever a weapon is equipped) ──
+   No per-frame hand bone on the sprite, so each weapon gets hand-tuned
+   offsets below. fwd/up are fractions of the player's DRAWN size measured
+   from the player's centre; scale = weapon width as a multiple of the
+   player's drawn width. If a gun ever points the wrong way, flip the
+   `player.face<0` test in the scale(-1,1) line.                          */
+const HELD_WEAPON={
+  pistol:  {fwd:0.20, up:0.06, scale:0.55},
+  shotgun: {fwd:0.10, up:0.08, scale:1.05},
+  rifle:   {fwd:0.06, up:0.07, scale:1.18},
+  grenade: {fwd:0.22, up:0.14, scale:0.34},
+};
+function drawHeldWeapon(){
+  if(player.dead || !isArmed()) return;
+  const id=weaponList[weaponSel];
+  const cfg=HELD_WEAPON[id], art=WEAPON_ART[id], img=loaded.weapons;
+  if(!cfg||!art||!imgOk(img)) return;
+  const dw=PW*ZOOM*CSCALE, dh=PH*ZOOM*CSCALE;
+  const pcx=(player.x+PW/2-camX)*ZOOM;                 // player centre, screen x
+  const midY=(player.y+PH-SRCY)*ZOOM-dh*0.5;           // player vertical centre, screen y
+  const ww=dw*cfg.scale, wh=ww*art.sh/art.sw;          // weapon drawn size (keeps aspect)
+  const handX=pcx + player.face*dw*cfg.fwd;
+  const handY=midY - dh*cfg.up;
+  ctx.save();
+  ctx.translate(handX,handY);
+  if(player.face<0) ctx.scale(-1,1);                   // mirror to face the player's direction
+  ctx.drawImage(img, art.sx,art.sy,art.sw,art.sh, -ww*0.30, -wh*0.5, ww, wh);
+  ctx.restore();
+}
 function hitEnemy(e,dmg,knock,dir){
   if(e.state!=='walk') return;
   e.hp-=dmg; e.x += dir*(knock||8);
@@ -1645,6 +1674,7 @@ function draw(){
     ctx.restore();
   } else { ctx.fillStyle='#c0392b'; ctx.fillRect(sx,sy,dw,dh); }
 
+  drawHeldWeapon();    // the equipped gun/grenade in the player's hand
   drawBullets();
   drawVfx();
   drawDoors();
