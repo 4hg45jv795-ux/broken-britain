@@ -403,6 +403,17 @@ const SECTIONS=[
      you walk it; the left edge returns to the hub. BGW is the level length. */
   {id:'blacklevel', name:'The Void', bgKey:'__black__', black:true, BGW:4000, srcY:0, flatGround:200, chain:true, next:null, prev:null, enemies:[]},
 
+  /* ── HOLODECK (entered from the hub Portal -> travel menu) ─────────────
+     A full-screen MP4 backdrop: one widescreen clip (holodeck.mp4) fills the
+     WHOLE screen (no separate floor band) and is drawn TWICE side-by-side, so
+     the level is two screens wide. flip:true gives a FLIP-SCREEN camera: the
+     view SNAPS from one panel to the next as your character crosses the
+     boundary (no smooth scrolling), so each screen stays put while you run
+     across it. Delete flip:true to go back to smooth scrolling. black
+     underneath, the video is silent, Holodeck.mp3 is the sound. Want it
+     longer? Add screens: set BGW to (number-of-screens x 534). */
+  {id:'holodeck', name:'The Holodeck', bgKey:'__black__', black:true, flip:true, BGW:1068, srcY:0, flatGround:210, chain:true, next:null, prev:null, enemies:[]},
+
   /* ── INTERIOR ROOMS (entered from the hub; EXIT door returns to the street) ── */
   {id:'in_house', name:'Inside &mdash; My House', bgKey:'room_house', BGW:591, srcY:46, flatGround:277, charScale:1.3, interior:true, enemies:[],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
@@ -432,7 +443,7 @@ const SECTIONS=[
   /* Police Station is a wide walk-through (enquiries -> custody cells -> staff
      room) so it uses the full 2182px-wide image. srcY/flatGround/charScale are
      starting guesses — nudge on the phone. EXIT door sits near the entrance. */
-  {id:'in_police', name:'Inside &mdash; Police Station', bgKey:'room_police', BGW:2182, srcY:300, flatGround:505, charScale:1.6, interior:true, enemies:[],
+  {id:'in_police', name:'Inside &mdash; Police Station', bgKey:'room_police', BGW:2182, zoom:0.85, srcY:150, flatGround:545, charScale:2.2, interior:true, enemies:[],
    doors:[ {x:240, w:90, label:'EXIT &mdash; to the street', target:'home'} ]},
   {id:'in_nightclub', name:"Inside &mdash; Slammin' Vinyl", bgKey:'room_nightclub', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
@@ -452,6 +463,7 @@ let CSCALE=1;
 function loadSectionConfig(){
   const s=SECTIONS[sectionIndex];
   SRCY=s.srcY; BGW=s.BGW; CSCALE=s.charScale||1;
+  ZOOM=s.zoom||1.5; SRCW=VW/ZOOM; SRCH=VH/ZOOM;     // per-section camera zoom (default 1.5)
   document.getElementById('flag').textContent=' '+s.name.replace(/&mdash;/g,'—').toUpperCase();
 }
 function groundAt(x){
@@ -474,7 +486,7 @@ const ASSETS = [
   {key:'room_library',      type:'img', src:'room library.jpeg', optional:true},
   {key:'room_winchester',   type:'img', src:'room winchester.jpeg', optional:true},
   /* ── NEW ROOM BACKGROUNDS (same "room NAME.jpeg" convention as above) ── */
-  {key:'room_police',       type:'img', src:'room police.jpeg', optional:true},
+  {key:'room_police',       type:'img', src:'room police 2.jpeg', optional:true},
   {key:'room_nightclub',    type:'img', src:'room nightclub.jpeg', optional:true},
   {key:'room_crackadilly',  type:'img', src:'room crackadilly.jpeg', optional:true},
   {key:'bg',       type:'img', src:'bg.jpg'},
@@ -605,7 +617,7 @@ const sfxThrow =()=>{ blip(420,700,0.16,'triangle',0.12); };
 /* ── GAME STATE ──────────────────────────────────────────── */
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
 const VW=800,VH=360;
-const ZOOM=1.5,SRCW=VW/ZOOM,SRCH=VH/ZOOM;
+let ZOOM=1.5,SRCW=VW/ZOOM,SRCH=VH/ZOOM;   // recomputed per-section in loadSectionConfig (see section.zoom)
 const PH=80; let PW=Math.round(PH*FW/FH);
 let cur=null,raf=null,camX=0;
 const player={x:120,y:200,vx:0,vy:0,face:1,onGround:true,clip:'idle',ct:0,hp:100,max:100,dead:false,deadT:0,attackId:0,hurtCool:0,armour:0};
@@ -1166,6 +1178,7 @@ function drawTVMarker(){
                 the left and right edges butt together with no visible seam. */
 const SCENE_VIDEOS = {
   blacklevel: { wall:'wall.mp4', floor:'floor.mp4', wallFrac:0.75, tileW:1200 },
+  holodeck:   { wall:'holodeck.mp4', floor:null, wallFrac:1.0, tileW:534 },   // full-screen clip, doubled side-by-side
 };
 let sceneWallVid=null, sceneFloorVid=null;
 function curSceneCfg(){ return SCENE_VIDEOS[SECTIONS[sectionIndex].id] || null; }
@@ -1183,21 +1196,28 @@ function sceneVid(which){
 }
 function sceneLoad(playNow){
   const cfg=curSceneCfg(); if(!cfg){ scenePause(); return; }
-  const w=sceneVid('wall'), f=sceneVid('floor');
-  if(cfg.wall  && w.getAttribute('data-src')!==cfg.wall ){ w.setAttribute('data-src',cfg.wall ); w.src=cfg.wall ; try{w.load();}catch(_){} }
-  if(cfg.floor && f.getAttribute('data-src')!==cfg.floor){ f.setAttribute('data-src',cfg.floor); f.src=cfg.floor; try{f.load();}catch(_){} }
-  w.muted=true; f.muted=true;
-  if(playNow && !paused){ w.play().catch(()=>{}); f.play().catch(()=>{}); requestWakeLock(); }
+  const w=sceneVid('wall');
+  if(cfg.wall && w.getAttribute('data-src')!==cfg.wall){ w.setAttribute('data-src',cfg.wall); w.src=cfg.wall; try{w.load();}catch(_){} }
+  w.muted=true;
+  let f=null;
+  if(cfg.floor){
+    f=sceneVid('floor');
+    if(f.getAttribute('data-src')!==cfg.floor){ f.setAttribute('data-src',cfg.floor); f.src=cfg.floor; try{f.load();}catch(_){} }
+    f.muted=true;
+  } else if(sceneFloorVid){ try{ sceneFloorVid.pause(); }catch(_){} }   // full-screen level: no floor clip
+  if(playNow && !paused){ w.play().catch(()=>{}); if(f) f.play().catch(()=>{}); requestWakeLock(); }
 }
 function sceneEnter(){ if(curSceneCfg()) sceneLoad(true); else scenePause(); }
 function scenePause(){ try{ if(sceneWallVid) sceneWallVid.pause(); if(sceneFloorVid) sceneFloorVid.pause(); }catch(_){} }
 function drawSceneVideos(){
   const cfg=curSceneCfg(); if(!cfg) return;
-  const wallH=Math.round(VH*cfg.wallFrac), floorY=wallH, floorH=VH-wallH;
+  const hasFloor = !!cfg.floor;                                   // no floor clip -> wall fills the whole screen
+  const wallH = hasFloor ? Math.round(VH*cfg.wallFrac) : VH;
+  const floorY=wallH, floorH=VH-wallH;
   const tileScreenW=cfg.tileW*ZOOM;
   const w=sceneWallVid, f=sceneFloorVid;
   const wallReady = w && w.readyState>=2 && w.videoWidth>0 && w.getAttribute('data-src')===cfg.wall;
-  const floorReady= f && f.readyState>=2 && f.videoWidth>0 && f.getAttribute('data-src')===cfg.floor;
+  const floorReady= hasFloor && f && f.readyState>=2 && f.videoWidth>0 && f.getAttribute('data-src')===cfg.floor;
   const startK=Math.floor(camX/cfg.tileW);
   for(let k=startK; k*cfg.tileW < camX+SRCW; k++){
     const sx=(k*cfg.tileW - camX)*ZOOM;
@@ -1205,12 +1225,14 @@ function drawSceneVideos(){
     else { ctx.save(); ctx.fillStyle='#0a0c12'; ctx.fillRect(sx,0,tileScreenW,wallH);
            ctx.strokeStyle='#1a2640'; ctx.lineWidth=1; ctx.strokeRect(sx+0.5,0.5,tileScreenW-1,wallH-1);
            ctx.fillStyle='#33405a'; ctx.font='700 12px monospace'; ctx.textAlign='center';
-           ctx.fillText((cfg.wall||'(no wall)')+'  \u00B7  WALL', sx+tileScreenW/2, wallH/2); ctx.restore(); }
-    if(floorReady){ try{ ctx.drawImage(f, sx, floorY, tileScreenW, floorH); }catch(_){} }
-    else { ctx.save(); ctx.fillStyle='#05070b'; ctx.fillRect(sx,floorY,tileScreenW,floorH);
-           ctx.strokeStyle='#141d30'; ctx.lineWidth=1; ctx.strokeRect(sx+0.5,floorY+0.5,tileScreenW-1,floorH-1);
-           ctx.fillStyle='#2a3550'; ctx.font='700 12px monospace'; ctx.textAlign='center';
-           ctx.fillText((cfg.floor||'(no floor)')+'  \u00B7  FLOOR', sx+tileScreenW/2, floorY+floorH/2); ctx.restore(); }
+           ctx.fillText((cfg.wall||'(no clip)')+(hasFloor?'  \u00B7  WALL':'  \u00B7  SCREEN'), sx+tileScreenW/2, wallH/2); ctx.restore(); }
+    if(hasFloor){
+      if(floorReady){ try{ ctx.drawImage(f, sx, floorY, tileScreenW, floorH); }catch(_){} }
+      else { ctx.save(); ctx.fillStyle='#05070b'; ctx.fillRect(sx,floorY,tileScreenW,floorH);
+             ctx.strokeStyle='#141d30'; ctx.lineWidth=1; ctx.strokeRect(sx+0.5,floorY+0.5,tileScreenW-1,floorH-1);
+             ctx.fillStyle='#2a3550'; ctx.font='700 12px monospace'; ctx.textAlign='center';
+             ctx.fillText((cfg.floor||'(no floor)')+'  \u00B7  FLOOR', sx+tileScreenW/2, floorY+floorH/2); ctx.restore(); }
+    }
   }
   ctx.textAlign='start';
 }
@@ -1259,6 +1281,7 @@ const TRAVEL_MENUS={
     {label:'The Streets', target:'street'},          // already wired to the original level chain
     {label:'Mortal Kombat', target:'mk'},            // the UMK3 "Blue Portal" bridge arena
     {label:'The Void', target:'blacklevel'},         // black level: tiled MP4 wall + floor scenery
+    {label:'The Holodeck', target:'holodeck'},       // full-screen MP4 backdrop, doubled side-by-side
   ]},
   easyjet: { title:'easyJet Holidays', dests:[
     {label:'America',   target:'lvl_america'},
@@ -1972,8 +1995,8 @@ const TRACKS={ select:'Character selection screen.mp3', home:'Home.mp3', street:
   in_trainstation:'Trainstation.mp3', in_library:'Library.mp3', in_winchester:'Winchester.mp3',
   /* ── NEW ROOM MUSIC SLOTS (upload these three .mp3s next to index.html) ── */
   in_police:'Police.mp3', in_nightclub:'Slamminvinyl.mp3', in_crackadilly:'Crackadilly.mp3',
-  /* ── BLACK LEVEL MUSIC (the wall/floor MP4s are silent; this is its sound) ── */
-  blacklevel:'Void.mp3' };
+  /* ── BLACK LEVEL + HOLODECK MUSIC (the MP4s are silent; these are the sound) ── */
+  blacklevel:'Void.mp3', holodeck:'Holodeck.mp3' };
 function sectionMusic(){
   const id=SECTIONS[sectionIndex].id;
   return (!SCREENS[id] && TRACKS[id]) ? TRACKS[id] : null;   // a video screen always wins over a music track
@@ -2137,7 +2160,14 @@ function drawBg(){
   if(imgOk(loaded[bgKey])){ try{ ctx.drawImage(loaded[bgKey],camX,SRCY,SRCW,SRCH,0,0,VW,VH); }catch(e){ drawNoBg(); } } else drawNoBg();
 }
 function draw(){
-  camX=player.x+PW/2-SRCW/2; camX=Math.max(0,Math.min(BGW-SRCW,camX));
+  const dsec=SECTIONS[sectionIndex];
+  if(dsec.flip){                                   // flip-screen: snap the camera to whole-screen panels
+    const cfg=curSceneCfg(); const panelW=(cfg&&cfg.tileW)||SRCW;
+    const pi=Math.max(0,Math.floor((player.x+PW/2)/panelW));
+    camX=Math.max(0,Math.min(BGW-SRCW,pi*panelW));
+  } else {
+    camX=player.x+PW/2-SRCW/2; camX=Math.max(0,Math.min(BGW-SRCW,camX));
+  }
   ctx.clearRect(0,0,VW,VH); ctx.imageSmoothingEnabled=true;
   drawBg();
 
