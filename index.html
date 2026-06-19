@@ -101,8 +101,6 @@ html,body{margin:0;height:100%;background:#0b0c0f;color:var(--ink);font-family:'
 .pausecard{font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#fff;text-align:center;
   font-size:30px;text-shadow:0 2px 10px #000;}
 .pausecard span{display:block;font:600 13px monospace;color:#cdd3df;margin-top:10px;letter-spacing:.06em;text-transform:none;}
-.pbtn{background:#1f2a3a;border:1px solid #5a7aa8;color:#e8e4db;font:800 14px sans-serif;letter-spacing:.04em;text-transform:uppercase;padding:10px 18px;border-radius:8px;cursor:pointer;width:100%;text-align:center;}
-.pbtn:active{background:#ffd34d;color:#111;transform:scale(.98);}
 #kbhint{display:block;width:max-content;max-width:90%;margin:18px auto 0;
   background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:13px;padding:11px 18px;}
 
@@ -211,9 +209,13 @@ canvas#cv{display:block;width:100%;height:auto;}
 <section id="select">
   <div class="eyebrow">Side-scroller</div>
   <div class="title"><span class="word-broken">Enough</span><span class="word-britain">Is Enough</span></div>
-  <p class="sub">Britain's fucked. Time to clean house.</p>
+  <p class="sub">Britain's gone to the dogs.</p>
   <p class="rotate-tip" style="max-width:640px;margin:0 auto 10px;opacity:.85;">
-    A brutal side-scrolling brawl through a country that's gone completely to shit. Stab your way through chavs, loyalist nutters, Deliveroo wankers and whatever else is fucking the place up. Explore the hub — church, gun shop, library, The Winchester, cinema, easyJet and station — kit up with real hardware, summon proper lads like the Hurler and the flaming wheelie-bin from hell, then portal out and sort the streets. Keep your eyes on the skies too. Pick your fighter and get stuck in.
+    A side-scrolling brawl through a country that's lost the plot. Explore the town hub &#8212;
+    church, gun shop, library, the Winchester, cinema, airport and station &#8212; kit yourself out,
+    then take the portal to the streets and battle on through Belfast, Dundee, Glasgow and beyond.
+    Buy guns at FAFO Ammo &amp; Arms, summon mates like the Hurler and the flaming wheelie-bin,
+    and keep an eye on the skies. Pick your fighter to drop in.
   </p>
   <p class="rotate-tip">On a phone? Turn it sideways &#8212; the game goes full screen in landscape.</p>
   <div class="warn" id="warn"></div>
@@ -240,23 +242,7 @@ canvas#cv{display:block;width:100%;height:auto;}
     </div>
   </div>
   <div class="banner" id="banner">end of level</div>
-  <div id="pausemenu">
-    <div class="pausecard" style="background:#12100a;border:2px solid #ffd34d;border-radius:16px;padding:22px 26px;min-width:280px;max-width:92%;">
-      <div style="font:900 28px sans-serif;letter-spacing:.08em;color:#fff;margin-bottom:6px;">PAUSED</div>
-      <div style="font:600 12px monospace;color:#9fb4d8;margin-bottom:16px;">ENOUGH IS ENOUGH</div>
-      
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <button class="pbtn" data-action="resume">RESUME</button>
-        <button class="pbtn" data-action="save">SAVE GAME</button>
-        <button class="pbtn" data-action="load">LOAD GAME</button>
-        <button class="pbtn" data-action="restart">RESTART LEVEL</button>
-        <button class="pbtn" data-action="scores">HIGH SCORES</button>
-        <button class="pbtn" data-action="title">BACK TO TITLE</button>
-      </div>
-      
-      <div style="margin-top:14px;font:700 11px monospace;color:#8a8278;">Tap outside or press P to resume</div>
-    </div>
-  </div>
+  <div id="pausemenu"><div class="pausecard">Paused<span>Tap to resume</span></div></div>
   <div id="shop"><div class="shopcard">
     <div class="shophead"><span>FAFO Ammo &amp; Arms</span><span id="shopmoney">&pound;0</span></div>
     <div id="shoplist"></div>
@@ -420,13 +406,12 @@ const SECTIONS=[
   /* ── HOLODECK (entered from the hub Portal -> travel menu) ─────────────
      A full-screen MP4 backdrop: one widescreen clip (holodeck.mp4) fills the
      WHOLE screen (no separate floor band) and is drawn TWICE side-by-side, so
-     the level is two screens wide. flip:true gives a FLIP-SCREEN camera: the
-     view SNAPS from one panel to the next as your character crosses the
-     boundary (no smooth scrolling), so each screen stays put while you run
-     across it. Delete flip:true to go back to smooth scrolling. black
-     underneath, the video is silent, Holodeck.mp3 is the sound. Want it
-     longer? Add screens: set BGW to (number-of-screens x 534). */
-  {id:'holodeck', name:'The Holodeck', bgKey:'__black__', black:true, flip:true, BGW:1068, srcY:0, flatGround:210, chain:true, next:null, prev:null, enemies:[]},
+     the level is two screens wide and SCROLLS smoothly (the panels are anchored
+     to the world; the camera pans across as you run). Add flip:true to the line
+     below if you ever want a flip-screen camera instead (snaps panel-to-panel,
+     no scroll). black underneath, the video is silent, Holodeck.mp3 is the
+     sound. Want it longer? Add screens: set BGW to (number-of-screens x 534). */
+  {id:'holodeck', name:'The Holodeck', bgKey:'__black__', black:true, BGW:1068, srcY:0, flatGround:210, chain:true, next:null, prev:null, enemies:[]},
 
   /* ── INTERIOR ROOMS (entered from the hub; EXIT door returns to the street) ── */
   {id:'in_house', name:'Inside &mdash; My House', bgKey:'room_house', BGW:591, srcY:46, flatGround:277, charScale:1.3, interior:true, enemies:[],
@@ -564,7 +549,6 @@ function onAllLoaded(){
   }
   buildCards();
   buildHelperThumbs();
-  loadHighScores();
 }
 
 /* ── FIGHTER META ────────────────────────────────────────── */
@@ -684,10 +668,7 @@ function spawnParkAliens(){
 const ESPEED=1.05, EAGGRO=560, EHIT_RANGE=42, EDMG=8;
 function enemyClipDone(e){ const c=ENEMY_KINDS[e.kind].clips.die; return e.ct>=Math.ceil(c.count*60/c.fps); }
 function killEnemy(e,ko){ if(e.state==='die'||e.state==='dead')return; e.state='die'; e.ct=0; (ko?sfxKO:sfxHit)();
-  const reward=e.static?25:10; addMoney(reward); addFloater(e.x+e.w/2, e.y, '+\u00A3'+reward);
-  const pts = e.static ? 150 : 80; addScore(pts); addFloater(e.x+e.w/2, e.y-18, '+'+pts);
-  spawnBlood(e.x + e.w/2, e.y + e.h*0.35, 14); // big blood explosion on death
-}
+  const reward=e.static?25:10; addMoney(reward); addFloater(e.x+e.w/2, e.y, '+\u00A3'+reward); }
 function updateEnemies(){
   for(const e of enemies){
     e.y=groundAt(e.x+e.w/2)-e.h;
@@ -929,7 +910,6 @@ function nextSection(){
   const nextId=here.next;
   if(!nextId){                                  // end of the chain -> pop back to the hub
     transitioning=true;
-    updateHighScores(score, 'Completed the run');
     doFade('THE END &mdash; back to the street', ()=>{ killedEnemies.clear(); gotoId('home',{x:hubReturnX,face:1}); transitioning=false; });
     return;
   }
@@ -1258,23 +1238,11 @@ function drawSceneVideos(){
 
 /* ── MONEY + FLOATING REWARDS ────────────────────────────── */
 let money=0;
-let score=0;
 function updateMoneyHUD(){ const m=document.getElementById('money'); if(m) m.textContent='\u00A3'+money; }
 function addMoney(n){ money+=n; updateMoneyHUD(); }
-function updateScoreHUD(){ /* placeholder for now; can add a score element later */ }
-function addScore(n){ score += n; updateScoreHUD(); }
 let floaters=[];
 function addFloater(x,y,txt){ floaters.push({x,y,txt,t:0}); }
 function updateFloaters(){ for(const f of floaters) f.t++; floaters=floaters.filter(f=>f.t<55); }
-function spawnBlood(x,y,amount){
-  for(let i=0; i<(amount||6); i++){
-    vfx.push({
-      type:'blood', x:x + (Math.random()-0.5)*12, y:y + (Math.random()-0.5)*8,
-      vx:(Math.random()-0.5)*3.5, vy: -1.5 - Math.random()*2.5,
-      t:0, life: 22 + Math.random()*18, size: 2.5 + Math.random()*3
-    });
-  }
-}
 function drawFloaters(){
   ctx.save(); ctx.textAlign='center'; ctx.font='800 16px sans-serif';
   for(const f of floaters){ const a=Math.max(0,1-f.t/55); const sx=(f.x-camX)*ZOOM, sy=(f.y-SRCY)*ZOOM-f.t*0.9;
@@ -1283,111 +1251,10 @@ function drawFloaters(){
   ctx.restore();
 }
 
-/* ── SAVE / LOAD + HIGH SCORES (localStorage) ─────────────────────────── */
-const SAVE_KEY = 'enoughIsEnough_save_v1';
-const HS_KEY = 'enoughIsEnough_highscores_v1';
-
-function saveGame(){
-  if(!cur) return false;
-  const data = {
-    money, score,
-    owned: Array.from(owned),
-    killedEnemies: Array.from(killedEnemies),
-    sectionId: SECTIONS[sectionIndex].id,
-    playerX: Math.round(player.x),
-    playerFace: player.face,
-    armour: player.armour,
-    timestamp: Date.now()
-  };
-  try{
-    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
-    flashBanner('Game saved');
-    return true;
-  }catch(e){ flashBanner('Save failed (storage full?)'); return false; }
-}
-
-function loadGame(){
-  try{
-    const raw = localStorage.getItem(SAVE_KEY);
-    if(!raw) { flashBanner('No save found'); return false; }
-    const d = JSON.parse(raw);
-    // restore core state
-    money = d.money || 0; score = d.score || 0; updateMoneyHUD();
-    owned.clear(); (d.owned||[]).forEach(id => owned.add(id));
-    killedEnemies.clear(); (d.killedEnemies||[]).forEach(id => killedEnemies.add(id));
-    // find section
-    const idx = SECTIONS.findIndex(s => s.id === d.sectionId);
-    if(idx >= 0){
-      sectionIndex = idx;
-      enterSection({x: d.playerX || 120, face: d.playerFace || 1});
-    } else {
-      gotoId('home', {x:120, face:1});
-    }
-    player.armour = d.armour || 0; updateArmourHUD();
-    // rebuild weapon loadout
-    weaponList = WEAPON_ORDER.filter(x => owned.has(x));
-    weaponSel = weaponList.length > 0 ? 0 : -1;
-    refreshWeaponBtn();
-    flashBanner('Game loaded');
-    return true;
-  }catch(e){ flashBanner('Load failed'); return false; }
-}
-
-let highScores = [];
-function loadHighScores(){
-  try{
-    const raw = localStorage.getItem(HS_KEY);
-    highScores = raw ? JSON.parse(raw) : [];
-  }catch(e){ highScores = []; }
-}
-function saveHighScores(){
-  try{ localStorage.setItem(HS_KEY, JSON.stringify(highScores.slice(0,10))); }catch(e){}
-}
-function updateHighScores(finalScore, extra=''){
-  loadHighScores();
-  const entry = {
-    score: finalScore,
-    money: money,
-    section: SECTIONS[sectionIndex].name.replace(/&mdash;/g,'—'),
-    date: new Date().toISOString().slice(0,10),
-    extra: extra
-  };
-  highScores.push(entry);
-  highScores.sort((a,b)=> b.score - a.score);
-  highScores = highScores.slice(0,10);
-  saveHighScores();
-}
-function showHighScores(){
-  loadHighScores();
-  if(highScores.length === 0){
-    flashBanner('No high scores yet — go kill some bastards');
-    return;
-  }
-  const card = document.createElement('div');
-  card.style.cssText = 'position:fixed;inset:0;background:#000c;z-index:30;display:flex;align-items:center;justify-content:center;';
-  card.innerHTML = `
-    <div style="width:min(92%,420px);background:#12100a;border:2px solid #ffd34d;border-radius:14px;padding:16px 18px;box-shadow:0 10px 40px #000a;color:#e8e4db;">
-      <div style="font:900 18px sans-serif;letter-spacing:.04em;color:#ffe46b;text-transform:uppercase;text-align:center;margin-bottom:12px;">HIGH SCORES — TOP CUNTS</div>
-      <div id="hs-list" style="font:700 13px monospace;line-height:1.45;max-height:260px;overflow:auto;"></div>
-      <button id="hs-close" style="display:block;width:100%;margin-top:14px;background:#7a1f25;border:0;color:#fff;font:800 14px sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:11px;border-radius:9px;">CLOSE</button>
-    </div>`;
-  document.body.appendChild(card);
-  const list = card.querySelector('#hs-list');
-  highScores.forEach((h,i)=>{
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex;justify-content:space-between;padding:4px 2px;border-bottom:1px solid #2a2418;';
-    row.innerHTML = `<span>#${i+1} ${h.score} pts — ${h.section}</span><span style="color:#9fd2ff;">${h.date}</span>`;
-    list.appendChild(row);
-  });
-  card.querySelector('#hs-close').onclick = () => card.remove();
-  card.onclick = (e) => { if(e.target === card) card.remove(); };
-}
-
 /* ── RETURN TO HUB (run off the left edge of a level) ─────── */
 function returnToHub(){
   if(transitioning) return;
   transitioning=true;
-  updateHighScores(score, 'Returned to hub');
   doFade('Back to the high street', ()=>{ killedEnemies.clear(); gotoId('home',{x:hubReturnX,face:1}); transitioning=false; });
 }
 
@@ -1596,7 +1463,6 @@ function drawHeldWeapon(){
 function hitEnemy(e,dmg,knock,dir){
   if(e.state!=='walk') return;
   e.hp-=dmg; e.x += dir*(knock||8);
-  spawnBlood(e.x + e.w/2, e.y + e.h*0.4, 4);
   if(e.hp<=0) killEnemy(e,true); else sfxHit();
 }
 function fireWeapon(w){
@@ -1655,18 +1521,7 @@ function updateBullets(){
   }
   bullets=bullets.filter(b=>!b.dead);
 }
-function updateVfx(){ 
-  for(const f of vfx){ 
-    f.t++; 
-    if(f.type==='blood'){ 
-      f.vy = (f.vy||0) + 0.35; 
-      f.x += (f.vx||0); 
-      f.y += f.vy; 
-      if(f.y > groundAt(f.x) - 5) { f.vy *= -0.3; f.vx *= 0.6; } // bounce on ground
-    }
-  } 
-  vfx=vfx.filter(f=>f.t<f.life); 
-}
+function updateVfx(){ for(const f of vfx) f.t++; vfx=vfx.filter(f=>f.t<f.life); }
 function drawBullets(){
   for(const b of bullets){
     const sx=(b.x-camX)*ZOOM, sy=(b.y-SRCY)*ZOOM;
@@ -1704,15 +1559,6 @@ function drawVfx(){
       grd.addColorStop(0.5,'rgba(255,140,20,'+(0.8-p*0.8)+')');
       grd.addColorStop(1,'rgba(120,30,0,0)');
       ctx.fillStyle=grd; ctx.beginPath(); ctx.arc(sx,sy,rr,0,7); ctx.fill(); ctx.restore();
-    } else if(f.type==='blood'){
-      ctx.save();
-      ctx.globalAlpha = Math.max(0.15, 1 - p*1.1);
-      ctx.fillStyle = '#9c1f1f';
-      const r = (f.size||3) * ZOOM * (1 + p*0.3);
-      ctx.beginPath(); ctx.arc(sx, sy, r, 0, 7); ctx.fill();
-      // small drip
-      if(p < 0.6){ ctx.fillRect(sx-1, sy, 2, r*1.8); }
-      ctx.restore();
     }
   }
 }
@@ -1828,7 +1674,7 @@ function start(m){
   document.getElementById('hpbar').style.width='100%';
   bannerShown=false;csActive=false;csDone=false;
   photographerMet=false; npc.active=false;
-  money=1000; score=0; owned.clear(); updateMoneyHUD(); closeShop(); floaters=[];  // TESTING: start with £1000 (set back to 0 later)
+  money=1000; owned.clear(); updateMoneyHUD(); closeShop(); floaters=[];  // TESTING: start with £1000 (set back to 0 later)
   weaponList=[]; weaponSel=-1; shootCool=0; bullets=[]; vfx=[];
   player.armour=0; updateArmourHUD(); refreshWeaponBtn();
   hubReturnX=200;                                  // first time out, pop up by the house
@@ -1854,33 +1700,7 @@ function setPaused(p){
   }
 }
 document.getElementById('pause').onclick=(e)=>{ e.stopPropagation(); setPaused(!paused); };
-
-document.getElementById('pausemenu').onclick = (e) => {
-  const btn = e.target.closest('.pbtn');
-  if(btn){
-    const action = btn.dataset.action;
-    if(action === 'resume'){ setPaused(false); }
-    else if(action === 'save'){ saveGame(); }
-    else if(action === 'load'){ setPaused(false); setTimeout(()=>{ loadGame(); }, 80); }
-    else if(action === 'restart'){ 
-      setPaused(false); 
-      const curId = SECTIONS[sectionIndex].id; 
-      setTimeout(()=>{ gotoId(curId, {x:120, face:1}); killedEnemies.clear(); score=0; }, 120); 
-    }
-    else if(action === 'scores'){ showHighScores(); }
-    else if(action === 'title'){ 
-      setPaused(false); 
-      setTimeout(()=>{ 
-        document.getElementById('game').style.display='none'; 
-        document.getElementById('select').style.display='block'; 
-        document.getElementById('kbhint').style.display='block';
-        cur = null; 
-      }, 80); 
-    }
-    return;
-  }
-  if(e.target.id === 'pausemenu') setPaused(false); // click outside card
-};
+document.getElementById('pausemenu').onclick=()=>setPaused(false);
 document.getElementById('shopclose').onclick=(e)=>{ e.stopPropagation(); closeShop(); };
 document.getElementById('shop').onclick=(e)=>{ if(e.target.id==='shop') closeShop(); };
 document.getElementById('travel-close').onclick=(e)=>{ e.stopPropagation(); closeTravel(); };
@@ -2207,6 +2027,18 @@ const PROX_AUDIO=[
   {section:'in_library', src:'Burgerking.mp3', range:180, getX:()=>bkNpc?bkNpc.x:null},
   {section:'home',       src:'Captain.mp3',    range:180,
      getX:()=>{ const c=hubNpcs.find(n=>n.def&&n.def.key==='captain'); return c?c.x:null; }},
+  /* ── POLICE STATION proximity sounds (FIXED spots, measured in room pixels) ──
+     A different looping mp3 fades in as you stand in front of each cell, the
+     pool table and the staff-room seating. The four cells sit close together,
+     so their `range` is kept tight (60) to stop them overlapping. The x values
+     (room is 2182 wide) are estimates — nudge each `x` and `range` by ear.
+     These layer on top of Police.mp3.                                        */
+  {section:'in_police', src:'Cell1.mp3',     range:60,  getX:()=>895},
+  {section:'in_police', src:'Cell2.mp3',     range:60,  getX:()=>1025},
+  {section:'in_police', src:'Cell3.mp3',     range:60,  getX:()=>1155},
+  {section:'in_police', src:'Cell4.mp3',     range:60,  getX:()=>1285},
+  {section:'in_police', src:'Pooltable.mp3', range:120, getX:()=>1600},
+  {section:'in_police', src:'Staffroom.mp3', range:150, getX:()=>1920},
 ];
 const _proxEls={};
 function _proxEl(src){
