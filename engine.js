@@ -801,7 +801,7 @@ const WEAPON_ART={
   vest:    {sx:190,  sy:544, sw:273, sh:281},
   grenade: {sx:856,  sy:653, sw:145, sh:128},
 };
-const WEAPON_ORDER=['pistol','shotgun','rifle','grenade'];   // fixed cycle order
+const WEAPON_ORDER=['pistol','shotgun','rifle','grenade','littleblaster','bigblaster'];   // fixed cycle order
 let weaponList=[];        // owned weapons (excludes vest), in WEAPON_ORDER
 let weaponSel=-1;         // -1 = unarmed (fists); else index into weaponList
 let shootCool=0;
@@ -824,6 +824,11 @@ function cycleWeapon(){
 }
 function drawWeaponIcon(cx,id,W,H){
   cx.clearRect(0,0,W,H);
+  if((id==='bigblaster'||id==='littleblaster') && imgOk(loaded[id])){
+    const bi=loaded[id], pad=8, s=Math.min((W-pad*2)/bi.naturalWidth,(H-pad*2)/bi.naturalHeight);
+    const dw=bi.naturalWidth*s, dh=bi.naturalHeight*s; cx.imageSmoothingEnabled=true;
+    try{ cx.drawImage(bi,(W-dw)/2,(H-dh)/2,dw,dh); return; }catch(_){}
+  }
   const a=WEAPON_ART[id], img=loaded.weapons;
   if(a && imgOk(img)){
     const pad=7, aw=W-pad*2, ah=H-pad*2, s=Math.min(aw/a.sw, ah/a.sh);
@@ -895,10 +900,11 @@ function fireWeapon(w){
     return;
   }
   sfxShot();
+  if(w.shake) addShake(8,11);
   for(let i=0;i<w.pellets;i++){
     const spread=(Math.random()*2-1)*w.spread;
     bullets.push({ x:m.x, y:m.y, vx:player.face*w.speed*Math.cos(spread), vy:w.speed*Math.sin(spread),
-                   dmg:w.dmg, knock:w.knock, range:w.range, traveled:0 });
+                   dmg:w.dmg, knock:w.knock, range:w.range, traveled:0, sprite:w.sprite, spriteH:w.spriteH });
   }
 }
 function tryFire(){
@@ -952,6 +958,12 @@ function drawBullets(){
     if(b.grenade){
       ctx.save(); ctx.fillStyle='#3f5a2a'; ctx.strokeStyle='#1a240f'; ctx.lineWidth=2;
       ctx.beginPath(); ctx.arc(sx,sy,6,0,7); ctx.fill(); ctx.stroke(); ctx.restore();
+    } else if(b.sprite && imgOk(loaded[b.sprite])){
+      const bi=loaded[b.sprite]; const bh=(b.spriteH||30)*ZOOM, bw=bh*bi.naturalWidth/bi.naturalHeight;
+      ctx.save(); ctx.translate(sx,sy); if(b.vx<0) ctx.scale(-1,1);
+      ctx.shadowColor='rgba(90,190,255,0.85)'; ctx.shadowBlur=12;
+      try{ ctx.drawImage(bi,-bw*0.5,-bh*0.5,bw,bh); }catch(_){}
+      ctx.restore();
     } else {
       ctx.save(); ctx.strokeStyle='#ffd24a'; ctx.lineWidth=3; ctx.lineCap='round';
       ctx.shadowColor='#ffae00'; ctx.shadowBlur=6;
@@ -1061,7 +1073,7 @@ function initNPC(){ npc.x=player.x+SRCW+80; npc.state='walkin'; npc.t=0; npc.ani
 function updateNPC(){
   if(!npc.active)return;
   if(csActive){npc.state='idle';npc.y=groundAt(npc.x+NPCW/2)-NPCH;return;}
-  if(npc.state==='walkin'){ npc.x-=1.4; npc.anim+=0.17; if(!csDone&&Math.abs(player.x-npc.x)<180){npc.state='idle';startCutscene();} }
+  if(npc.state==='walkin'){ npc.x-=1.4; npc.anim+=0.17; if(!csDone&&Math.abs(player.x-npc.x)<260){npc.state='idle';startCutscene();} }
   else if(npc.state==='idle'){ npc.t=0; if(player.x > npc.x + 20) npc.state='trail'; }
   else{ const targetX=player.x-130; const gap=npc.x-targetX;
     if(gap>30){npc.x-=1.8;npc.anim+=0.16;npc.state='trail';}
