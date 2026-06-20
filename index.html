@@ -340,6 +340,19 @@ const CLIPS_DOG={
   die:    {start:8,  count:1, fps:6,  loop:false},    // no death art yet; freezes on idle
   shoot:  {start:12, count:3, fps:18, loop:false},    // aim -> fire; holds on frame 14 (gun up, muzzle flash)
 };
+/* ── The Boss (blue-suit heavy with a machine gun). Single row, 8 frames:
+     0-1 walk, 2-4 raise+fire (muzzle flash/smoke), 5 idle (adjusting tie),
+     6 kneel, 7 lying dead. Gun is IN the sprite, so noWeaponArt + muzzle. */
+const CLIPS_BOSS={
+  idle:   {start:5, count:1, fps:2,  loop:true},
+  walk:   {start:0, count:2, fps:6,  loop:true},
+  run:    {start:0, count:2, fps:9,  loop:true},
+  jump:   {start:1, count:1, fps:8,  loop:false},
+  punch:  {start:2, count:3, fps:13, loop:false},   // unarmed melee = gun raise
+  headbutt:{start:2,count:3, fps:13, loop:false},
+  die:    {start:6, count:2, fps:6,  loop:false},   // kneel -> lying
+  shoot:  {start:2, count:3, fps:15, loop:false},   // aim -> fire -> smoke
+};
 let CLIPS=CLIPS_BRIT;
 const GSTEP=60;
 const GROUNDPTS=[322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,330.0,342.0,346,346,346,346,346,346,346,346,346,346,346,346,346,346,338.0,330.0,322,322,322,322,322,322,322,322,322,322];
@@ -443,7 +456,7 @@ const SECTIONS=[
      room) so it uses the full 2182px-wide image. srcY/flatGround/charScale are
      starting guesses — nudge on the phone. EXIT door sits near the entrance. */
   {id:'in_police', name:'Inside &mdash; Police Station', bgKey:'room_police', BGW:2182, zoom:0.85, srcY:150, flatGround:545, charScale:2.2, interior:true, enemies:[],
-   doors:[ {x:240, w:90, label:'EXIT &mdash; to the street', target:'home'} ]},
+   doors:[ {x:2070, w:100, label:'EXIT &mdash; to the street', target:'home'} ]},
   {id:'in_nightclub', name:"Inside &mdash; Slammin' Vinyl", bgKey:'room_nightclub', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
   {id:'in_crackadilly', name:'Inside &mdash; Crackadilly Park', bgKey:'room_crackadilly', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
@@ -495,6 +508,7 @@ const ASSETS = [
   {key:'brit',     type:'img', src:'brit2.png'},
   {key:'crusader', type:'img', src:'crusader2.png'},
   {key:'dog',      type:'img', src:'dog.png', optional:true},
+  {key:'boss',     type:'img', src:'boss.png', optional:true},
   {key:'photog',   type:'img', src:'photog2.png'},
   {key:'athlete',  type:'img', src:'athlete.png', optional:true},
   {key:'police',   type:'img', src:'police4.png', optional:true},
@@ -557,6 +571,8 @@ const META=[
   {id:'crusader', name:'The Crusader', flag:'CHRISTENDOM',   fw:134, fh:179, clips:CLIPS_CRU},
   {id:'dog',      name:'K-9 Unit',     flag:'ARMED RESPONSE',fw:224, fh:240, clips:CLIPS_DOG,
                   noWeaponArt:true, muzzle:{fwd:0.62, yfac:0.34}},
+  {id:'boss',     name:'The Boss',     flag:'THE FIRM',      fw:284, fh:301, clips:CLIPS_BOSS,
+                  noWeaponArt:true, muzzle:{fwd:0.62, yfac:0.46}},
 ];
 function buildCards(){
   const grid=document.getElementById('cards');
@@ -1470,7 +1486,6 @@ function fireWeapon(w){
   const m=muzzlePoint();
   vfx.push({type:'muzzle', x:m.x, y:m.y, face:player.face, t:0, life:7});
   for(let i=0;i<3;i++) vfx.push({type:'spark', x:m.x+player.face*(4+Math.random()*9), y:m.y+(Math.random()*7-3.5), t:0, life:6}); // muzzle sparks
-  addShake(w.type==='grenade'?6 : (w.pellets>=4?5:3), 7);   // kick the camera on fire
   if(w.type==='grenade'){
     sfxThrow();
     bullets.push({grenade:true, x:m.x, y:m.y-4, vx:player.face*w.speed, vy:-7.5, fuse:60, dmg:w.dmg, radius:w.radius, knock:w.knock});
@@ -2085,8 +2100,9 @@ const PROX_AUDIO=[
   {section:'in_police', src:'Cell1.mp3',     range:60,  getX:()=>895},
   {section:'in_police', src:'Cell2.mp3',     range:60,  getX:()=>1025},
   {section:'in_police', src:'Cell3.mp3',     range:60,  getX:()=>1155},
-  {section:'in_police', src:'Cell4.mp3',     range:60,  getX:()=>1285},
-  {section:'in_police', src:'Pooltable.mp3', range:120, getX:()=>1600},
+  {section:'in_police', src:'Cell4.mp3',       range:85,  getX:()=>1310},
+  {section:'in_police', src:'Policewoman.mp3', range:120, getX:()=>400},
+  {section:'in_police', src:'Pooltable.mp3',   range:120, getX:()=>1600},
   {section:'in_police', src:'Staffroom.mp3', range:150, getX:()=>1920},
 ];
 const _proxEls={};
