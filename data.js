@@ -51,21 +51,6 @@ const CLIPS_BOSS={
   die:    {start:6, count:2, fps:6,  loop:false},   // kneel -> lying
   shoot:  {start:2, count:3, fps:15, loop:false},   // aim -> fire -> smoke
 };
-/* ── The Operator (gun guy). operator.png = 13 frames @ 150×198, real PNG alpha:
-     walk → aim → fire (muzzle flash + flying casings) → kneel → lying dead.
-     Best-guess frame split below — nudge counts on the phone if a phase
-     runs short/long. Rifle is IN the sprite (noWeaponArt + muzzle), same as
-     K-9 and The Boss, so bullets leave his own barrel. */
-const CLIPS_OPERATOR={
-  idle:   {start:0,  count:1, fps:2,  loop:true},    // standing
-  walk:   {start:0,  count:3, fps:9,  loop:true},
-  run:    {start:0,  count:3, fps:12, loop:true},
-  jump:   {start:2,  count:1, fps:8,  loop:false},
-  punch:  {start:3,  count:4, fps:14, loop:false},   // gun-up melee
-  headbutt:{start:3, count:4, fps:14, loop:false},
-  die:    {start:9,  count:4, fps:8,  loop:false},   // kneel -> lying dead
-  shoot:  {start:3,  count:4, fps:16, loop:false},   // aim -> fire (holds on muzzle-flash frame)
-};
 /* ── FIGHTER META ────────────────────────────────────────── */
 const META=[
   {id:'brit',     name:'The Patriot',  flag:'GREAT BRITAIN', fw:181, fh:218, clips:CLIPS_BRIT},
@@ -74,8 +59,6 @@ const META=[
                   noWeaponArt:true, muzzle:{fwd:0.62, yfac:0.34}},
   {id:'boss',     name:'The Boss',     flag:'THE FIRM',      fw:294, fh:299, clips:CLIPS_BOSS,
                   noWeaponArt:true, muzzle:{fwd:0.62, yfac:0.46}},
-  {id:'operator', name:'The Operator', flag:'DIRECT ACTION', fw:150, fh:198, clips:CLIPS_OPERATOR,
-                  noWeaponArt:true, muzzle:{fwd:0.40, yfac:0.30}},
 ];
 /* ── ASSETS ──────────────────────────────────────────────── */
 const ASSETS = [
@@ -101,7 +84,6 @@ const ASSETS = [
   {key:'crusader', type:'img', src:'crusader2.png'},
   {key:'dog',      type:'img', src:'dog.png', optional:true},
   {key:'boss',     type:'img', src:'boss.png', optional:true},
-  {key:'operator', type:'img', src:'operator.png', optional:true},
   {key:'photog',   type:'img', src:'photog2.png'},
   {key:'athlete',  type:'img', src:'athlete.png', optional:true},
   {key:'police',   type:'img', src:'police4.png', optional:true},
