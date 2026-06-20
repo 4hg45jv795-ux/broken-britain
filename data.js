@@ -1,13 +1,14 @@
 /* data.js — Enough Is Enough: the data/config you tweak (loaded BEFORE engine.js). */
 
 const CLIPS_BRIT={
-  idle:   {start:0,  count:5, fps:7,  loop:true},
-  walk:   {start:5,  count:6, fps:10, loop:true},
-  run:    {start:11, count:6, fps:15, loop:true},
-  jump:   {start:17, count:6, fps:12, loop:false},
-  punch:  {start:23, count:6, fps:20, loop:false},
-  headbutt:{start:29,count:4, fps:16, loop:false},
-  die:    {start:33, count:3, fps:8,  loop:false},
+  idle:   {start:0,  count:1, fps:2,  loop:true},
+  walk:   {start:1,  count:6, fps:10, loop:true},
+  run:    {start:10, count:3, fps:13, loop:true},
+  jump:   {start:7,  count:1, fps:8,  loop:false},
+  punch:  {start:18, count:2, fps:14, loop:false},   // gun-thrust melee
+  headbutt:{start:18,count:2, fps:14, loop:false},
+  die:    {start:20, count:2, fps:7,  loop:false},   // kneel -> lying
+  shoot:  {start:13, count:2, fps:16, loop:false},   // raise -> fire
 };
 const CLIPS_CRU={
   idle:   {start:0,  count:4, fps:5,  loop:true},
@@ -53,7 +54,8 @@ const CLIPS_BOSS={
 };
 /* ── FIGHTER META ────────────────────────────────────────── */
 const META=[
-  {id:'brit',     name:'The Patriot',  flag:'GREAT BRITAIN', fw:181, fh:218, clips:CLIPS_BRIT},
+  {id:'brit',     name:'The Patriot',  flag:'GREAT BRITAIN', fw:233, fh:220, clips:CLIPS_BRIT,
+                  noWeaponArt:true, muzzle:{fwd:0.34, yfac:0.40}},
   {id:'crusader', name:'The Crusader', flag:'CHRISTENDOM',   fw:134, fh:179, clips:CLIPS_CRU},
   {id:'dog',      name:'K-9 Unit',     flag:'ARMED RESPONSE',fw:224, fh:240, clips:CLIPS_DOG,
                   noWeaponArt:true, muzzle:{fwd:0.62, yfac:0.34}},
@@ -80,7 +82,7 @@ const ASSETS = [
   {key:'pub',      type:'img', src:'pub2.jpeg'},
   {key:'dundee',   type:'img', src:'dundee.jpeg'},
   {key:'bg3',      type:'img', src:'bg3.jpeg'},
-  {key:'brit',     type:'img', src:'brit2.png'},
+  {key:'brit',     type:'img', src:'patriot.png'},
   {key:'crusader', type:'img', src:'crusader2.png'},
   {key:'dog',      type:'img', src:'dog.png', optional:true},
   {key:'boss',     type:'img', src:'boss.png', optional:true},
