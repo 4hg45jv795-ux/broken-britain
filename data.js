@@ -316,13 +316,18 @@ const TRAVEL_MENUS={
   ]},
 };
 const SHOP=[
-  {id:'rifle',   name:'Bullets',          price:350},
+  {id:'pistol',  name:'Pistol',           price:50},
+  {id:'shotgun', name:'Shotgun',          price:150},
+  {id:'rifle',   name:'Assault Rifle',    price:350},
   {id:'vest',    name:'Bulletproof Vest', price:250},
+  {id:'grenade', name:'Grenades',         price:120},
   {id:'littleblaster', name:'Little Blaster',    price:300},
   {id:'bigblaster',    name:'Big Blaster',       price:600},
 ];
 const WEAPONS={
-  rifle:   {name:'Bullets', auto:true,  cooldown:6,  type:'bullet', pellets:1, spread:0.05, speed:14, range:640, dmg:18, knock:6 },
+  pistol:  {name:'Pistol',  auto:false, cooldown:16, type:'bullet', pellets:1, spread:0.00, speed:12, range:540, dmg:34, knock:9 },
+  shotgun: {name:'Shotgun', auto:false, cooldown:42, type:'bullet', pellets:7, spread:0.30, speed:10, range:240, dmg:16, knock:16},
+  rifle:   {name:'Rifle',   auto:true,  cooldown:6,  type:'bullet', pellets:1, spread:0.05, speed:14, range:640, dmg:18, knock:6 },
   grenade: {name:'Grenade', auto:false, cooldown:48, type:'grenade', speed:8, dmg:80, radius:95, knock:22 },
   littleblaster:{name:'Little Blaster', auto:false, cooldown:16, type:'bullet', pellets:1, spread:0.02, speed:12, range:600, dmg:34, knock:9,  sprite:'littleblaster', spriteH:30, shake:false},
   bigblaster:   {name:'Big Blaster',    auto:false, cooldown:34, type:'bullet', pellets:1, spread:0.00, speed:10, range:680, dmg:90, knock:24, sprite:'bigblaster',    spriteH:58, shake:true },
@@ -403,5 +408,6 @@ const PROX_AUDIO=[
   {section:'in_police', src:'Cell3.mp3',     range:60,  getX:()=>1155},
   {section:'in_police', src:'Cell4.mp3',       range:85,  getX:()=>1310},
   {section:'in_police', src:'Policewoman.mp3', range:120, getX:()=>400},
-  {section:'in_police', src:'Staffroom.mp3', range:420, getX:()=>1920},
+  {section:'in_police', src:'Pooltable.mp3',   range:520, getX:()=>1600},
+  {section:'in_police', src:'Staffroom.mp3', range:150, getX:()=>1920},
 ];
