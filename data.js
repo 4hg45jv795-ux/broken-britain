@@ -57,14 +57,14 @@ const CLIPS_BOSS={
      runs short/long. Rifle is IN the sprite (noWeaponArt + muzzle), same as
      K-9 and The Boss, so bullets leave his own barrel. */
 const CLIPS_OPERATOR={
-  idle:   {start:4,  count:1, fps:2,  loop:true},    // aim/ready stance
-  walk:   {start:0,  count:4, fps:9,  loop:true},
-  run:    {start:0,  count:4, fps:12, loop:true},
-  jump:   {start:4,  count:1, fps:8,  loop:false},
-  punch:  {start:5,  count:3, fps:14, loop:false},   // unarmed melee = fire motion
-  headbutt:{start:5, count:3, fps:14, loop:false},
-  die:    {start:8,  count:5, fps:8,  loop:false},   // kneel -> lying dead
-  shoot:  {start:5,  count:3, fps:16, loop:false},   // aim -> fire
+  idle:   {start:0,  count:1, fps:2,  loop:true},    // standing
+  walk:   {start:0,  count:3, fps:9,  loop:true},
+  run:    {start:0,  count:3, fps:12, loop:true},
+  jump:   {start:2,  count:1, fps:8,  loop:false},
+  punch:  {start:3,  count:4, fps:14, loop:false},   // gun-up melee
+  headbutt:{start:3, count:4, fps:14, loop:false},
+  die:    {start:9,  count:4, fps:8,  loop:false},   // kneel -> lying dead
+  shoot:  {start:3,  count:4, fps:16, loop:false},   // aim -> fire (holds on muzzle-flash frame)
 };
 /* ── FIGHTER META ────────────────────────────────────────── */
 const META=[
