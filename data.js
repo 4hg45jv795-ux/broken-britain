@@ -78,6 +78,10 @@ const ASSETS = [
   {key:'room_police',       type:'img', src:'room police 2.jpeg', optional:true},
   {key:'room_nightclub',    type:'img', src:'room nightclub.jpeg', optional:true},
   {key:'room_crackadilly',  type:'img', src:'room crackadilly.jpeg', optional:true},
+  {key:'room_dnb',          type:'img', src:'room dnb.jpeg', optional:true},
+  {key:'room_hardcore',     type:'img', src:'room hardcore.jpeg', optional:true},
+  {key:'room_special',      type:'img', src:'room special.jpeg', optional:true},
+  {key:'room_cottagers',    type:'img', src:'room cottagers.jpeg', optional:true},
   {key:'bg',       type:'img', src:'bg.jpg'},
   {key:'pub',      type:'img', src:'pub2.jpeg'},
   {key:'dundee',   type:'img', src:'dundee.jpeg'},
@@ -171,8 +175,13 @@ const SECTIONS=[
      scrolling with the camera. black:true paints the frame black underneath,
      so anywhere a video hasn't loaded yet just stays black. chain:true lets
      you walk it; the left edge returns to the hub. BGW is the level length. */
+  /* THE VOID is now an ENDLESS WAVE ARENA. The engine's wave spawner (arena* in
+     engine.js) takes over: each cleared wave brings a tougher one (more enemies,
+     more HP, faster, hits harder). Kills bank score; top runs save to this device
+     and show when you fall. Walk off the far LEFT to leave. Add future tougher
+     enemy kinds to arenaPool() in engine.js, gated behind a higher wave number. */
   {id:'blacklevel', name:'The Void', bgKey:'__black__', black:true, BGW:8534, srcY:0, flatGround:200, chain:true, next:null, prev:null,
-   enemies:[ {at:700,kind:2},{at:1300,kind:7},{at:2100,kind:3},{at:2900,kind:7},{at:3600,kind:2},{at:4400,kind:7},{at:5200,kind:3},{at:6000,kind:7},{at:6800,kind:2},{at:7600,kind:7},{at:8100,kind:3} ]},
+   arena:true, enemies:[]},
 
   /* ── HOLODECK (entered from the hub Portal -> travel menu) ─────────────
      A full-screen MP4 backdrop: one widescreen clip (holodeck.mp4) fills the
@@ -213,10 +222,17 @@ const SECTIONS=[
   /* Police Station is a wide walk-through (enquiries -> custody cells -> staff
      room) so it uses the full 2182px-wide image. srcY/flatGround/charScale are
      starting guesses — nudge on the phone. EXIT door sits near the entrance. */
-  {id:'in_police', name:'Inside &mdash; Police Station', bgKey:'room_police', BGW:2182, zoom:0.85, srcY:150, flatGround:545, charScale:2.2, interior:true, enemies:[],
-   doors:[ {x:2070, w:100, label:'EXIT &mdash; to the street', target:'home'} ]},
-  {id:'in_nightclub', name:"Inside &mdash; Slammin' Vinyl", bgKey:'room_nightclub', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
-   doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
+  {id:'in_police', name:'Inside &mdash; Police Station', bgKey:'room_police', BGW:2182, zoom:0.85, srcY:150, flatGround:545, charScale:2.2, interior:true, exitLeft:'home', enemies:[],
+   doors:[]},   // EXIT by walking off the far LEFT of the room (no STRIKE) — exitLeft:'home'
+  /* ── SLAMMIN' VINYL (the club lobby; room nightclub.jpeg, 2048px wide). Leave
+     by walking off the far LEFT, back through the turnstiles (exitLeft:'home').
+     The 3 doors lead to the club rooms — nudge each x so the marker sits over the
+     painted door, and tune srcY/flatGround/charScale so feet land on the floor in
+     front of them (mirrors the police-room camera as a sensible starting point). */
+  {id:'in_nightclub', name:"Inside &mdash; Slammin' Vinyl", bgKey:'room_nightclub', BGW:2048, zoom:0.85, srcY:150, flatGround:540, charScale:1.7, interior:true, exitLeft:'home', enemies:[],
+   doors:[ {x:785,  w:95, label:'Room 1 &mdash; Drum &amp; Bass', target:'in_dnb'},
+           {x:1115, w:95, label:'Room 2 &mdash; Hardcore',       target:'in_hardcore'},
+           {x:1440, w:95, label:'Room 3 &mdash; Special Guest',  target:'in_special'} ]},
   /* ── CRACKADILLY GARDENS (the stitched 3-panorama park; end of the hub) ──
      One wide outdoor walk-through built from Park1+Park2+Park3 stitched into a
      single seamless jpeg (room crackadilly.jpeg, 5946px wide). interior:true so
@@ -226,11 +242,37 @@ const SECTIONS=[
      screen, and flatGround:350 drops the player's feet onto that pavement.
      Nudge if needed — raise flatGround (e.g. 350->370) to push him lower; raise
      srcY (e.g. 140->165) to reveal even more pavement at the very bottom.
-     The EXIT door is at the FAR RIGHT (walk the gardens, leave at the far side);
-     move its x left (e.g. x:200) to exit back by the entrance. Music:
-     Crackadilly.mp3 (already slotted in TRACKS below — just upload that file). */
-  {id:'in_crackadilly', name:'Crackadilly Gardens', bgKey:'room_crackadilly', BGW:5946, srcY:140, flatGround:350, charScale:1.2, interior:true, enemies:[],
-   doors:[ {x:5786, w:130, label:'EXIT &mdash; to the street', target:'home'} ]},
+     EXIT: walk off the far LEFT of the level (no STRIKE) — exitLeft:'home'. The
+     door at the far-right end is the Cottagers Cove underpass (a separate room).
+     groundPts gives the walk a DIP through the canal basin: 350 (towpath) for most
+     of the level, dropping to ~366 across the basin (world x ~4300-5000) so the
+     player walks the wet stone quay in FRONT of the water, then climbs back to 350
+     for the towpath/underpass. Each point spans groundStep (100) world px. To drop
+     him further into the basin, raise those dip numbers toward 378 (378 is ~the
+     very bottom of the view); flatGround:350 stays as a fallback if the image ever
+     fails to load. Nudge the underpass door x (5300) to sit over the tunnel mouth.
+     Music: Crackadilly.mp3 (already in TRACKS). */
+  {id:'in_crackadilly', name:'Crackadilly Gardens', bgKey:'room_crackadilly', BGW:5946, srcY:140, flatGround:350, charScale:1.2, interior:true, exitLeft:'home', enemies:[],
+   groundStep:100,
+   groundPts:[350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,352,360,364,366,366,366,362,354,350,350,350,350,350,350,350,350,350],
+   doors:[ {x:5300, w:150, label:'Cottagers Cove &mdash; underpass', target:'in_cottagers'} ]},
+
+  /* ── SLAMMIN' VINYL ROOMS (entered from the club lobby; EXIT door -> lobby) ──
+     Placeholder interiors until you make their backgrounds (room dnb/hardcore/
+     special.jpeg). Each loops its own track (see TRACKS). The engine draws a dark
+     room until the art exists; nudge BGW/srcY/flatGround/charScale once it does. */
+  {id:'in_dnb', name:'Room 1 &mdash; Drum &amp; Bass', bgKey:'room_dnb', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
+   doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
+  {id:'in_hardcore', name:'Room 2 &mdash; Hardcore', bgKey:'room_hardcore', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
+   doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
+  {id:'in_special', name:'Room 3 &mdash; Special Guest', bgKey:'room_special', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
+   doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
+
+  /* ── COTTAGERS COVE (the underpass at the far end of Crackadilly Gardens) ──
+     A standalone room reached from the gardens' right-hand underpass door.
+     Placeholder until you make room cottagers.jpeg; EXIT pops back to the hub. */
+  {id:'in_cottagers', name:'Cottagers Cove', bgKey:'room_cottagers', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
+   doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
 
   /* Placeholder for travel destinations that aren't built yet (easyJet / train
      station locations). When you create a real level, give it its own id and
@@ -253,6 +295,7 @@ const TRACKS={ select:'Character selection screen.mp3', home:'Home.mp3', street:
   in_trainstation:'Trainstation.mp3', in_library:'Library.mp3', in_winchester:'Winchester.mp3',
   /* ── NEW ROOM MUSIC SLOTS (upload these three .mp3s next to index.html) ── */
   in_police:'Police.mp3', in_nightclub:'Slamminvinyl.mp3', in_crackadilly:'Crackadilly.mp3',
+  in_dnb:'Dnb.mp3', in_hardcore:'Hardcore.mp3', in_special:'Specialguest.mp3', in_cottagers:'Cottagerscove.mp3',
   /* ── BLACK LEVEL + HOLODECK MUSIC (the MP4s are silent; these are the sound) ── */
   blacklevel:'Void.mp3', holodeck:'Holodeck.mp3' };
 /* ── ROOM SCREENS (looping .mp4s with sound, painted onto wall screens) ──
