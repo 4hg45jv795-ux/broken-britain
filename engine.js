@@ -688,13 +688,14 @@ function sceneEnter(){ sceneZoneIdx=-1; if(curSceneCfg()) sceneLoad(true); else 
 function scenePause(){ try{ if(sceneWallVid) sceneWallVid.pause(); if(sceneFloorVid) sceneFloorVid.pause(); }catch(_){} }
 function drawSceneVideos(){
   const cfg=curSceneCfg(); if(!cfg) return;
-  const hasFloor = !!cfg.floor;                                   // no floor clip -> wall fills the whole screen
+  const src=sceneSrc()||{};
+  const hasFloor = !!src.floor;                                   // no floor clip -> wall fills the whole screen
   const wallH = hasFloor ? Math.round(VH*cfg.wallFrac) : VH;
   const floorY=wallH, floorH=VH-wallH;
   const tileScreenW=cfg.tileW*ZOOM;
   const w=sceneWallVid, f=sceneFloorVid;
-  const wallReady = w && w.readyState>=2 && w.videoWidth>0 && w.getAttribute('data-src')===cfg.wall;
-  const floorReady= hasFloor && f && f.readyState>=2 && f.videoWidth>0 && f.getAttribute('data-src')===cfg.floor;
+  const wallReady = w && w.readyState>=2 && w.videoWidth>0 && w.getAttribute('data-src')===src.wall;
+  const floorReady= hasFloor && f && f.readyState>=2 && f.videoWidth>0 && f.getAttribute('data-src')===src.floor;
   const startK=Math.floor(camX/cfg.tileW);
   for(let k=startK; k*cfg.tileW < camX+SRCW; k++){
     const sx=(k*cfg.tileW - camX)*ZOOM;
@@ -702,13 +703,13 @@ function drawSceneVideos(){
     else { ctx.save(); ctx.fillStyle='#0a0c12'; ctx.fillRect(sx,0,tileScreenW,wallH);
            ctx.strokeStyle='#1a2640'; ctx.lineWidth=1; ctx.strokeRect(sx+0.5,0.5,tileScreenW-1,wallH-1);
            ctx.fillStyle='#33405a'; ctx.font='700 12px monospace'; ctx.textAlign='center';
-           ctx.fillText((cfg.wall||'(no clip)')+(hasFloor?'  \u00B7  WALL':'  \u00B7  SCREEN'), sx+tileScreenW/2, wallH/2); ctx.restore(); }
+           ctx.fillText((src.wall||'(no clip)')+(hasFloor?'  \u00B7  WALL':'  \u00B7  SCREEN'), sx+tileScreenW/2, wallH/2); ctx.restore(); }
     if(hasFloor){
       if(floorReady){ try{ ctx.drawImage(f, sx, floorY, tileScreenW, floorH); }catch(_){} }
       else { ctx.save(); ctx.fillStyle='#05070b'; ctx.fillRect(sx,floorY,tileScreenW,floorH);
              ctx.strokeStyle='#141d30'; ctx.lineWidth=1; ctx.strokeRect(sx+0.5,floorY+0.5,tileScreenW-1,floorH-1);
              ctx.fillStyle='#2a3550'; ctx.font='700 12px monospace'; ctx.textAlign='center';
-             ctx.fillText((cfg.floor||'(no floor)')+'  \u00B7  FLOOR', sx+tileScreenW/2, floorY+floorH/2); ctx.restore(); }
+             ctx.fillText((src.floor||'(no floor)')+'  \u00B7  FLOOR', sx+tileScreenW/2, floorY+floorH/2); ctx.restore(); }
     }
   }
   ctx.textAlign='start';
