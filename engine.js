@@ -151,6 +151,8 @@ const ENEMY_KINDS=[
    clips:{walk:{start:0,count:6,fps:12,loop:true}, die:{start:6,count:4,fps:9,loop:false}}},
   {img:'bikeboy', fw:175, fh:130, color:'#8a8f96', hair:'#2a2622',
    clips:{walk:{start:0,count:2,fps:3,loop:true}, die:{start:2,count:2,fps:6,loop:false}}},
+  {img:'ufo', fw:119, fh:90, hover:34, color:'#bfe4ff', hair:'#3a5a8a',
+   clips:{walk:{start:0,count:8,fps:10,loop:true}, die:{start:0,count:1,fps:6,loop:false}}},
 ];
 const EH=78;
 let enemies=[];
@@ -176,7 +178,7 @@ function killEnemy(e,ko){ if(e.state==='die'||e.state==='dead')return; e.state='
   const reward=e.static?25:10; addMoney(reward); addFloater(e.x+e.w/2, e.y, '+\u00A3'+reward); }
 function updateEnemies(){
   for(const e of enemies){
-    e.y=groundAt(e.x+e.w/2)-e.h;
+    e.y=groundAt(e.x+e.w/2)-e.h-(ENEMY_KINDS[e.kind].hover||0);
     if(e.state==='dead') continue;
     if(e.state==='die'){ e.ct++; if(enemyClipDone(e)){ e.state='dead'; if(e.id) killedEnemies.add(e.id); } continue; }
     // walking / chasing the player
@@ -657,20 +659,32 @@ function sceneVid(which){
   }
   return v;
 }
+let sceneZoneIdx=-1;
+function sceneSrc(){
+  const cfg=curSceneCfg(); if(!cfg) return null;
+  if(cfg.zones && cfg.zones.length){ let z=cfg.zones[0]; for(const zz of cfg.zones){ if(player.x>=zz.from) z=zz; } return {wall:z.wall, floor:z.floor}; }
+  return {wall:cfg.wall, floor:cfg.floor};
+}
+function sceneUpdate(){
+  const cfg=curSceneCfg(); if(!cfg||!cfg.zones) return;
+  let idx=0; for(let i=0;i<cfg.zones.length;i++){ if(player.x>=cfg.zones[i].from) idx=i; }
+  if(idx!==sceneZoneIdx){ sceneZoneIdx=idx; sceneLoad(true); }
+}
 function sceneLoad(playNow){
   const cfg=curSceneCfg(); if(!cfg){ scenePause(); return; }
+  const src=sceneSrc()||{};
   const w=sceneVid('wall');
-  if(cfg.wall && w.getAttribute('data-src')!==cfg.wall){ w.setAttribute('data-src',cfg.wall); w.src=cfg.wall; try{w.load();}catch(_){} }
+  if(src.wall && w.getAttribute('data-src')!==src.wall){ w.setAttribute('data-src',src.wall); w.src=src.wall; try{w.load();}catch(_){} }
   w.muted=true;
   let f=null;
-  if(cfg.floor){
+  if(src.floor){
     f=sceneVid('floor');
-    if(f.getAttribute('data-src')!==cfg.floor){ f.setAttribute('data-src',cfg.floor); f.src=cfg.floor; try{f.load();}catch(_){} }
+    if(f.getAttribute('data-src')!==src.floor){ f.setAttribute('data-src',src.floor); f.src=src.floor; try{f.load();}catch(_){} }
     f.muted=true;
   } else if(sceneFloorVid){ try{ sceneFloorVid.pause(); }catch(_){} }   // full-screen level: no floor clip
   if(playNow && !paused){ w.play().catch(()=>{}); if(f) f.play().catch(()=>{}); requestWakeLock(); }
 }
-function sceneEnter(){ if(curSceneCfg()) sceneLoad(true); else scenePause(); }
+function sceneEnter(){ sceneZoneIdx=-1; if(curSceneCfg()) sceneLoad(true); else scenePause(); }
 function scenePause(){ try{ if(sceneWallVid) sceneWallVid.pause(); if(sceneFloorVid) sceneFloorVid.pause(); }catch(_){} }
 function drawSceneVideos(){
   const cfg=curSceneCfg(); if(!cfg) return;
@@ -1199,7 +1213,7 @@ const ufo={active:false, sx:0, sy:0, ct:0};
 let parkInvaded=false;
 function startParkIntro(){
   const sec=SECTIONS[sectionIndex];
-  if(sec.id==='park'){ ufo.active=true; ufo.sx=-180; ufo.sy=VH*0.09; ufo.ct=0; parkInvaded=false; }
+  if(sec.id==='park'||sec.id==='blacklevel'){ ufo.active=true; ufo.sx=-180; ufo.sy=VH*0.09; ufo.ct=0; parkInvaded=false; }
   else { ufo.active=false; }
 }
 function updateUfo(){
@@ -1520,6 +1534,7 @@ function update(){
   updatePickup();
   updateFloaters();
   updateProxAudio();
+  sceneUpdate();
 
   // section edges: chained levels advance to the right; running off the LEFT returns to the hub
   if(SECTIONS[sectionIndex].chain){
