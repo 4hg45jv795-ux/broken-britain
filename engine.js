@@ -11,8 +11,8 @@
    everything is testable.
    ============================================================ */
 
-let FW=181,FH=218;
-const PFW=124,PFH=214;
+let FW=181,FH=218;          // current fighter's frame size (set in start())
+const PFW=124,PFH=214;      // photographer frame size
 let CLIPS=CLIPS_BRIT;
 const GSTEP=60;
 const GROUNDPTS=[322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,322,330.0,342.0,346,346,346,346,346,346,346,346,346,346,346,346,346,346,338.0,330.0,322,322,322,322,322,322,322,322,322,322];
@@ -25,7 +25,7 @@ let CSCALE=1;
 function loadSectionConfig(){
   const s=SECTIONS[sectionIndex];
   SRCY=s.srcY; BGW=s.BGW; CSCALE=s.charScale||1;
-  ZOOM=s.zoom||1.5; SRCW=VW/ZOOM; SRCH=VH/ZOOM;
+  ZOOM=s.zoom||1.5; SRCW=VW/ZOOM; SRCH=VH/ZOOM;     // per-section camera zoom (default 1.5)
   document.getElementById('flag').textContent=' '+s.name.replace(/&mdash;/g,'—').toUpperCase();
 }
 function groundAt(x){
@@ -89,7 +89,7 @@ function drawThumbPlaceholder(ctx2,w,h){
   ctx2.fillText('no img', w/2, h/2+4); ctx2.textAlign='start';
 }
 
-/* ── SOUND EFFECTS ────────── */
+/* ── SOUND EFFECTS (synthesised, no files needed) ────────── */
 let AC=null, sfxOn=true;
 function actx(){ try{ if(!AC) AC=new (window.AudioContext||window.webkitAudioContext)(); if(AC.state!=='running') AC.resume(); }catch(e){} return AC; }
 function blip(f1,f2,dur,type,vol){
@@ -121,7 +121,7 @@ const sfxThrow =()=>{ blip(420,700,0.16,'triangle',0.12); };
 /* ── GAME STATE ──────────────────────────────────────────── */
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
 const VW=800,VH=360;
-let ZOOM=1.5,SRCW=VW/ZOOM,SRCH=VH/ZOOM;
+let ZOOM=1.5,SRCW=VW/ZOOM,SRCH=VH/ZOOM;   // recomputed per-section in loadSectionConfig (see section.zoom)
 const PH=80; let PW=Math.round(PH*FW/FH);
 let cur=null,raf=null,camX=0;
 const player={x:120,y:200,vx:0,vy:0,face:1,onGround:true,clip:'idle',ct:0,hp:100,max:100,dead:false,deadT:0,attackId:0,hurtCool:0,armour:0};
@@ -134,6 +134,8 @@ const SPEED=2.1,RUNSPEED=3.4,GRAV=0.55,JUMP=-9.6;
 let bannerShown=false;
 
 /* ── ENEMIES ─────────────────────────────────────────────── */
+/* enemy strip layout (single horizontal row, uniform FWxFH cells):
+   walk frames first (start:0), then die frames last.              */
 const ENEMY_KINDS=[
   {img:'police', fw:167, fh:130, color:'#d8e23a', hair:'#1a2233',
    clips:{walk:{start:0,count:6,fps:9,loop:true}, die:{start:6,count:1,fps:6,loop:false}}},
@@ -154,7 +156,7 @@ const ENEMY_KINDS=[
 ];
 const EH=78;
 let enemies=[];
-const killedEnemies=new Set();
+const killedEnemies=new Set();          // ids of enemies killed this playthrough (don't respawn)
 function pushEnemy(kind,at,id,opts){
   const k=ENEMY_KINDS[kind]; const w=Math.round(EH*k.fw/k.fh);
   const hp=(opts&&opts.hp)||40;
@@ -179,31 +181,34 @@ function updateEnemies(){
     e.y=groundAt(e.x+e.w/2)-e.h-(ENEMY_KINDS[e.kind].hover||0);
     if(e.state==='dead') continue;
     if(e.state==='die'){ e.ct++; if(enemyClipDone(e)){ e.state='dead'; if(e.id) killedEnemies.add(e.id); } continue; }
+    // walking / chasing the player
     const dx=(player.x+PW/2)-(e.x+e.w/2);
     e.face = dx>0?1:-1;
     if(!player.dead && Math.abs(dx)<EAGGRO && Math.abs(dx)>EHIT_RANGE){
       if(!e.static) e.x += e.face*ESPEED; e.ct++;
     } else { e.ct++; }
     e.x=Math.max(0,Math.min(BGW-e.w,e.x));
+    // contact damage to player
     if(e.dmgCool>0) e.dmgCool--;
     if(!e.static && !player.dead && Math.abs(dx)<EHIT_RANGE+6 && e.dmgCool<=0){
       damagePlayer(EDMG); e.dmgCool=70;
-      player.x += (dx>0?-10:10);
+      player.x += (dx>0?-10:10); // knockback
     }
   }
+  // cull fully-dead after their death anim has shown a moment
   enemies = enemies.filter(e=> e.state!=='dead');
 }
 function applyPlayerHits(){
   if(!playerAttacking()) return;
   const c=CLIPS[player.clip]; const dur=Math.ceil(c.count*60/c.fps);
   const prog=player.ct/dur;
-  if(prog<0.18||prog>0.62) return;
+  if(prog<0.18||prog>0.62) return;               // active strike window only
   const dmg = player.clip==='headbutt'?60:26;
   const reach=64;
   const front = player.x + (player.face>0?PW*0.4:PW*0.6);
   for(const e of enemies){
     if(e.state!=='walk') continue;
-    if(e.hitId===player.attackId) continue;
+    if(e.hitId===player.attackId) continue;       // already hit this swing
     const ec=e.x+e.w/2;
     const inFront = player.face>0 ? (ec>front && ec<front+reach) : (ec<front && ec>front-reach);
     if(!inFront) continue;
@@ -229,16 +234,20 @@ function drawEnemy(e){
 function drawEnemyStandin(dw,dh,k,e){
   const walkBob = (e.state==='walk') ? Math.sin(e.ct*0.3)*2 : 0;
   ctx.save(); ctx.translate(0,walkBob);
+  // body
   ctx.fillStyle=k.color; roundRect(dw*0.22,dh*0.32,dw*0.56,dh*0.55,6); ctx.fill();
+  // legs
   ctx.fillRect(dw*0.30,dh*0.80,dw*0.16,dh*0.20); ctx.fillRect(dw*0.54,dh*0.80,dw*0.16,dh*0.20);
+  // head
   ctx.fillStyle=k.hair; ctx.beginPath(); ctx.arc(dw*0.5,dh*0.22,dh*0.14,0,7); ctx.fill();
   ctx.fillStyle='#f3c9a8'; ctx.beginPath(); ctx.arc(dw*0.5,dh*0.25,dh*0.085,0,7); ctx.fill();
+  // little placard
   ctx.fillStyle='#d9caa6'; ctx.fillRect(dw*0.74,dh*0.10,dw*0.22,dh*0.16);
   ctx.strokeStyle='#5a4a2a'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(dw*0.80,dh*0.26); ctx.lineTo(dw*0.80,dh*0.55); ctx.stroke();
   ctx.restore();
 }
 
-/* HELPERS */
+/* HELPERS (summonable) */
 const HELPERS=[
   {id:'athlete', name:'The Hurler', img:'athlete', type:'fighter', fw:127, fh:185, drawH:80,
    color:'#27c2a8', skin:'#f0c49a', stick:'#caa05a',
@@ -366,6 +375,7 @@ function buildHelperThumbs(){
 function updateHelperBarVisibility(){
   const s=SECTIONS[sectionIndex];
   const bar=document.querySelector('.helperbar');
+  // only the portal levels (street, park, belfast, pub, dundee, glasgow, southampton)
   if(bar) bar.style.display = s.chain ? '' : 'none';
 }
 function refreshHelperBtns(){
@@ -376,12 +386,13 @@ function refreshHelperBtns(){
   });
 }
 
+/* ── small canvas helper ── */
 function roundRect(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
 
 /* ── PLAYER HP / DEATH ───────────────────────────────────── */
 function damagePlayer(d){
   if(player.dead||player.hurtCool>0) return;
-  if(player.armour>0){
+  if(player.armour>0){                              // vest soaks the hit, no HP lost
     player.armour--; player.hurtCool=18; sfxHurt(); updateArmourHUD();
     if(player.armour===0) flashBanner('Armour gone');
     return;
@@ -403,21 +414,21 @@ function flashBanner(html){ const b=document.getElementById('banner'); b.innerHT
 function nextSection(){
   if(transitioning) return;
   const here=SECTIONS[sectionIndex];
-  if(!here.chain) return;
+  if(!here.chain) return;                       // hub & interior rooms don't advance off the edge
   const nextId=here.next;
-  if(!nextId){
+  if(!nextId){                                  // end of the chain -> pop back to the hub
     transitioning=true;
     doFade('THE END &mdash; back to the street', ()=>{ killedEnemies.clear(); gotoId('home',{x:hubReturnX,face:1}); transitioning=false; });
     return;
   }
   const next=SECTIONS.find(s=>s.id===nextId);
-  if(nextId==='dundee'){
+  if(nextId==='dundee'){ // pub -> Dundee: flash the news card for ~3s
     transitioning=true;
     showCard({img:'dundee-news.jpeg', text:'Welcome to Dundee',
       swap:()=>{ gotoId('dundee'); }, done:()=>{ transitioning=false; }});
     return;
   }
-  if(nextId==='glasgow'){
+  if(nextId==='glasgow'){ // Dundee -> Glasgow: title card with a 3s cut-scene track
     transitioning=true;
     showCard({text:next.name, sound:'Glasgowcut.mp3',
       swap:()=>{ gotoId('glasgow'); }, done:()=>{ transitioning=false; }});
@@ -429,7 +440,7 @@ function nextSection(){
 function prevSection(){
   if(transitioning) return;
   const here=SECTIONS[sectionIndex];
-  if(!here.chain || !here.prev) return;
+  if(!here.chain || !here.prev) return;         // only chained levels with a prev can backtrack
   const prev=SECTIONS.find(s=>s.id===here.prev);
   transitioning=true;
   doFade(prev.name, ()=>{ gotoId(here.prev,'right'); transitioning=false; });
@@ -440,15 +451,15 @@ function showCard(opts){
   const txt=card.querySelector('.dtxt'); if(txt) txt.innerHTML=opts.text||'';
   if(opts.img){
     card.classList.remove('noimg');
-    img.onerror=()=>card.classList.add('noimg');
+    img.onerror=()=>card.classList.add('noimg');   // if the picture isn't uploaded yet, fall back to text
     img.onload =()=>card.classList.remove('noimg');
     img.src=opts.img;
-  } else { card.classList.add('noimg'); img.removeAttribute('src'); }
+  } else { card.classList.add('noimg'); img.removeAttribute('src'); }   // text-only card
   if(opts.sound && !musicMuted){ try{ const a=new Audio(opts.sound); a.volume=0.9; a.play().catch(()=>{}); }catch(_){} }
   card.classList.add('on');
   requestAnimationFrame(()=>{ card.style.opacity='1'; });
-  setTimeout(()=>{ opts.swap&&opts.swap(); }, 1500);
-  setTimeout(()=>{ card.style.opacity='0'; }, 3000);
+  setTimeout(()=>{ opts.swap&&opts.swap(); }, 1500);          // switch the level underneath while it's hidden
+  setTimeout(()=>{ card.style.opacity='0'; }, 3000);          // ~3s on screen, then fade out
   setTimeout(()=>{ card.classList.remove('on'); opts.done&&opts.done(); }, 3400);
 }
 function doFade(txt, mid){
@@ -468,7 +479,7 @@ function enterSection(opts){
   if(opts && typeof opts.face==='number') player.face=opts.face;
   bannerShown=false; helper.active=false; helperCool=[0,0]; activeDoor=null;
   if(SECTIONS[sectionIndex].id==='home' && !photographerMet){
-    photographerMet=true; initNPC();
+    photographerMet=true; initNPC();              // first time on the street: the photographer turns up
   } else if(typeof npc!=='undefined' && npc.active){
     npc.x=Math.max(0,Math.min(BGW-NPCW, player.x-130)); npc.state='trail'; npc.y=groundAt(npc.x+NPCW/2)-NPCH;
   }
@@ -481,13 +492,13 @@ function enterSection(opts){
   spawnEnemiesForSection();
   refreshHelperBtns();
   updateHelperBarVisibility();
-  playSectionTrack();
+  playSectionTrack();   // plays this room's track, or silence for screen rooms / trackless interiors
   initPickup();
-  tvEnter();
-  sceneEnter();
+  tvEnter();                                       // start this room's wall screen (or stop if none)
+  sceneEnter();                                    // start this level's full-scene wall+floor videos (or stop)
 }
 
-/* ── WORLD / DOORWAYS ────────────────────── */
+/* ── WORLD / DOORWAYS (hub <-> rooms) ────────────────────── */
 let activeDoor=null, hubReturnX=120, photographerMet=false;
 function gotoId(id, opts){
   const idx=SECTIONS.findIndex(s=>s.id===id);
@@ -503,20 +514,20 @@ function updateDoors(){
 }
 function useDoor(d){
   if(transitioning||!d) return;
-  if(d.menu){
+  if(d.menu){                                         // travel point (portal / departures): open its menu
     const sec=SECTIONS[sectionIndex];
-    if(sec.hub) hubReturnX=d.x;
+    if(sec.hub) hubReturnX=d.x;                        // pop back to this spot when returning to the hub
     openTravel(d.menu);
     return;
   }
   if(d.target===null){ flashBanner('The portal is dormant&hellip; for now'); return; }
   if(d.target==='shop'){ openShop(); return; }
   const sec=SECTIONS[sectionIndex];
-  if(d.target==='home'){
+  if(d.target==='home'){                              // leaving a room -> back outside
     transitioning=true;
     doFade('Out to the street', ()=>{ gotoId('home',{x:hubReturnX,face:1}); transitioning=false; });
-  } else {
-    if(sec.hub) hubReturnX=d.x;
+  } else {                                            // entering a room (or a future linked level)
+    if(sec.hub) hubReturnX=d.x;                        // remember which building to pop back to
     const dest=SECTIONS.find(s=>s.id===d.target);
     transitioning=true;
     doFade(dest?dest.name:'', ()=>{ gotoId(d.target,{x:90,face:1}); transitioning=false; });
@@ -526,7 +537,7 @@ function drawDoors(){
   const sec=SECTIONS[sectionIndex];
   if(!sec.doors || !activeDoor) return;
   const d=activeDoor;
-  const mx=(d.x-camX)*ZOOM;
+  const mx=(d.x-camX)*ZOOM;                       // screen x over the doorway
   const bob=Math.sin(performance.now()/260)*4;
   const label=d.label.replace(/&mdash;/g,'\u2014').replace(/&amp;/g,'&').toUpperCase();
   let name, hint;
@@ -543,7 +554,7 @@ function drawMarker(cx, cy, name, hint){
   ctx.font='700 11px sans-serif'; const w2=ctx.measureText(hint).width;
   const w=Math.max(w1,w2)+26, h=42;
   const bx=Math.max(6,Math.min(VW-w-6, cx-w/2)), by=cy;
-  const px=Math.max(bx+12,Math.min(bx+w-12,cx));
+  const px=Math.max(bx+12,Math.min(bx+w-12,cx));        // pointer aimed at the door
   ctx.globalAlpha=0.93; ctx.fillStyle='#0b0e14';
   roundRect(bx,by,w,h,9); ctx.fill();
   ctx.beginPath(); ctx.moveTo(px-9,by+h-1); ctx.lineTo(px+9,by+h-1); ctx.lineTo(px,by+h+11); ctx.closePath(); ctx.fill();
@@ -555,6 +566,10 @@ function drawMarker(cx, cy, name, hint){
 }
 
 let tvVideo=null, tvHot=false;
+/* ── KEEP-AWAKE: hold a screen wake lock while a room video is playing so the
+   phone doesn't dim/lock if it isn't touched. Released when the video stops.
+   The OS drops the lock whenever the tab is hidden, so we re-acquire it when
+   the page becomes visible again and a video is still rolling.              */
 let wakeLock=null;
 async function requestWakeLock(){
   try{
@@ -574,10 +589,10 @@ function curScreen(){ return SCREENS[SECTIONS[sectionIndex].id] || null; }
 function tvEl(){
   if(!tvVideo){
     tvVideo=document.createElement('video');
-    tvVideo.setAttribute('playsinline','');
+    tvVideo.setAttribute('playsinline','');           // keep it inline on iPhone (no fullscreen takeover)
     tvVideo.setAttribute('webkit-playsinline','');
     tvVideo.loop=true; tvVideo.preload='auto';
-    tvVideo.muted=musicMuted;
+    tvVideo.muted=musicMuted;                          // the mute button controls the screens too
     tvVideo.style.cssText='position:fixed;left:-9999px;top:-9999px;width:2px;height:2px;opacity:0;pointer-events:none;';
     document.body.appendChild(tvVideo);
   }
@@ -590,12 +605,12 @@ function screenLoad(playNow){
   v.muted=musicMuted;
   if(playNow && !paused){ v.play().catch(()=>{}); requestWakeLock(); }
 }
-function tvEnter(){ if(curScreen()) screenLoad(true); else tvPause(); }
-function tvPause(){ if(tvVideo){ try{ tvVideo.pause(); }catch(_){} } releaseWakeLock(); }
+function tvEnter(){ if(curScreen()) screenLoad(true); else tvPause(); }   // start this room's screen (or stop)
+function tvPause(){ if(tvVideo){ try{ tvVideo.pause(); }catch(_){} } releaseWakeLock(); }   // stop this room's screen + let the phone sleep again
 function tvNextChannel(){
   const sc=curScreen(); if(!sc||!sc.switchable) return;
   sc.idx=(sc.idx+1)%sc.files.length; screenLoad(true);
-  blip(540,820,0.05,'square',0.12); blip(300,300,0.04,'square',0.08);
+  blip(540,820,0.05,'square',0.12); blip(300,300,0.04,'square',0.08);  // little "channel-flip" click
   flashBanner('Channel '+(sc.idx+1));
 }
 function screenCenterX(sc){ return sc.rect.x + sc.rect.w/2; }
@@ -612,6 +627,7 @@ function drawTV(){
   if(v && v.readyState>=2 && v.videoWidth>0 && v.getAttribute('data-src')===sc.files[sc.idx]){
     try{ ctx.drawImage(v, sx, sy, sw, sh); }catch(_){}
   } else {
+    // no video uploaded yet (or still buffering): show a placeholder screen
     ctx.save();
     ctx.fillStyle='#05070b'; ctx.fillRect(sx,sy,sw,sh);
     ctx.fillStyle='#1d2b46'; for(let i=0;i<6;i++){ ctx.fillRect(sx, sy+sh*(i/6), sw, sh/12); }
@@ -636,7 +652,7 @@ function sceneVid(which){
   if(!v){
     v=document.createElement('video');
     v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
-    v.loop=true; v.preload='auto'; v.muted=true;
+    v.loop=true; v.preload='auto'; v.muted=true;                 // scenery is always silent
     v.style.cssText='position:fixed;left:-9999px;top:-9999px;width:2px;height:2px;opacity:0;pointer-events:none;';
     document.body.appendChild(v);
     if(which==='wall') sceneWallVid=v; else sceneFloorVid=v;
@@ -665,60 +681,40 @@ function sceneLoad(playNow){
     f=sceneVid('floor');
     if(f.getAttribute('data-src')!==src.floor){ f.setAttribute('data-src',src.floor); f.src=src.floor; try{f.load();}catch(_){} }
     f.muted=true;
-  } else if(sceneFloorVid){ try{ sceneFloorVid.pause(); }catch(_){} }
+  } else if(sceneFloorVid){ try{ sceneFloorVid.pause(); }catch(_){} }   // full-screen level: no floor clip
   if(playNow && !paused){ w.play().catch(()=>{}); if(f) f.play().catch(()=>{}); requestWakeLock(); }
 }
 function sceneEnter(){ sceneZoneIdx=-1; if(curSceneCfg()) sceneLoad(true); else scenePause(); }
 function scenePause(){ try{ if(sceneWallVid) sceneWallVid.pause(); if(sceneFloorVid) sceneFloorVid.pause(); }catch(_){} }
-
-/* ====================== CORRECTED drawSceneVideos() ====================== */
 function drawSceneVideos(){
   const cfg=curSceneCfg(); if(!cfg) return;
-
-  const src = sceneSrc() || {};
-  const hasFloor = !!src.floor;
-
+  const hasFloor = !!cfg.floor;                                   // no floor clip -> wall fills the whole screen
   const wallH = hasFloor ? Math.round(VH*cfg.wallFrac) : VH;
   const floorY=wallH, floorH=VH-wallH;
   const tileScreenW=cfg.tileW*ZOOM;
-
   const w=sceneWallVid, f=sceneFloorVid;
-
-  const wallReady = w && w.readyState>=2 && w.videoWidth>0 && w.getAttribute('data-src')===src.wall;
-  const floorReady= hasFloor && f && f.readyState>=2 && f.videoWidth>0 && f.getAttribute('data-src')===src.floor;
-
+  const wallReady = w && w.readyState>=2 && w.videoWidth>0 && w.getAttribute('data-src')===cfg.wall;
+  const floorReady= hasFloor && f && f.readyState>=2 && f.videoWidth>0 && f.getAttribute('data-src')===cfg.floor;
   const startK=Math.floor(camX/cfg.tileW);
   for(let k=startK; k*cfg.tileW < camX+SRCW; k++){
     const sx=(k*cfg.tileW - camX)*ZOOM;
-
-    if(wallReady){
-      try{ ctx.drawImage(w, sx, 0, tileScreenW, wallH); }catch(_){}
-    } else {
-      ctx.save();
-      ctx.fillStyle='#0a0c12'; ctx.fillRect(sx,0,tileScreenW,wallH);
-      ctx.strokeStyle='#1a2640'; ctx.lineWidth=1; ctx.strokeRect(sx+0.5,0.5,tileScreenW-1,wallH-1);
-      ctx.fillStyle='#33405a'; ctx.font='700 12px monospace'; ctx.textAlign='center';
-      ctx.fillText((src.wall||'(no clip)') + (hasFloor?'  ·  WALL':'  ·  SCREEN'), sx+tileScreenW/2, wallH/2);
-      ctx.restore();
-    }
-
+    if(wallReady){ try{ ctx.drawImage(w, sx, 0, tileScreenW, wallH); }catch(_){} }
+    else { ctx.save(); ctx.fillStyle='#0a0c12'; ctx.fillRect(sx,0,tileScreenW,wallH);
+           ctx.strokeStyle='#1a2640'; ctx.lineWidth=1; ctx.strokeRect(sx+0.5,0.5,tileScreenW-1,wallH-1);
+           ctx.fillStyle='#33405a'; ctx.font='700 12px monospace'; ctx.textAlign='center';
+           ctx.fillText((cfg.wall||'(no clip)')+(hasFloor?'  \u00B7  WALL':'  \u00B7  SCREEN'), sx+tileScreenW/2, wallH/2); ctx.restore(); }
     if(hasFloor){
-      if(floorReady){
-        try{ ctx.drawImage(f, sx, floorY, tileScreenW, floorH); }catch(_){}
-      } else {
-        ctx.save();
-        ctx.fillStyle='#05070b'; ctx.fillRect(sx,floorY,tileScreenW,floorH);
-        ctx.strokeStyle='#141d30'; ctx.lineWidth=1; ctx.strokeRect(sx+0.5,floorY+0.5,tileScreenW-1,floorH-1);
-        ctx.fillStyle='#2a3550'; ctx.font='700 12px monospace'; ctx.textAlign='center';
-        ctx.fillText((src.floor||'(no floor)')+'  ·  FLOOR', sx+tileScreenW/2, floorY+floorH/2);
-        ctx.restore();
-      }
+      if(floorReady){ try{ ctx.drawImage(f, sx, floorY, tileScreenW, floorH); }catch(_){} }
+      else { ctx.save(); ctx.fillStyle='#05070b'; ctx.fillRect(sx,floorY,tileScreenW,floorH);
+             ctx.strokeStyle='#141d30'; ctx.lineWidth=1; ctx.strokeRect(sx+0.5,floorY+0.5,tileScreenW-1,floorH-1);
+             ctx.fillStyle='#2a3550'; ctx.font='700 12px monospace'; ctx.textAlign='center';
+             ctx.fillText((cfg.floor||'(no floor)')+'  \u00B7  FLOOR', sx+tileScreenW/2, floorY+floorH/2); ctx.restore(); }
     }
   }
   ctx.textAlign='start';
 }
-/* ======================================================================== */
 
+/* ── MONEY + FLOATING REWARDS ────────────────────────────── */
 let money=0;
 function updateMoneyHUD(){ const m=document.getElementById('money'); if(m) m.textContent='\u00A3'+money; }
 function addMoney(n){ money+=n; updateMoneyHUD(); }
@@ -733,6 +729,7 @@ function drawFloaters(){
   ctx.restore();
 }
 
+/* ── RETURN TO HUB (run off the left edge of a level) ─────── */
 function returnToHub(){
   if(transitioning) return;
   transitioning=true;
@@ -768,7 +765,7 @@ function travelTo(target, label){
   closeTravel();
   if(transitioning) return;
   const dest=SECTIONS.find(s=>s.id===target);
-  const goId = dest ? target : 'empty';
+  const goId = dest ? target : 'empty';               // not built yet -> placeholder
   transitioning=true;
   doFade(dest?dest.name:label, ()=>{
     gotoId(goId,{x:90,face:1}); transitioning=false;
@@ -794,16 +791,33 @@ function buyWeapon(w){
   if(owned.has(w.id)) return;
   if(money>=w.price){
     money-=w.price; owned.add(w.id); updateMoneyHUD(); renderShop();
-    addWeaponToLoadout(w.id);
-    flashBanner('Bought '+w.name);
-  } else {
-    flashBanner('Not enough money');
+    if(w.id==='vest'){ player.armour=ARMOUR_HITS; updateArmourHUD(); flashBanner('Armour on &mdash; '+ARMOUR_HITS+' hits'); }
+    else { addWeaponToLoadout(w.id); flashBanner(w.name+' ready'); }
+    [0,4,7,12].forEach((s,i)=>setTimeout(()=>blip(440*Math.pow(2,s/12),0,0.12,'triangle',0.15),i*60));
   }
+  else { flashBanner('Not enough money for the '+w.name); blip(200,110,0.12,'square',0.16); }
 }
 
-const WEAPON_ORDER=['littleblaster','bigblaster','rifle','grenade'];
-let weaponList=[];
-let weaponSel=-1;
+/* ── WEAPONS, SHOOTING & ARMOUR ──────────────────────────────
+   Real-world-ish fire actions, unlimited ammo:
+     pistol  : semi-auto single shots
+     shotgun : pump-action spread of pellets, short range, big up close
+     rifle   : full-auto (hold SHOOT to keep firing), accurate, long range
+     grenade : lobbed arc that explodes for area damage
+   Armour (the vest) isn't a weapon — it soaks the next 5 hits, then HP
+   starts dropping again. It never shows in the weapon-select button.   */
+const ARMOUR_HITS=5;
+// where each item lives inside weapons.png (measured from the sheet)
+const WEAPON_ART={
+  pistol:  {sx:144,  sy:143, sw:314, sh:185},
+  shotgun: {sx:503,  sy:154, sw:491, sh:138},
+  rifle:   {sx:1010, sy:148, sw:467, sh:201},
+  vest:    {sx:190,  sy:544, sw:273, sh:281},
+  grenade: {sx:856,  sy:653, sw:145, sh:128},
+};
+const WEAPON_ORDER=['rifle','littleblaster','bigblaster'];   // fixed cycle order
+let weaponList=[];        // owned weapons (excludes vest), in WEAPON_ORDER
+let weaponSel=-1;         // -1 = unarmed (fists); else index into weaponList
 let shootCool=0;
 let bullets=[], vfx=[];
 
@@ -811,14 +825,14 @@ function isArmed(){ return weaponSel>=0 && weaponSel<weaponList.length; }
 function curWeapon(){ return isArmed()? WEAPONS[weaponList[weaponSel]] : null; }
 
 function addWeaponToLoadout(id){
-  weaponList=WEAPON_ORDER.filter(x=>owned.has(x));
-  weaponSel=weaponList.indexOf(id);
+  weaponList=WEAPON_ORDER.filter(x=>owned.has(x));   // rebuild in order
+  weaponSel=weaponList.indexOf(id);                  // auto-select the new buy
   refreshWeaponBtn();
 }
 function cycleWeapon(){
-  if(weaponList.length===0) return;
+  if(weaponList.length===0) return;                  // nothing owned yet
   weaponSel++;
-  if(weaponSel>=weaponList.length) weaponSel=-1;
+  if(weaponSel>=weaponList.length) weaponSel=-1;     // ...-> last -> back to fists
   refreshWeaponBtn();
   blip(560,640,0.05,'square',0.10);
 }
@@ -852,6 +866,15 @@ function muzzlePoint(){
   const mz=(cur&&cur.muzzle)||{fwd:0.55,yfac:0.46};
   return { x: player.x+PW/2 + player.face*(PW*mz.fwd+6), y: player.y+PH*mz.yfac };
 }
+/* ── WEAPON IN HAND (drawn on the player whenever a gun is equipped) ──
+   No per-frame hand bone on the sprite, so each weapon gets hand-tuned
+   offsets below. fwd/up are fractions of the player's DRAWN size measured
+   from the player's centre; a POSITIVE up raises the weapon, NEGATIVE drops
+   it toward the hands. scale = weapon width as a multiple of the player's
+   drawn width. If a gun ever points the wrong way, flip the `player.face<0`
+   test in the scale(-1,1) line.
+   NOTE: the grenade is intentionally NOT drawn in-hand — it's only shown
+   once it's actually thrown (see drawBullets).                            */
 const HELD_WEAPON={
   pistol:  {fwd:0.24, up:-0.14, scale:0.50},
   shotgun: {fwd:0.16, up:-0.12, scale:1.00},
@@ -859,20 +882,20 @@ const HELD_WEAPON={
 };
 function drawHeldWeapon(){
   if(player.dead || !isArmed()) return;
-  if(cur && cur.noWeaponArt) return;
+  if(cur && cur.noWeaponArt) return;                  // sprite already includes the weapon
   const id=weaponList[weaponSel];
-  if(id==='grenade') return;
+  if(id==='grenade') return;                          // grenade shows only when thrown
   const cfg=HELD_WEAPON[id], art=WEAPON_ART[id], img=loaded.weapons;
   if(!cfg||!art||!imgOk(img)) return;
   const dw=PW*ZOOM*CSCALE, dh=PH*ZOOM*CSCALE;
-  const pcx=(player.x+PW/2-camX)*ZOOM;
-  const midY=(player.y+PH-SRCY)*ZOOM-dh*0.5;
-  const ww=dw*cfg.scale, wh=ww*art.sh/art.sw;
+  const pcx=(player.x+PW/2-camX)*ZOOM;                 // player centre, screen x
+  const midY=(player.y+PH-SRCY)*ZOOM-dh*0.5;           // player vertical centre, screen y
+  const ww=dw*cfg.scale, wh=ww*art.sh/art.sw;          // weapon drawn size (keeps aspect)
   const handX=pcx + player.face*dw*cfg.fwd;
   const handY=midY - dh*cfg.up;
   ctx.save();
   ctx.translate(handX,handY);
-  if(player.face<0) ctx.scale(-1,1);
+  if(player.face<0) ctx.scale(-1,1);                   // mirror to face the player's direction
   ctx.drawImage(img, art.sx,art.sy,art.sw,art.sh, -ww*0.30, -wh*0.5, ww, wh);
   ctx.restore();
 }
@@ -884,7 +907,7 @@ function hitEnemy(e,dmg,knock,dir){
 function fireWeapon(w){
   const m=muzzlePoint();
   vfx.push({type:'muzzle', x:m.x, y:m.y, face:player.face, t:0, life:7});
-  for(let i=0;i<3;i++) vfx.push({type:'spark', x:m.x+player.face*(4+Math.random()*9), y:m.y+(Math.random()*7-3.5), t:0, life:6});
+  for(let i=0;i<3;i++) vfx.push({type:'spark', x:m.x+player.face*(4+Math.random()*9), y:m.y+(Math.random()*7-3.5), t:0, life:6}); // muzzle sparks
   if(w.type==='grenade'){
     sfxThrow();
     bullets.push({grenade:true, x:m.x, y:m.y-4, vx:player.face*w.speed, vy:-7.5, fuse:60, dmg:w.dmg, radius:w.radius, knock:w.knock});
@@ -902,12 +925,12 @@ function tryFire(){
   const w=curWeapon(); if(!w) return;
   if(shootCool>0) return;
   fireWeapon(w); shootCool=w.cooldown;
-  if(CLIPS.shoot){ if(player.clip!=='shoot') setClip('shoot'); player.shootPoseT=14; }
+  if(CLIPS.shoot){ if(player.clip!=='shoot') setClip('shoot'); player.shootPoseT=14; }  // hold the fire pose
 }
 function explodeGrenade(b){
   vfx.push({type:'boom', x:b.x, y:b.y, t:0, life:26, r:b.radius});
   sfxKO();
-  addShake(9,12);
+  addShake(9,12);                              // bigger kick for the explosion
   for(const e of enemies){
     if(e.state!=='walk') continue;
     const ex=e.x+e.w/2, ey=e.y+e.h*0.5;
@@ -989,12 +1012,17 @@ function drawVfx(){
   }
 }
 
+/* ── BLOOD SPLATTER + CAMERA SHAKE (punchy hit/fire feedback) ─────────────
+   Canvas equivalents of the Unity prefab/coroutine idea — there are no
+   prefabs or transforms here. Blood is a little particle burst sprayed from
+   the impact point ALONG the shot's direction (the 2D "hit normal"), with
+   gravity; the shake briefly jitters the whole canvas on each shot.        */
 let blood=[];
-function spawnBlood(x,y,dir){
+function spawnBlood(x,y,dir){                 // dir = +1/-1: the way the shot was travelling
   dir = dir>=0 ? 1 : -1;
   const n=12+Math.floor(Math.random()*8);
   for(let i=0;i<n;i++){
-    const spread=(Math.random()*2-1)*0.85;
+    const spread=(Math.random()*2-1)*0.85;    // cone around the impact direction
     const sp=1.2+Math.random()*4.4;
     blood.push({ x, y,
       vx: dir*Math.cos(spread)*sp*(0.6+Math.random()*0.7),
@@ -1018,15 +1046,17 @@ function drawBlood(){
   }
 }
 
+/* camera shake: a brief random canvas offset, kicked on each shot/explosion.
+   addShake(magnitude-in-px, duration-in-frames). draw() applies + decays it. */
 let shakeT=0, shakeMag=0, shakeDur=1;
 function addShake(mag,frames){
-  if(shakeT<=0){ shakeMag=0; shakeDur=1; }
+  if(shakeT<=0){ shakeMag=0; shakeDur=1; }    // start fresh if not already shaking
   shakeT=Math.max(shakeT,frames);
   shakeDur=Math.max(shakeDur,frames);
   shakeMag=Math.max(shakeMag,mag);
 }
 
-/* ── CUTSCENE ─────────────────────── */
+/* ── CUTSCENE (unchanged intro chat) ─────────────────────── */
 const DIALOGUE=[
   {side:'left', label:'YOU',          text:'Who are you?'},
   {side:'right',label:'PHOTOGRAPHER', text:'A YouTuber.'},
@@ -1050,7 +1080,7 @@ function showNextLine(){
 function endCutscene(){ csActive=false; csDone=true; document.getElementById('cutscene').classList.remove('active'); }
 document.getElementById('cutscene').addEventListener('click',()=>{ if(!csActive)return; clearTimeout(csTimeout); if(csStep<DIALOGUE.length) showNextLine(); else endCutscene(); });
 
-/* ── NPC photographer ────────────────────────── */
+/* ── NPC photographer (unchanged) ────────────────────────── */
 const NPCH=78,NPCW=Math.round(NPCH*PFW/PFH);
 const npc={x:0,y:0,state:'walkin',t:0,anim:0,active:false};
 function initNPC(){ npc.x=player.x+SRCW+80; npc.state='walkin'; npc.t=0; npc.anim=0; npc.active=true; csDone=false; npc.y=groundAt(npc.x+NPCW/2)-NPCH; }
@@ -1105,11 +1135,13 @@ document.querySelectorAll('.btn').forEach(b=>{
   b.addEventListener('touchcancel',off,{passive:false});
   b.addEventListener('mousedown',on);b.addEventListener('mouseup',off);b.addEventListener('mouseleave',off);
 });
+// helper summon buttons
 document.querySelectorAll('.helperbtn').forEach(btn=>{
   const idx=+btn.dataset.h;
   const fire=e=>{ e.preventDefault(); actx(); summonHelper(idx); };
   btn.addEventListener('touchstart',fire,{passive:false}); btn.addEventListener('mousedown',fire);
 });
+// weapon-select button (cycles owned weapons, then back to fists)
 (function(){
   const wb=document.getElementById('weaponsel'); if(!wb) return;
   const fire=e=>{ e.preventDefault(); actx(); cycleWeapon(); };
@@ -1135,14 +1167,14 @@ function start(m){
   document.getElementById('hpbar').style.width='100%';
   bannerShown=false;csActive=false;csDone=false;
   photographerMet=false; npc.active=false;
-  money=1000; owned.clear(); updateMoneyHUD(); closeShop(); floaters=[];
+  money=1000; owned.clear(); updateMoneyHUD(); closeShop(); floaters=[];  // TESTING: start with £1000 (set back to 0 later)
   weaponList=[]; weaponSel=-1; shootCool=0; bullets=[]; vfx=[];
   player.armour=0; updateArmourHUD(); refreshWeaponBtn();
-  hubReturnX=200;
+  hubReturnX=200;                                  // first time out, pop up by the house
   helper.active=false; helperCool=[0,0]; buildHelperThumbs(); refreshHelperBtns();
   killedEnemies.clear(); pickup.active=false;
   setPaused(false);
-  gotoId('in_house', {x:90, face:1});
+  gotoId('in_house', {x:90, face:1});              // the game begins inside the house
   if(!raf)loop();
 }
 
@@ -1155,7 +1187,7 @@ function setPaused(p){
   const bgm=document.getElementById('bgm');
   if(p){ bgm.pause(); tvPause(); scenePause(); pauseAllProxAudio(); }
   else if(cur){
-    if(!musicMuted && sectionMusic()) bgm.play().catch(()=>{}); 
+    if(!musicMuted && sectionMusic()) bgm.play().catch(()=>{});   // rooms with a music track resume
     if(curScreen()) screenLoad(true);
     if(curSceneCfg()) sceneLoad(true);
   }
@@ -1175,7 +1207,7 @@ document.getElementById('mute').onclick=(e)=>{
   document.getElementById('mute').innerHTML = musicMuted ? '&#128263;' : '&#128266;';
 };
 
-/* ── UFO + PARK INVASION ─ */
+/* ── UFO (park intro NPC: flies the sky, harmless) + PARK INVASION ─ */
 const UFO_FW=119, UFO_FH=90;
 const ufo={active:false, sx:0, sy:0, ct:0};
 let parkInvaded=false;
@@ -1186,8 +1218,8 @@ function startParkIntro(){
 }
 function updateUfo(){
   if(!ufo.active) return;
-  ufo.ct++; ufo.sx += 2.7;
-  if(!parkInvaded && ufo.sx>VW){ parkInvaded=true; spawnParkAliens(); }
+  ufo.ct++; ufo.sx += 2.7;                 // glide left -> right across the sky
+  if(!parkInvaded && ufo.sx>VW){ parkInvaded=true; spawnParkAliens(); }  // crossed -> aliens come
   if(ufo.sx>VW+220) ufo.active=false;
 }
 function drawUfo(){
@@ -1198,7 +1230,7 @@ function drawUfo(){
   try{ ctx.drawImage(loaded.ufo, f*UFO_FW,0,UFO_FW,UFO_FH, ufo.sx, ufo.sy+bob, dw,dh); }catch(_){}
 }
 
-/* ── WANDERER ── */
+/* ── WANDERER (ambient background NPC, harmless) ── */
 const WAN_FW=118, WAN_FH=182, WAN_H=58;
 const wanderer={active:false, x:0, face:1, anim:0};
 function startWanderer(){
@@ -1273,7 +1305,7 @@ function updateChurchNpc(){
   if(n.pauseT>0){ n.pauseT--; return; }
   n.x += n.face*n.speed; n.anim += 0.13;
   const left=PRIEST.centre-PRIEST.halfRun, right=PRIEST.centre+PRIEST.halfRun;
-  if(n.x<left){ n.x=left; n.face=1; }
+  if(n.x<left){ n.x=left; n.face=1; }                       // turn back at the stage edges
   else if(n.x>right){ n.x=right; n.face=-1; }
   else { if(Math.random()<0.004) n.face*=-1; if(Math.random()<0.003) n.pauseT=40+Math.floor(Math.random()*90); }
 }
@@ -1282,8 +1314,8 @@ function drawChurchNpc(){
   const im=loaded[PRIEST_DEF.key]; if(!imgOk(im)) return;
   const d=PRIEST_DEF, n=priestNpc;
   const h=PRIEST.height*CSCALE, w=Math.round(h*d.fw/d.fh);
-  const leftX=n.x - w/2;
-  const gy=groundAt(n.x)-PRIEST.lift-h;
+  const leftX=n.x - w/2;                                    // n.x is his centre
+  const gy=groundAt(n.x)-PRIEST.lift-h;                     // feet raised onto the stage
   const sx=(leftX-camX)*ZOOM, sy=(gy-SRCY)*ZOOM, dw=w*ZOOM, dh=h*ZOOM;
   if(sx<-dw*2||sx>VW+dw*2) return;
   const f = n.pauseT>0 ? 0 : Math.floor(n.anim)%d.frames;
@@ -1302,15 +1334,15 @@ function initLibraryNpc(){
 function updateLibraryNpc(){
   if(!bkNpc) return;
   const n=bkNpc;
-  n.anim += BK.animSpd;
-  if(--n.flipT<=0){ n.face*=-1; n.flipT=BK.flipEvery; }
+  n.anim += BK.animSpd;                                     // loop the strike, in place
+  if(--n.flipT<=0){ n.face*=-1; n.flipT=BK.flipEvery; }     // then strike the other way
 }
 function drawLibraryNpc(){
   if(!bkNpc) return;
   const im=loaded[BK_DEF.key]; if(!imgOk(im)) return;
   const d=BK_DEF, n=bkNpc;
   const h=BK.height*CSCALE, w=Math.round(h*d.fw/d.fh);
-  const leftX=n.x - w/2;
+  const leftX=n.x - w/2;                                    // n.x is his centre
   const gy=groundAt(n.x)-BK.lift-h;
   const sx=(leftX-camX)*ZOOM, sy=(gy-SRCY)*ZOOM, dw=w*ZOOM, dh=h*ZOOM;
   if(sx<-dw*2||sx>VW+dw*2) return;
@@ -1356,7 +1388,7 @@ function drawMkNpcs(){
   }
 }
 
-/* ── FOOD PICKUP ── */
+/* ── FOOD PICKUP (pub heal — walk over the roast to refill) ── */
 const FOOD_H=30;
 const pickup={active:false,x:0,w:0,taken:false};
 function initPickup(){
@@ -1389,7 +1421,7 @@ function drawPickup(){
 
 function sectionMusic(){
   const id=SECTIONS[sectionIndex].id;
-  return (!SCREENS[id] && TRACKS[id]) ? TRACKS[id] : null;
+  return (!SCREENS[id] && TRACKS[id]) ? TRACKS[id] : null;   // a video screen always wins over a music track
 }
 function playTrack(src){
   const bgm=document.getElementById('bgm');
@@ -1422,7 +1454,7 @@ function updateProxAudio(){
       const nx=p.getX();
       if(nx!=null){
         const d=Math.abs((player.x+PW/2)-nx);
-        if(d<p.range){ want=true; vol=0.25 + 0.55*(1-d/p.range); }
+        if(d<p.range){ want=true; vol=0.25 + 0.55*(1-d/p.range); }   // louder up close
       }
     }
     if(want){ a.muted=musicMuted; a.volume=Math.max(0,Math.min(0.8,vol)); if(a.paused) a.play().catch(()=>{}); }
@@ -1450,12 +1482,13 @@ function update(){
     punchEdge=false;
     if(tvHot){ tvNextChannel(); }
     else if(activeDoor){ useDoor(activeDoor); }
-    else if(armed){ tryFire(); }
+    else if(armed){ tryFire(); }                      // tap = shoot (and first shot of full-auto)
     else if(player.onGround){
       if(!playerAttacking()){ setClip('punch'); player.attackId++; sfxPunch(); }
       else if(player.clip==='punch'){ setClip('headbutt'); player.attackId++; sfxPunch(); }
     }
   }
+  // full-auto: keep firing while SHOOT is held (not while at a door/TV)
   if(armed && punchDown && !activeDoor && !tvHot){ const w=curWeapon(); if(w&&w.auto) tryFire(); }
   const attacking=playerAttacking() && !clipDone();
 
@@ -1479,7 +1512,7 @@ function update(){
   if(player.shootPoseT>0) player.shootPoseT--;
   const stillAttacking = playerAttacking() && !clipDone();
   if(stillAttacking) applyPlayerHits();
-  const shootingPose = player.shootPoseT>0 && CLIPS.shoot;
+  const shootingPose = player.shootPoseT>0 && CLIPS.shoot;     // only chars with a shoot clip
   if(!stillAttacking && !shootingPose){
     if(!player.onGround) setClip('jump');
     else if(moving) setClip(running?'run':'walk');
@@ -1503,6 +1536,7 @@ function update(){
   updateProxAudio();
   sceneUpdate();
 
+  // section edges: chained levels advance to the right; running off the LEFT returns to the hub
   if(SECTIONS[sectionIndex].chain){
     if(player.x>BGW-PW-40){
       if(!bannerShown){ bannerShown=true; nextSection(); }
@@ -1520,14 +1554,14 @@ function frameIndex(){
 function drawBg(){
   const sec=SECTIONS[sectionIndex];
   if(sec.black){ ctx.fillStyle='#000'; ctx.fillRect(0,0,VW,VH); drawSceneVideos(); return; }
-  if(sec.bgSegments){
+  if(sec.bgSegments){                                   // end-to-end images (the extended hub)
     let anyDrawn=false;
     for(const seg of sec.bgSegments){
       const segL=seg.x, segR=seg.x+seg.w;
       const left=Math.max(segL,camX), right=Math.min(segR,camX+SRCW);
-      if(right<=left) continue;
+      if(right<=left) continue;                          // this image isn't on screen right now
       const im=loaded[seg.key]; if(!imgOk(im)) continue;
-      const srcX=left-segL, srcW=right-left;
+      const srcX=left-segL, srcW=right-left;             // 1 world px == 1 image px
       const dstX=(left-camX)*ZOOM, dstW=srcW*ZOOM;
       try{ ctx.drawImage(im, srcX, SRCY, srcW, SRCH, dstX, 0, dstW, VH); anyDrawn=true; }catch(e){}
     }
@@ -1539,7 +1573,7 @@ function drawBg(){
 }
 function draw(){
   const dsec=SECTIONS[sectionIndex];
-  if(dsec.flip){
+  if(dsec.flip){                                   // flip-screen: snap the camera to whole-screen panels
     const cfg=curSceneCfg(); const panelW=(cfg&&cfg.tileW)||SRCW;
     const pi=Math.max(0,Math.floor((player.x+PW/2)/panelW));
     camX=Math.max(0,Math.min(BGW-SRCW,pi*panelW));
@@ -1557,6 +1591,7 @@ function draw(){
   drawUfo();
   drawWanderer();
   drawPickup();
+  // enemies behind the player
   for(const e of enemies) drawEnemy(e);
   drawNPC();
   drawHubNpcs();
@@ -1565,19 +1600,20 @@ function draw(){
   drawMkNpcs();
   drawHelper();
 
+  // player
   const fx=frameIndex();
   const cs=(cur&&cur.scale)||1; const dw=PW*ZOOM*CSCALE*cs,dh=PH*ZOOM*CSCALE*cs;
   const sx=(player.x-camX)*ZOOM-(dw-PW*ZOOM)/2,sy=(player.y+PH-SRCY)*ZOOM-dh;
   if(imgOk(loaded[cur.id])){
     ctx.save();
     if(player.face<0){ctx.translate(sx+dw,sy);ctx.scale(-1,1);}else{ctx.translate(sx,sy);}
-    if(player.hurtCool>0 && (player.hurtCool>>1)%2===0) ctx.globalAlpha=0.55;
+    if(player.hurtCool>0 && (player.hurtCool>>1)%2===0) ctx.globalAlpha=0.55; // hit flash
     ctx.shadowColor='rgba(150,180,255,0.55)';ctx.shadowBlur=7;
     try{ ctx.drawImage(loaded[cur.id],fx*FW,0,FW,FH,0,0,dw,dh); }catch(e){}
     ctx.restore();
   } else { ctx.fillStyle='#c0392b'; ctx.fillRect(sx,sy,dw,dh); }
 
-  drawHeldWeapon();
+  drawHeldWeapon();    // the equipped gun/grenade in the player's hand
   drawBullets();
   drawVfx();
   drawBlood();
@@ -1595,19 +1631,22 @@ function drawNoBg(){
     ctx.fillStyle='#3a3d44'; ctx.fillRect(0,VH*0.78,VW,VH);
   }
 }
+// deterministic pseudo-random so scenery doesn't flicker frame to frame
 function pr(n){ const s=Math.sin(n*127.1)*43758.5453; return s-Math.floor(s); }
 function drawParkPlaceholder(){
   const sec=SECTIONS[sectionIndex];
-  const gY=(sec.flatGround/SRCH)*VH;
+  const gY=(sec.flatGround/SRCH)*VH;            // sidewalk top in view space
   const sky=ctx.createLinearGradient(0,0,0,gY);
   sky.addColorStop(0,'#1a1d24'); sky.addColorStop(1,'#2b2f38');
   ctx.fillStyle=sky; ctx.fillRect(0,0,VW,gY);
+  // distant skyline (parallax)
   const par=camX*0.35;
   ctx.fillStyle='#23262e';
   for(let i=-1;i<24;i++){
     const seed=i*3+1, bx=i*120-(par%120), bw=70+pr(seed)*46, bh=60+pr(seed+9)*90;
     ctx.fillRect(bx,gY-bh,bw,bh);
   }
+  // hotel block mid-level so Park–Hotel–Park still reads without the art
   const hx=(BGW*0.5-camX);
   if(hx>-260 && hx<VW+260){
     const hw=240, hh=gY*0.92, hxx=hx-hw/2;
@@ -1616,17 +1655,20 @@ function drawParkPlaceholder(){
     for(let r=0;r<5;r++)for(let c=0;c<4;c++){ if(pr(r*7+c)>0.45) ctx.fillRect(hxx+18+c*54,gY-hh+22+r*34,26,20); }
     ctx.fillStyle='#7a1f25'; ctx.fillRect(hxx+hw-26,gY-hh+10,16,hh*0.6);
   }
+  // grass + railing
   ctx.fillStyle='#243126'; ctx.fillRect(0,gY-VH*0.16,VW,VH*0.16);
   ctx.strokeStyle='#15171c'; ctx.lineWidth=3;
   const railTop=gY-VH*0.13;
   ctx.beginPath(); ctx.moveTo(0,railTop); ctx.lineTo(VW,railTop); ctx.stroke();
   for(let x=-(camX%26); x<VW; x+=26){ ctx.beginPath(); ctx.moveTo(x,railTop); ctx.lineTo(x,gY); ctx.stroke(); }
+  // trees
   for(let i=0;i<60;i++){
     const tx=i*150+40-camX; if(tx<-60||tx>VW+60) continue;
     const ty=gY-VH*0.13, th=VH*0.34;
     ctx.fillStyle='#2c241c'; ctx.fillRect(tx-4,ty-th*0.4,8,th*0.4);
     ctx.fillStyle='#1f3322'; ctx.beginPath(); ctx.arc(tx,ty-th*0.5,VH*0.12,0,7); ctx.fill();
   }
+  // sidewalk
   ctx.fillStyle='#3a3d44'; ctx.fillRect(0,gY,VW,VH-gY);
   ctx.strokeStyle='#2c2f36'; ctx.lineWidth=1;
   for(let x=-(camX%48); x<VW; x+=48){ ctx.beginPath(); ctx.moveTo(x,gY); ctx.lineTo(x,VH); ctx.stroke(); }
