@@ -116,6 +116,16 @@ const ASSETS = [
   {key:'weapons',  type:'img', src:'weapons.png', optional:true},
   {key:'bigblaster',   type:'img', src:'bigblaster.png', optional:true},
   {key:'littleblaster',type:'img', src:'littleblaster.png', optional:true},
+  {key:'fireblaster',  type:'img', src:'fireblaster.png', optional:true},
+  {key:'bossman',      type:'img', src:'bossman.png', optional:true},
+  {key:'weapon01', type:'img', src:'weapon01.png', optional:true},
+  {key:'weapon02', type:'img', src:'weapon02.png', optional:true},
+  {key:'weapon03', type:'img', src:'weapon03.png', optional:true},
+  {key:'weapon04', type:'img', src:'weapon04.png', optional:true},
+  {key:'weapon05', type:'img', src:'weapon05.png', optional:true},
+  {key:'weapon06', type:'img', src:'weapon06.png', optional:true},
+  {key:'weapon07', type:'img', src:'weapon07.png', optional:true},
+  {key:'weapon08', type:'img', src:'weapon08.png', optional:true},
   {key:'priest',   type:'img', src:'priest.png', optional:true},
   {key:'burgerking', type:'img', src:'burgerking.png', optional:true},
   {key:'captain',  type:'img', src:'captain.png', optional:true},
@@ -166,7 +176,7 @@ const SECTIONS=[
      edge gives the "THE END" exit and the left edge returns to the hub.
      Ambient MK characters (NPCs) are wired separately in MK_NPCS below. */
   {id:'mk', name:'The Portal &mdash; Mortal Kombat', bgKey:'mk', BGW:1432, srcY:0, flatGround:206, chain:true, next:null, prev:null,
-   enemies:[ {at:360,kind:4},{at:620,kind:0},{at:880,kind:1},{at:1120,kind:4},{at:1340,kind:0} ]},
+   enemies:[ {at:360,kind:4},{at:620,kind:0},{at:880,kind:1},{at:1120,kind:4},{at:1340,kind:0},{at:1000,kind:8,hp:600} ]},
 
   /* ── BLACK LEVEL (entered from the hub Portal -> travel menu) ──────────
      A long, currently-black stage that hosts the MP4 scenery system below
@@ -229,10 +239,10 @@ const SECTIONS=[
      The 3 doors lead to the club rooms — nudge each x so the marker sits over the
      painted door, and tune srcY/flatGround/charScale so feet land on the floor in
      front of them (mirrors the police-room camera as a sensible starting point). */
-  {id:'in_nightclub', name:"Inside &mdash; Slammin' Vinyl", bgKey:'room_nightclub', BGW:2048, zoom:0.85, srcY:150, flatGround:540, charScale:1.7, interior:true, exitLeft:'home', enemies:[],
-   doors:[ {x:785,  w:95, label:'Room 1 &mdash; Drum &amp; Bass', target:'in_dnb'},
-           {x:1115, w:95, label:'Room 2 &mdash; Hardcore',       target:'in_hardcore'},
-           {x:1440, w:95, label:'Room 3 &mdash; Special Guest',  target:'in_special'} ]},
+  {id:'in_nightclub', name:"Inside &mdash; Slammin' Vinyl", bgKey:'room_nightclub', BGW:2048, zoom:0.85, srcY:150, flatGround:540, charScale:2.5, interior:true, exitLeft:'home', enemies:[],
+   doors:[ {x:745,  w:90, label:'Room 1 &mdash; Drum &amp; Bass', target:'in_dnb'},
+           {x:1025, w:90, label:'Room 2 &mdash; Hardcore',       target:'in_hardcore'},
+           {x:1305, w:90, label:'Room 3 &mdash; Special Guest',  target:'in_special'} ]},
   /* ── CRACKADILLY GARDENS (the stitched 3-panorama park; end of the hub) ──
      One wide outdoor walk-through built from Park1+Park2+Park3 stitched into a
      single seamless jpeg (room crackadilly.jpeg, 5946px wide). interior:true so
@@ -255,7 +265,7 @@ const SECTIONS=[
   {id:'in_crackadilly', name:'Crackadilly Gardens', bgKey:'room_crackadilly', BGW:5946, srcY:140, flatGround:350, charScale:1.2, interior:true, exitLeft:'home', enemies:[],
    groundStep:100,
    groundPts:[350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,352,360,364,366,366,366,362,354,350,350,350,350,350,350,350,350,350],
-   doors:[ {x:5300, w:150, label:'Cottagers Cove &mdash; underpass', target:'in_cottagers'} ]},
+   doors:[ {x:5500, w:150, label:'Cottagers Cove &mdash; underpass', target:'in_cottagers'} ]},
 
   /* ── SLAMMIN' VINYL ROOMS (entered from the club lobby; EXIT door -> lobby) ──
      Placeholder interiors until you make their backgrounds (room dnb/hardcore/
@@ -381,12 +391,32 @@ const SHOP=[
   {id:'vest',    name:'Bulletproof Vest', price:250},
   {id:'littleblaster', name:'Little Blaster',    price:300},
   {id:'bigblaster',    name:'Big Blaster',       price:600},
+  {id:'fireblaster',   name:'Fire Blaster',      price:800},
+  {id:'weapon01', name:'Weapon 1', price:450},
+  {id:'weapon02', name:'Weapon 2', price:500},
+  {id:'weapon03', name:'Weapon 3', price:700},
+  {id:'weapon04', name:'Weapon 4', price:950},
+  {id:'weapon05', name:'Weapon 5', price:650},
+  {id:'weapon06', name:'Weapon 6', price:1100},
+  {id:'weapon07', name:'Weapon 7', price:600},
+  {id:'weapon08', name:'Weapon 8', price:1500},
 ];
 const WEAPONS={
   rifle:   {name:'Bullets', auto:true,  cooldown:6,  type:'bullet', pellets:1, spread:0.05, speed:14, range:640, dmg:18, knock:6 },
   grenade: {name:'Grenade', auto:false, cooldown:48, type:'grenade', speed:8, dmg:80, radius:95, knock:22 },
   littleblaster:{name:'Little Blaster', auto:false, cooldown:16, type:'bullet', pellets:1, spread:0.02, speed:12, range:600, dmg:34, knock:9,  sprite:'littleblaster', spriteH:30, shake:false},
   bigblaster:   {name:'Big Blaster',    auto:false, cooldown:34, type:'bullet', pellets:1, spread:0.00, speed:10, range:680, dmg:90, knock:24, sprite:'bigblaster',    spriteH:58, shake:true },
+  // Fire Blaster — fast, hard-hitting fireball gun (sprite from the explosion sheet).
+  fireblaster:  {name:'Fire Blaster',   auto:true,  cooldown:8,  type:'bullet', pellets:1, spread:0.04, speed:13, range:660, dmg:40, knock:12, sprite:'fireblaster', spriteH:34, shake:false},
+  // 8 NAMELESS neon weapons (rename freely — the key/sprite stay the same).
+  weapon01: {name:'Weapon 1', auto:false, cooldown:12, type:'bullet', pellets:1, spread:0.03, speed:14, range:660, dmg:30, knock:8,  sprite:'weapon01', spriteH:26, shake:false},
+  weapon02: {name:'Weapon 2', auto:true,  cooldown:10, type:'bullet', pellets:1, spread:0.04, speed:13, range:640, dmg:26, knock:7,  sprite:'weapon02', spriteH:26, shake:false},
+  weapon03: {name:'Weapon 3', auto:false, cooldown:16, type:'bullet', pellets:1, spread:0.02, speed:12, range:660, dmg:44, knock:11, sprite:'weapon03', spriteH:28, shake:false},
+  weapon04: {name:'Weapon 4', auto:false, cooldown:22, type:'bullet', pellets:1, spread:0.00, speed:11, range:680, dmg:55, knock:18, sprite:'weapon04', spriteH:30, shake:true },
+  weapon05: {name:'Weapon 5', auto:false, cooldown:14, type:'bullet', pellets:1, spread:0.03, speed:13, range:650, dmg:38, knock:10, sprite:'weapon05', spriteH:26, shake:false},
+  weapon06: {name:'Weapon 6', auto:true,  cooldown:10, type:'bullet', pellets:1, spread:0.03, speed:16, range:700, dmg:48, knock:9,  sprite:'weapon06', spriteH:22, shake:false},
+  weapon07: {name:'Weapon 7', auto:false, cooldown:12, type:'bullet', pellets:1, spread:0.03, speed:14, range:650, dmg:34, knock:9,  sprite:'weapon07', spriteH:24, shake:false},
+  weapon08: {name:'Weapon 8', auto:false, cooldown:26, type:'bullet', pellets:1, spread:0.00, speed:12, range:700, dmg:70, knock:20, sprite:'weapon08', spriteH:30, shake:true },
 };
 /* ── HUB WANDERERS (ambient NPCs on the high street, can't hit / be hit) ──
    One of each, they just stroll back and forth on the hub. Add more by
