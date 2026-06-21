@@ -158,21 +158,25 @@ const ENEMY_KINDS=[
    clips:{walk:{start:0,count:2,fps:3,loop:true}, die:{start:2,count:2,fps:6,loop:false}}},
   {img:'ufo', fw:119, fh:90, hover:34, color:'#bfe4ff', hair:'#3a5a8a',
    clips:{walk:{start:0,count:8,fps:10,loop:true}, die:{start:0,count:1,fps:6,loop:false}}},
+  // 8 = BOSS MAN: big, very tanky, SHOOTS fireballs at the player (appears in the MK level).
+  // Single static frame for now (re-export a walk/die strip later and bump the counts).
+  {img:'bossman', fw:103, fh:84, scale:1.9, shooter:true, shotDmg:16, color:'#c64a4a', hair:'#8aa0b8',
+   clips:{walk:{start:0,count:1,fps:1,loop:true}, die:{start:0,count:1,fps:2,loop:false}}},
 ];
 const EH=78;
 let enemies=[];
 const killedEnemies=new Set();          // ids of enemies killed this playthrough (don't respawn)
 function pushEnemy(kind,at,id,opts){
-  const k=ENEMY_KINDS[kind]; const w=Math.round(EH*k.fw/k.fh);
+  const k=ENEMY_KINDS[kind]; const sc=k.scale||1; const h=Math.round(EH*sc); const w=Math.round(h*k.fw/k.fh);
   const hp=(opts&&opts.hp)||40;
-  const e={kind, x:at, w, h:EH, y:0, vx:0, face:-1, id:id||null, static:!!(opts&&opts.static),
-    hp, max:hp, state:'walk', ct:0, hitId:-1, dmgCool:0, fade:1};
+  const e={kind, x:at, w, h, y:0, vx:0, face:-1, id:id||null, static:!!(opts&&opts.static),
+    hp, max:hp, state:'walk', ct:0, hitId:-1, dmgCool:0, fade:1, fireCd:80+Math.floor(Math.random()*60)};
   enemies.push(e); return e;            // returned so the arena can scale its speed/damage
 }
 function spawnEnemiesForSection(){
   if(SECTIONS[sectionIndex].arena){ arenaEnter(); return; }   // arena sections run their own wave spawner
   arenaActive=false;                                          // any normal section leaves the arena
-  enemies=[];
+  enemies=[]; enemyBullets=[];
   SECTIONS[sectionIndex].enemies.forEach((e,i)=>{ const id=sectionIndex+'-e'+i; if(!killedEnemies.has(id)) pushEnemy(e.kind, e.at, id, e); });
   if(SECTIONS[sectionIndex].id==='park' && parkInvaded) spawnParkAliens();
 }
@@ -201,6 +205,11 @@ function updateEnemies(){
     if(!e.static && !player.dead && Math.abs(dx)<EHIT_RANGE+6 && e.dmgCool<=0){
       damagePlayer(e.dmg||EDMG); e.dmgCool=70;
       player.x += (dx>0?-10:10); // knockback
+    }
+    // shooter enemies (e.g. Boss Man) lob fireballs at the player from a distance
+    if(ENEMY_KINDS[e.kind].shooter && !player.dead){
+      if(e.fireCd>0) e.fireCd--;
+      if(e.fireCd<=0 && Math.abs(dx)<900){ enemyFire(e); e.fireCd=70+Math.floor(Math.random()*50); }
     }
   }
   // cull fully-dead after their death anim has shown a moment
@@ -251,7 +260,43 @@ function drawEnemyStandin(dw,dh,k,e){
   ctx.restore();
 }
 
-/* HELPERS (summonable) */
+/* ── ENEMY PROJECTILES: fireballs thrown by shooter enemies like Boss Man ── */
+let enemyBullets=[];
+function enemyFire(e){
+  const px=player.x+PW/2, py=player.y+PH*0.45;
+  const ex=e.x+e.w*0.5, ey=e.y+e.h*0.42;
+  let dx=px-ex, dy=py-ey; const d=Math.hypot(dx,dy)||1, sp=4.6;
+  enemyBullets.push({x:ex, y:ey, vx:dx/d*sp, vy:dy/d*sp, dmg:(ENEMY_KINDS[e.kind].shotDmg||14), t:0, life:150});
+  if(typeof sfxShot==='function') sfxShot();
+}
+function updateEnemyBullets(){
+  for(const b of enemyBullets){
+    b.x+=b.vx; b.y+=b.vy; b.t++;
+    if(b.t>b.life || b.x<-40 || b.x>BGW+40){ b.dead=true; continue; }
+    if(!player.dead && (player.hurtCool||0)<=0 &&
+       Math.abs(b.x-(player.x+PW/2))<PW*0.42 && Math.abs(b.y-(player.y+PH*0.5))<PH*0.5){
+      damagePlayer(b.dmg); b.dead=true;
+      if(typeof vfx!=='undefined') vfx.push({type:'spark', x:b.x, y:b.y, t:0, life:8});
+    }
+  }
+  enemyBullets=enemyBullets.filter(b=>!b.dead);
+}
+function drawEnemyBullets(){
+  for(const b of enemyBullets){
+    const sx=(b.x-camX)*ZOOM, sy=(b.y-SRCY)*ZOOM;
+    if(sx<-30||sx>VW+30) continue;
+    if(imgOk(loaded.fireblaster)){
+      const bi=loaded.fireblaster, bh=30*ZOOM, bw=bh*bi.naturalWidth/bi.naturalHeight;
+      ctx.save(); ctx.translate(sx,sy);
+      ctx.shadowColor='rgba(255,140,20,0.9)'; ctx.shadowBlur=12;
+      try{ ctx.drawImage(bi,-bw/2,-bh/2,bw,bh); }catch(_){}
+      ctx.restore();
+    } else {
+      ctx.save(); ctx.fillStyle='#ff7a1a'; ctx.shadowColor='#ff4500'; ctx.shadowBlur=10;
+      ctx.beginPath(); ctx.arc(sx,sy,6*ZOOM,0,7); ctx.fill(); ctx.restore();
+    }
+  }
+}
 const HELPERS=[
   {id:'athlete', name:'The Hurler', img:'athlete', type:'fighter', fw:127, fh:185, drawH:80,
    color:'#27c2a8', skin:'#f0c49a', stick:'#caa05a',
@@ -806,7 +851,7 @@ const WEAPON_ART={
   vest:    {sx:190,  sy:544, sw:273, sh:281},
   grenade: {sx:856,  sy:653, sw:145, sh:128},
 };
-const WEAPON_ORDER=['rifle','littleblaster','bigblaster'];
+const WEAPON_ORDER=['rifle','littleblaster','bigblaster','fireblaster','weapon01','weapon02','weapon03','weapon04','weapon05','weapon06','weapon07','weapon08'];
 let weaponList=[];
 let weaponSel=-1;
 let shootCool=0;
@@ -1495,6 +1540,7 @@ function update(){
   arenaUpdate();          // the Void's endless-wave spawner (no-op everywhere else)
   updateHelper();
   updateBullets();
+  updateEnemyBullets();
   updateVfx();
   updateBlood();
   updateNPC();
@@ -1592,6 +1638,7 @@ function draw(){
 
   drawHeldWeapon();
   drawBullets();
+  drawEnemyBullets();
   drawVfx();
   drawBlood();
   drawDoors();
@@ -1666,7 +1713,7 @@ function arenaPool(w){
 }
 function arenaEnter(){
   arenaActive=true; arenaWave=0; arenaScore=0; arenaGrace=0; arenaScored=false;
-  enemies=[]; bullets=[]; vfx=[];
+  enemies=[]; bullets=[]; vfx=[]; enemyBullets=[];
   arenaNextWave();
 }
 function arenaNextWave(){
