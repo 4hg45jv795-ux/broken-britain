@@ -1069,11 +1069,11 @@ document.getElementById('cutscene').addEventListener('click',()=>{ if(!csActive)
 /* ── NPC photographer (unchanged) ────────────────────────── */
 const NPCH=78,NPCW=Math.round(NPCH*PFW/PFH);
 const npc={x:0,y:0,state:'walkin',t:0,anim:0,active:false};
-function initNPC(){ npc.x=430; npc.state='walkin'; npc.t=0; npc.anim=0; npc.active=true; csDone=false; npc.y=groundAt(npc.x+NPCW/2)-NPCH; }
+function initNPC(){ npc.x=player.x+SRCW+80; npc.state='walkin'; npc.t=0; npc.anim=0; npc.active=true; csDone=false; npc.y=groundAt(npc.x+NPCW/2)-NPCH; }
 function updateNPC(){
   if(!npc.active)return;
   if(csActive){npc.state='idle';npc.y=groundAt(npc.x+NPCW/2)-NPCH;return;}
-  if(npc.state==='walkin'){ npc.anim+=0.10; if(!csDone&&(player.x+PW/2)>285){npc.state='idle';startCutscene();} }
+  if(npc.state==='walkin'){ npc.x-=1.4; npc.anim+=0.17; if(!csDone&&Math.abs(player.x-npc.x)<260){npc.state='idle';startCutscene();} }
   else if(npc.state==='idle'){ npc.t=0; if(player.x > npc.x + 20) npc.state='trail'; }
   else{ const targetX=player.x-130; const gap=npc.x-targetX;
     if(gap>30){npc.x-=1.8;npc.anim+=0.16;npc.state='trail';}
@@ -1156,7 +1156,7 @@ function start(m){
   money=1000; owned.clear(); updateMoneyHUD(); closeShop(); floaters=[];  // TESTING: start with £1000 (set back to 0 later)
   weaponList=[]; weaponSel=-1; shootCool=0; bullets=[]; vfx=[];
   player.armour=0; updateArmourHUD(); refreshWeaponBtn();
-  hubReturnX=20;                                  // first time out, pop up by the house
+  hubReturnX=200;                                  // first time out, pop up by the house
   helper.active=false; helperCool=[0,0]; buildHelperThumbs(); refreshHelperBtns();
   killedEnemies.clear(); pickup.active=false;
   setPaused(false);
@@ -1587,7 +1587,7 @@ function draw(){
 
   // player
   const fx=frameIndex();
-  const dw=PW*ZOOM*CSCALE,dh=PH*ZOOM*CSCALE;
+  const cs=(cur&&cur.scale)||1; const dw=PW*ZOOM*CSCALE*cs,dh=PH*ZOOM*CSCALE*cs;
   const sx=(player.x-camX)*ZOOM-(dw-PW*ZOOM)/2,sy=(player.y+PH-SRCY)*ZOOM-dh;
   if(imgOk(loaded[cur.id])){
     ctx.save();
