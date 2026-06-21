@@ -55,7 +55,7 @@ const CLIPS_BOSS={
 /* ── FIGHTER META ────────────────────────────────────────── */
 const META=[
   {id:'brit',     name:'The Patriot',  flag:'GREAT BRITAIN', fw:233, fh:220, clips:CLIPS_BRIT,
-                  noWeaponArt:true, muzzle:{fwd:0.34, yfac:0.40}},
+                  noWeaponArt:true, scale:1.2, muzzle:{fwd:0.34, yfac:0.40}},
   {id:'crusader', name:'The Crusader', flag:'CHRISTENDOM',   fw:134, fh:179, clips:CLIPS_CRU},
   {id:'dog',      name:'K-9 Unit',     flag:'ARMED RESPONSE',fw:224, fh:240, clips:CLIPS_DOG,
                   noWeaponArt:true, muzzle:{fwd:0.62, yfac:0.34}},
