@@ -221,12 +221,15 @@ const SECTIONS=[
      One wide outdoor walk-through built from Park1+Park2+Park3 stitched into a
      single seamless jpeg (room crackadilly.jpeg, 5946px wide). interior:true so
      the EXIT door pops you back to the hub. srcY / flatGround / charScale are
-     starting guesses copied from the Glasgow/Southampton street levels — nudge
-     on the phone so the player's feet sit on the pavement. The EXIT door is at
-     the FAR RIGHT (walk the gardens, leave at the far side); move its x left
-     (e.g. x:200) if you'd rather exit back by the entrance. Music: Crackadilly.mp3
-     (already slotted in TRACKS below — just upload that file). */
-  {id:'in_crackadilly', name:'Crackadilly Gardens', bgKey:'room_crackadilly', BGW:5946, srcY:90, flatGround:300, charScale:1.2, interior:true, enemies:[],
+     tuned from your in-game screenshots: srcY:140 slides the view DOWN so the
+     wet pavement (the bottom ~45% of the image) shows along the bottom of the
+     screen, and flatGround:350 drops the player's feet onto that pavement.
+     Nudge if needed — raise flatGround (e.g. 350->370) to push him lower; raise
+     srcY (e.g. 140->165) to reveal even more pavement at the very bottom.
+     The EXIT door is at the FAR RIGHT (walk the gardens, leave at the far side);
+     move its x left (e.g. x:200) to exit back by the entrance. Music:
+     Crackadilly.mp3 (already slotted in TRACKS below — just upload that file). */
+  {id:'in_crackadilly', name:'Crackadilly Gardens', bgKey:'room_crackadilly', BGW:5946, srcY:140, flatGround:350, charScale:1.2, interior:true, enemies:[],
    doors:[ {x:5786, w:130, label:'EXIT &mdash; to the street', target:'home'} ]},
 
   /* Placeholder for travel destinations that aren't built yet (easyJet / train
