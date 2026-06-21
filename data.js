@@ -171,8 +171,8 @@ const SECTIONS=[
      scrolling with the camera. black:true paints the frame black underneath,
      so anywhere a video hasn't loaded yet just stays black. chain:true lets
      you walk it; the left edge returns to the hub. BGW is the level length. */
-  {id:'blacklevel', name:'The Void', bgKey:'__black__', black:true, BGW:4267, srcY:0, flatGround:200, chain:true, next:null, prev:null,
-   enemies:[ {at:600,kind:2},{at:950,kind:7},{at:1300,kind:3},{at:1700,kind:7},{at:2050,kind:2},{at:2450,kind:7},{at:2800,kind:3},{at:3200,kind:7},{at:3550,kind:2},{at:3950,kind:7} ]},
+  {id:'blacklevel', name:'The Void', bgKey:'__black__', black:true, BGW:8534, srcY:0, flatGround:200, chain:true, next:null, prev:null,
+   enemies:[ {at:700,kind:2},{at:1300,kind:7},{at:2100,kind:3},{at:2900,kind:7},{at:3600,kind:2},{at:4400,kind:7},{at:5200,kind:3},{at:6000,kind:7},{at:6800,kind:2},{at:7600,kind:7},{at:8100,kind:3} ]},
 
   /* ── HOLODECK (entered from the hub Portal -> travel menu) ─────────────
      A full-screen MP4 backdrop: one widescreen clip (holodeck.mp4) fills the
@@ -284,9 +284,9 @@ const SCREENS = {
 const SCENE_VIDEOS = {
   blacklevel: { wallFrac:0.75, tileW:1200, zones:[
     {from:0,    wall:'wall.mp4',  floor:'floor.mp4' },
-    {from:1067, wall:'wall2.mp4', floor:'floor2.mp4'},
-    {from:2133, wall:'wall3.mp4', floor:'floor3.mp4'},
-    {from:3200, wall:'wall4.mp4', floor:'floor4.mp4'},
+    {from:2134, wall:'wall2.mp4', floor:'floor2.mp4'},
+    {from:4267, wall:'wall3.mp4', floor:'floor3.mp4'},
+    {from:6400, wall:'wall4.mp4', floor:'floor4.mp4'},
   ]},
   holodeck:   { wall:'holodeck.mp4', floor:null, wallFrac:1.0, tileW:534 },   // full-screen clip, doubled side-by-side
 };
