@@ -137,7 +137,7 @@ const SECTIONS=[
         exactly how every other door here was lined up. */
      {x:2280, w:100, label:'Police Station',    target:'in_police'},
      {x:2490, w:110, label:"Slammin' Vinyl",    target:'in_nightclub'},
-     {x:2700, w:120, label:'Crackadilly Park',  target:'in_crackadilly'}
+     {x:2700, w:120, label:'Crackadilly Gardens',  target:'in_crackadilly'}
    ]},
   {id:'street', name:'Southside &mdash; the street', bgKey:'bg',  BGW:4047, srcY:120, flatGround:null, chain:true, next:'park',
    enemies:[ {at:1200,kind:0},{at:1700,kind:1},{at:2300,kind:0},{at:3300,kind:1},{at:3700,kind:0} ]},
@@ -217,8 +217,17 @@ const SECTIONS=[
    doors:[ {x:2070, w:100, label:'EXIT &mdash; to the street', target:'home'} ]},
   {id:'in_nightclub', name:"Inside &mdash; Slammin' Vinyl", bgKey:'room_nightclub', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
-  {id:'in_crackadilly', name:'Inside &mdash; Crackadilly Park', bgKey:'room_crackadilly', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
-   doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
+  /* ── CRACKADILLY GARDENS (the stitched 3-panorama park; end of the hub) ──
+     One wide outdoor walk-through built from Park1+Park2+Park3 stitched into a
+     single seamless jpeg (room crackadilly.jpeg, 5946px wide). interior:true so
+     the EXIT door pops you back to the hub. srcY / flatGround / charScale are
+     starting guesses copied from the Glasgow/Southampton street levels — nudge
+     on the phone so the player's feet sit on the pavement. The EXIT door is at
+     the FAR RIGHT (walk the gardens, leave at the far side); move its x left
+     (e.g. x:200) if you'd rather exit back by the entrance. Music: Crackadilly.mp3
+     (already slotted in TRACKS below — just upload that file). */
+  {id:'in_crackadilly', name:'Crackadilly Gardens', bgKey:'room_crackadilly', BGW:5946, srcY:90, flatGround:300, charScale:1.2, interior:true, enemies:[],
+   doors:[ {x:5786, w:130, label:'EXIT &mdash; to the street', target:'home'} ]},
 
   /* Placeholder for travel destinations that aren't built yet (easyJet / train
      station locations). When you create a real level, give it its own id and
