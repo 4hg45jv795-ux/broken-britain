@@ -1,14 +1,13 @@
 /* data.js — Enough Is Enough: the data/config you tweak (loaded BEFORE engine.js). */
 
 const CLIPS_BRIT={
-  idle:   {start:0,  count:1, fps:2,  loop:true},
-  walk:   {start:1,  count:6, fps:10, loop:true},
-  run:    {start:10, count:3, fps:13, loop:true},
-  jump:   {start:7,  count:1, fps:8,  loop:false},
-  punch:  {start:18, count:2, fps:14, loop:false},   // gun-thrust melee
-  headbutt:{start:18,count:2, fps:14, loop:false},
-  die:    {start:20, count:2, fps:7,  loop:false},   // kneel -> lying
-  shoot:  {start:13, count:2, fps:16, loop:false},   // raise -> fire
+  idle:   {start:0,  count:5, fps:7,  loop:true},
+  walk:   {start:5,  count:6, fps:10, loop:true},
+  run:    {start:11, count:6, fps:15, loop:true},
+  jump:   {start:17, count:6, fps:12, loop:false},
+  punch:  {start:23, count:6, fps:20, loop:false},
+  headbutt:{start:29,count:4, fps:16, loop:false},
+  die:    {start:33, count:3, fps:8,  loop:false},
 };
 const CLIPS_CRU={
   idle:   {start:0,  count:4, fps:5,  loop:true},
@@ -52,15 +51,31 @@ const CLIPS_BOSS={
   die:    {start:6, count:2, fps:6,  loop:false},   // kneel -> lying
   shoot:  {start:2, count:3, fps:15, loop:false},   // aim -> fire -> smoke
 };
+/* ── The Operator (gun guy). operator.png = 13 frames @ 150×198, real PNG alpha:
+     walk → aim → fire (muzzle flash + flying casings) → kneel → lying dead.
+     Best-guess frame split below — nudge counts on the phone if a phase
+     runs short/long. Rifle is IN the sprite (noWeaponArt + muzzle), same as
+     K-9 and The Boss, so bullets leave his own barrel. */
+const CLIPS_OPERATOR={
+  idle:   {start:4,  count:1, fps:2,  loop:true},    // aim/ready stance
+  walk:   {start:0,  count:4, fps:9,  loop:true},
+  run:    {start:0,  count:4, fps:12, loop:true},
+  jump:   {start:4,  count:1, fps:8,  loop:false},
+  punch:  {start:5,  count:3, fps:14, loop:false},   // unarmed melee = fire motion
+  headbutt:{start:5, count:3, fps:14, loop:false},
+  die:    {start:8,  count:5, fps:8,  loop:false},   // kneel -> lying dead
+  shoot:  {start:5,  count:3, fps:16, loop:false},   // aim -> fire
+};
 /* ── FIGHTER META ────────────────────────────────────────── */
 const META=[
-  {id:'brit',     name:'The Patriot',  flag:'GREAT BRITAIN', fw:233, fh:220, clips:CLIPS_BRIT,
-                  noWeaponArt:true, muzzle:{fwd:0.34, yfac:0.40}},
+  {id:'brit',     name:'The Patriot',  flag:'GREAT BRITAIN', fw:181, fh:218, clips:CLIPS_BRIT},
   {id:'crusader', name:'The Crusader', flag:'CHRISTENDOM',   fw:134, fh:179, clips:CLIPS_CRU},
   {id:'dog',      name:'K-9 Unit',     flag:'ARMED RESPONSE',fw:224, fh:240, clips:CLIPS_DOG,
                   noWeaponArt:true, muzzle:{fwd:0.62, yfac:0.34}},
   {id:'boss',     name:'The Boss',     flag:'THE FIRM',      fw:294, fh:299, clips:CLIPS_BOSS,
                   noWeaponArt:true, muzzle:{fwd:0.62, yfac:0.46}},
+  {id:'operator', name:'The Operator', flag:'DIRECT ACTION', fw:150, fh:198, clips:CLIPS_OPERATOR,
+                  noWeaponArt:true, muzzle:{fwd:0.40, yfac:0.30}},
 ];
 /* ── ASSETS ──────────────────────────────────────────────── */
 const ASSETS = [
@@ -82,10 +97,11 @@ const ASSETS = [
   {key:'pub',      type:'img', src:'pub2.jpeg'},
   {key:'dundee',   type:'img', src:'dundee.jpeg'},
   {key:'bg3',      type:'img', src:'bg3.jpeg'},
-  {key:'brit',     type:'img', src:'patriot.png'},
+  {key:'brit',     type:'img', src:'brit2.png'},
   {key:'crusader', type:'img', src:'crusader2.png'},
   {key:'dog',      type:'img', src:'dog.png', optional:true},
   {key:'boss',     type:'img', src:'boss.png', optional:true},
+  {key:'operator', type:'img', src:'operator.png', optional:true},
   {key:'photog',   type:'img', src:'photog2.png'},
   {key:'athlete',  type:'img', src:'athlete.png', optional:true},
   {key:'police',   type:'img', src:'police4.png', optional:true},
@@ -110,8 +126,6 @@ const ASSETS = [
   {key:'mknpc2',   type:'img', src:'mknpc2.png', optional:true},
   {key:'mknpc3',   type:'img', src:'mknpc3.png', optional:true},
   {key:'weapons',  type:'img', src:'weapons.png', optional:true},
-  {key:'bigblaster',   type:'img', src:'bigblaster.png', optional:true},
-  {key:'littleblaster',type:'img', src:'littleblaster.png', optional:true},
   {key:'priest',   type:'img', src:'priest.png', optional:true},
   {key:'burgerking', type:'img', src:'burgerking.png', optional:true},
   {key:'captain',  type:'img', src:'captain.png', optional:true},
@@ -181,7 +195,7 @@ const SECTIONS=[
      below if you ever want a flip-screen camera instead (snaps panel-to-panel,
      no scroll). black underneath, the video is silent, Holodeck.mp3 is the
      sound. Want it longer? Add screens: set BGW to (number-of-screens x 534). */
-  {id:'holodeck', name:'The Holodeck', bgKey:'__black__', black:true, BGW:1068, srcY:0, flatGround:180, chain:true, next:null, prev:null, enemies:[]},
+  {id:'holodeck', name:'The Holodeck', bgKey:'__black__', black:true, BGW:1068, srcY:0, flatGround:210, chain:true, next:null, prev:null, enemies:[]},
 
   /* ── INTERIOR ROOMS (entered from the hub; EXIT door returns to the street) ── */
   {id:'in_house', name:'Inside &mdash; My House', bgKey:'room_house', BGW:591, srcY:46, flatGround:277, charScale:1.3, interior:true, enemies:[],
@@ -321,16 +335,12 @@ const SHOP=[
   {id:'rifle',   name:'Assault Rifle',    price:350},
   {id:'vest',    name:'Bulletproof Vest', price:250},
   {id:'grenade', name:'Grenades',         price:120},
-  {id:'littleblaster', name:'Little Blaster',    price:300},
-  {id:'bigblaster',    name:'Big Blaster',       price:600},
 ];
 const WEAPONS={
   pistol:  {name:'Pistol',  auto:false, cooldown:16, type:'bullet', pellets:1, spread:0.00, speed:12, range:540, dmg:34, knock:9 },
   shotgun: {name:'Shotgun', auto:false, cooldown:42, type:'bullet', pellets:7, spread:0.30, speed:10, range:240, dmg:16, knock:16},
   rifle:   {name:'Rifle',   auto:true,  cooldown:6,  type:'bullet', pellets:1, spread:0.05, speed:14, range:640, dmg:18, knock:6 },
   grenade: {name:'Grenade', auto:false, cooldown:48, type:'grenade', speed:8, dmg:80, radius:95, knock:22 },
-  littleblaster:{name:'Little Blaster', auto:false, cooldown:16, type:'bullet', pellets:1, spread:0.02, speed:12, range:600, dmg:34, knock:9,  sprite:'littleblaster', spriteH:30, shake:false},
-  bigblaster:   {name:'Big Blaster',    auto:false, cooldown:34, type:'bullet', pellets:1, spread:0.00, speed:10, range:680, dmg:90, knock:24, sprite:'bigblaster',    spriteH:58, shake:true },
 };
 /* ── HUB WANDERERS (ambient NPCs on the high street, can't hit / be hit) ──
    One of each, they just stroll back and forth on the hub. Add more by
@@ -408,6 +418,6 @@ const PROX_AUDIO=[
   {section:'in_police', src:'Cell3.mp3',     range:60,  getX:()=>1155},
   {section:'in_police', src:'Cell4.mp3',       range:85,  getX:()=>1310},
   {section:'in_police', src:'Policewoman.mp3', range:120, getX:()=>400},
-  {section:'in_police', src:'Pooltable.mp3',   range:520, getX:()=>1600},
+  {section:'in_police', src:'Pooltable.mp3',   range:120, getX:()=>1600},
   {section:'in_police', src:'Staffroom.mp3', range:150, getX:()=>1920},
 ];
