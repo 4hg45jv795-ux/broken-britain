@@ -55,7 +55,7 @@ const CLIPS_BOSS={
 /* ── FIGHTER META ────────────────────────────────────────── */
 const META=[
   {id:'brit',     name:'The Patriot',  flag:'GREAT BRITAIN', fw:233, fh:220, clips:CLIPS_BRIT,
-                  noWeaponArt:true, scale:1.2, muzzle:{fwd:0.34, yfac:0.40}},
+                  noWeaponArt:true, scale:1.1, muzzle:{fwd:0.34, yfac:0.40}},
   {id:'crusader', name:'The Crusader', flag:'CHRISTENDOM',   fw:134, fh:179, clips:CLIPS_CRU},
   {id:'dog',      name:'K-9 Unit',     flag:'ARMED RESPONSE',fw:224, fh:240, clips:CLIPS_DOG,
                   noWeaponArt:true, muzzle:{fwd:0.62, yfac:0.34}},
@@ -171,7 +171,8 @@ const SECTIONS=[
      scrolling with the camera. black:true paints the frame black underneath,
      so anywhere a video hasn't loaded yet just stays black. chain:true lets
      you walk it; the left edge returns to the hub. BGW is the level length. */
-  {id:'blacklevel', name:'The Void', bgKey:'__black__', black:true, BGW:4000, srcY:0, flatGround:200, chain:true, next:null, prev:null, enemies:[]},
+  {id:'blacklevel', name:'The Void', bgKey:'__black__', black:true, BGW:4267, srcY:0, flatGround:200, chain:true, next:null, prev:null,
+   enemies:[ {at:600,kind:2},{at:950,kind:7},{at:1300,kind:3},{at:1700,kind:7},{at:2050,kind:2},{at:2450,kind:7},{at:2800,kind:3},{at:3200,kind:7},{at:3550,kind:2},{at:3950,kind:7} ]},
 
   /* ── HOLODECK (entered from the hub Portal -> travel menu) ─────────────
      A full-screen MP4 backdrop: one widescreen clip (holodeck.mp4) fills the
@@ -281,7 +282,12 @@ const SCREENS = {
                 repeats more often). Author each clip to loop seamlessly so
                 the left and right edges butt together with no visible seam. */
 const SCENE_VIDEOS = {
-  blacklevel: { wall:'wall.mp4', floor:'floor.mp4', wallFrac:0.75, tileW:1200 },
+  blacklevel: { wallFrac:0.75, tileW:1200, zones:[
+    {from:0,    wall:'wall.mp4',  floor:'floor.mp4' },
+    {from:1067, wall:'wall2.mp4', floor:'floor2.mp4'},
+    {from:2133, wall:'wall3.mp4', floor:'floor3.mp4'},
+    {from:3200, wall:'wall4.mp4', floor:'floor4.mp4'},
+  ]},
   holodeck:   { wall:'holodeck.mp4', floor:null, wallFrac:1.0, tileW:534 },   // full-screen clip, doubled side-by-side
 };
 /* ── TRAVEL MENUS (the portal + departure boards) ─────────────────────────
