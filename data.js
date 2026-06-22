@@ -228,9 +228,11 @@ const SECTIONS=[
   {id:'in_library', name:'Inside &mdash; The Library', bgKey:'room_library', BGW:2172, zoom:1.0, srcY:8, flatGround:332, charScale:1.7, interior:true, exitLeft:'home', enemies:[],
    doors:[]},
   /* WINCHESTER swapped to the wide pub panorama (room winchester.jpeg now 2172x387).
-     zoom:1.0 shows an 800px-wide slice; walk RIGHT along the bar, walk off the far LEFT to
-     leave (exitLeft:'home'). flatGround:348 lands feet on the front walkway — nudge to taste. */
-  {id:'in_winchester', name:'Inside &mdash; The Winchester', bgKey:'room_winchester', BGW:2172, zoom:1.0, srcY:12, flatGround:348, charScale:1.7, interior:true, exitLeft:'home', enemies:[],
+     zoom:1.0 shows an 800px-wide slice. Character made BIGGER (charScale 2.2) and the view
+     panned down (srcY:27) with flatGround:360 so he walks the front floorboards IN FRONT of
+     the bar stools (seats behind him). EXIT from EITHER end by walking off the edge
+     (exitLeft + exitRight). Nudge flatGround/charScale to taste. */
+  {id:'in_winchester', name:'Inside &mdash; The Winchester', bgKey:'room_winchester', BGW:2172, zoom:1.0, srcY:27, flatGround:360, charScale:2.2, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
    doors:[]},
 
   /* ── NEW INTERIOR ROOMS ───────────────────────────────────────────────
@@ -291,8 +293,12 @@ const SECTIONS=[
   /* ── COTTAGERS COVE (the underpass at the far end of Crackadilly Gardens) ──
      A standalone room reached from the gardens' right-hand underpass door.
      Placeholder until you make room cottagers.jpeg; EXIT pops back to the hub. */
-  {id:'in_cottagers', name:'Cottagers Cove', bgKey:'room_cottagers', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
-   doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
+  /* COTTAGERS COVE now uses the wide underpass panorama (room cottagers.jpeg, 2172x724).
+     zoom:0.72 fits the wall+railing above and the brick towpath below; flatGround:620 stands
+     the player on the front bricks (railing/canal behind). Reached from the Crackadilly
+     underpass door; walk off the far LEFT to return to the hub (exitLeft:'home'). */
+  {id:'in_cottagers', name:'Cottagers Cove', bgKey:'room_cottagers', BGW:2172, zoom:0.72, srcY:160, flatGround:620, charScale:2.5, interior:true, exitLeft:'home', enemies:[],
+   doors:[]},
 
   /* Placeholder for travel destinations that aren't built yet (easyJet / train
      station locations). When you create a real level, give it its own id and
