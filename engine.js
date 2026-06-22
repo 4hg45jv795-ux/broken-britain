@@ -170,6 +170,14 @@ const ENEMY_KINDS=[
   //     Cottagers Cove. `scale` sizes him against the big-room player — nudge to taste.
   {img:'bruiser', fw:196, fh:237, scale:2.0, color:'#cdb89a', hair:'#3a2a1e',
    clips:{walk:{start:0,count:6,fps:11,loop:true}, die:{start:12,count:6,fps:10,loop:false}}},
+  // 10 = GUNMAN: hooded shooter (shooter.png). 12 frames -> 0-3 walk, 4-7 aim/fire, 8-11 die.
+  //      Fires the Big-Blaster bolt and plays its SHOOT pose while firing. In the Holodeck.
+  {img:'shooter', fw:292, fh:343, scale:1.7, shooter:true, shotDmg:10, color:'#3a4250', hair:'#20242c',
+   clips:{walk:{start:0,count:4,fps:9,loop:true}, shoot:{start:4,count:4,fps:11,loop:false}, die:{start:8,count:4,fps:9,loop:false}}},
+  // 11 = DANCER: walks a few steps, then breaks into 'The Wobble' (dancer.png). 15 frames ->
+  //      0-7 walk, 8-13 dance, 14 die (placeholder pose — sheet had no death frames). In the Library.
+  {img:'dancer', fw:163, fh:310, scale:1.7, dancer:true, color:'#2a2a30', hair:'#1a1a1e',
+   clips:{walk:{start:0,count:8,fps:11,loop:true}, dance:{start:8,count:6,fps:9,loop:true}, die:{start:14,count:1,fps:5,loop:false}}},
 ];
 const EH=78;
 let enemies=[];
@@ -203,22 +211,39 @@ function updateEnemies(){
     if(e.state==='dead') continue;
     if(e.state==='die'){ e.ct++; if(enemyClipDone(e)){ e.state='dead'; if(e.id) killedEnemies.add(e.id); } continue; }
     // walking / chasing the player
+    const K=ENEMY_KINDS[e.kind];
     const dx=(player.x+PW/2)-(e.x+e.w/2);
     e.face = dx>0?1:-1;
-    if(!player.dead && Math.abs(dx)<aggro && Math.abs(dx)>EHIT_RANGE){
-      if(!e.static) e.x += e.face*(e.spd||ESPEED); e.ct++;
-    } else { e.ct++; }
+    // e.anim is a VISUAL overlay ('shoot'/'dance') that pauses movement; e.state stays 'walk'
+    // so all hit/target logic keeps working. animT counts the overlay down.
+    if(e.animT>0){ e.animT--; if(e.animT<=0){ e.anim=null; e.ct=0; } }
+    // DANCER: walk a few steps, then dance in place, repeat
+    if(K.dancer){
+      if(e.phaseT===undefined){ e.phaseT=55; e.anim=null; }
+      if(--e.phaseT<=0){
+        if(e.anim==='dance'){ e.anim=null; e.phaseT=55; e.ct=0; }
+        else { e.anim='dance'; e.phaseT=120; e.ct=0; }
+      }
+    }
+    const busy = (e.anim==='shoot'||e.anim==='dance');   // stationary while doing the overlay
+    if(!busy && !player.dead && Math.abs(dx)<aggro && Math.abs(dx)>EHIT_RANGE){
+      if(!e.static) e.x += e.face*(e.spd||ESPEED);
+    }
+    e.ct++;
     e.x=Math.max(0,Math.min(BGW-e.w,e.x));
-    // contact damage to player
+    // contact damage to player (not while paused for an overlay)
     if(e.dmgCool>0) e.dmgCool--;
-    if(!e.static && !player.dead && Math.abs(dx)<EHIT_RANGE+6 && e.dmgCool<=0){
+    if(!busy && !e.static && !player.dead && Math.abs(dx)<EHIT_RANGE+6 && e.dmgCool<=0){
       damagePlayer(e.dmg||EDMG); e.dmgCool=70;
       player.x += (dx>0?-10:10); // knockback
     }
-    // shooter enemies (the UFO) lob Big-Blaster bolts at the player from a distance
-    if(ENEMY_KINDS[e.kind].shooter && !player.dead){
+    // shooter enemies (UFO, gunman) lob Big-Blaster bolts; gunmen play a SHOOT pose
+    if(K.shooter && !player.dead && !busy){
       if(e.fireCd>0) e.fireCd--;
-      if(e.fireCd<=0 && Math.abs(dx)<900){ enemyFire(e); e.fireCd=70+Math.floor(Math.random()*50); }
+      if(e.fireCd<=0 && Math.abs(dx)<900){
+        enemyFire(e); e.fireCd=70+Math.floor(Math.random()*50);
+        if(K.clips.shoot){ e.anim='shoot'; e.ct=0; e.animT=Math.ceil(K.clips.shoot.count*60/K.clips.shoot.fps); }
+      }
     }
   }
   // cull fully-dead after their death anim has shown a moment
@@ -251,7 +276,7 @@ function drawEnemy(e){
   if(e.face<0){ ctx.translate(sx+dw,sy); ctx.scale(-1,1); } else { ctx.translate(sx,sy); }
   if(e.state==='die'){ const p=Math.min(1,e.ct/26); ctx.globalAlpha=1-p*0.85; ctx.translate(0,dh*0.15*p); }
   if(imgOk(loaded[k.img])){
-    let clip = e.state==='die'?k.clips.die:k.clips.walk;
+    let clip = e.state==='die' ? k.clips.die : (k.clips[e.anim] || k.clips.walk);
     let f=Math.floor(e.ct*clip.fps/60); f=clip.loop?(f%clip.count):Math.min(f,clip.count-1);
     try{ ctx.drawImage(loaded[k.img],(clip.start+f)*k.fw,0,k.fw,k.fh,0,0,dw,dh); }catch(_){ drawEnemyStandin(dw,dh,k,e); }
   } else { drawEnemyStandin(dw,dh,k,e); }
@@ -1531,7 +1556,10 @@ function update(){
   }
   runHold = moving ? Math.min(runHold+1,60) : 0;
   const running = moving && runHold>28;
-  player.vx = attacking ? 0 : (moving ? player.face*(running?RUNSPEED:SPEED) : 0);
+  // per-section walk multiplier: low-zoom rooms (e.g. Cottagers/Library) move slowly on
+  // screen (on-screen speed = SPEED*ZOOM), so `walkMul` compensates so they don't feel sluggish.
+  const walkMul = SECTIONS[sectionIndex].walkMul || 1;
+  player.vx = attacking ? 0 : (moving ? player.face*(running?RUNSPEED:SPEED)*walkMul : 0);
 
   if(keys.jump&&player.onGround&&!attacking){player.vy=JUMP;player.onGround=false;sfxJump();}
 
@@ -1730,7 +1758,7 @@ function isArena(){ return !!SECTIONS[sectionIndex].arena; }
 function arenaPool(){
   // every NORMAL wave is a roughly-even mix of EVERY enemy in the game.
   // (kind 8 = UFO gunship is reserved for the every-5th "UFO assault" rounds.)
-  return [0,1,2,3,4,5,6,7,9]; // 0 police,1 clown,2 alien,3 geezer,4 knifeman,5 deliveroo,6 bikeboy,7 ufo,9 bruiser
+  return [0,1,2,3,4,5,7,9]; // 0 police,1 clown,2 alien,3 geezer,4 knifeman,5 deliveroo,7 ufo,9 bruiser  (bikeboy/6 stays in Glasgow)
 }
 function arenaEnter(){
   arenaActive=true; arenaWave=0; arenaScore=0; arenaGrace=0; arenaScored=false;
@@ -1746,7 +1774,7 @@ function arenaNextWave(){
   let kinds, count, hp;
   if(ufoWave){
     kinds=[8];                                             // ONLY UFO gunships (fire the Big Blaster)
-    count=10;                                              // ~10 of them
+    count=Math.min(16, Math.round(4 + (w/5 - 1)*1.5));     // 4 @w5, 6 @w10, 7 @w15, rising each UFO round
     hp=Math.round(220*(1+(w/5-1)*0.6));                    // very tanky — hard to kill, tougher each UFO round
   } else {
     kinds=arenaPool();                                     // an even mix of everything else
