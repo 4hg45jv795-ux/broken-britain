@@ -135,6 +135,8 @@ let punchDown=false,punchEdge=false,runHold=0;
 function setClip(name){ if(player.clip!==name){player.clip=name;player.ct=0;} }
 function clipDone(){ const c=CLIPS[player.clip]; return !c.loop && player.ct>=Math.ceil(c.count*60/c.fps); }
 function playerAttacking(){ return player.clip==='punch'||player.clip==='headbutt'; }
+// The photographer snaps on any action — a STRIKE or a SHOT (not used for melee damage).
+function playerActioning(){ return playerAttacking()||player.clip==='shoot'; }
 const SPEED=2.1,RUNSPEED=3.4,GRAV=0.55,JUMP=-9.6;
 let bannerShown=false;
 
@@ -189,6 +191,7 @@ function enemyClipDone(e){ const c=ENEMY_KINDS[e.kind].clips.die; return e.ct>=M
 function killEnemy(e,ko){ if(e.state==='die'||e.state==='dead')return; e.state='die'; e.ct=0; (ko?sfxKO:sfxHit)();
   const reward=e.static?25:10; addMoney(reward); addFloater(e.x+e.w/2, e.y, '+\u00A3'+reward); arenaAddKillScore(); }
 function updateEnemies(){
+  const aggro = isArena()? 1e9 : EAGGRO;   // The Void: enemies chase the player from ANY distance
   for(const e of enemies){
     e.y=groundAt(e.x+e.w/2)-e.h-(ENEMY_KINDS[e.kind].hover||0);
     if(e.state==='dead') continue;
@@ -196,7 +199,7 @@ function updateEnemies(){
     // walking / chasing the player
     const dx=(player.x+PW/2)-(e.x+e.w/2);
     e.face = dx>0?1:-1;
-    if(!player.dead && Math.abs(dx)<EAGGRO && Math.abs(dx)>EHIT_RANGE){
+    if(!player.dead && Math.abs(dx)<aggro && Math.abs(dx)>EHIT_RANGE){
       if(!e.static) e.x += e.face*(e.spd||ESPEED); e.ct++;
     } else { e.ct++; }
     e.x=Math.max(0,Math.min(BGW-e.w,e.x));
@@ -851,7 +854,7 @@ const WEAPON_ART={
   vest:    {sx:190,  sy:544, sw:273, sh:281},
   grenade: {sx:856,  sy:653, sw:145, sh:128},
 };
-const WEAPON_ORDER=['rifle','littleblaster','bigblaster','fireblaster','weapon01','weapon02','weapon03','weapon04','weapon05','weapon06','weapon07','weapon08'];
+const WEAPON_ORDER=['rifle','littleblaster','bigblaster','weapon01','weapon02','weapon03','weapon04','weapon05','weapon06','weapon07','weapon08'];
 let weaponList=[];
 let weaponSel=-1;
 let shootCool=0;
@@ -874,7 +877,8 @@ function cycleWeapon(){
 }
 function drawWeaponIcon(cx,id,W,H){
   cx.clearRect(0,0,W,H);
-  if((id==='bigblaster'||id==='littleblaster') && imgOk(loaded[id])){
+  // Any weapon that has its own loaded sprite (the blasters + weapon01..08) shows that art.
+  if(imgOk(loaded[id])){
     const bi=loaded[id], pad=8, s=Math.min((W-pad*2)/bi.naturalWidth,(H-pad*2)/bi.naturalHeight);
     const dw=bi.naturalWidth*s, dh=bi.naturalHeight*s; cx.imageSmoothingEnabled=true;
     try{ cx.drawImage(bi,(W-dw)/2,(H-dh)/2,dw,dh); return; }catch(_){}
@@ -1112,8 +1116,8 @@ function updateNPC(){
   else{ const targetX=player.x-130; const gap=npc.x-targetX;
     if(gap>30){npc.x-=1.8;npc.anim+=0.16;npc.state='trail';}
     else if(gap<-20){npc.x+=2.3;npc.anim+=0.16;npc.state='trail';}
-    else npc.state=playerAttacking()?'photo':'trailIdle';
-    if(playerAttacking()&&npc.state==='photo'){npc.t++;if(npc.t>40)npc.t=0;} else if(npc.state!=='photo')npc.t=0; }
+    else npc.state=playerActioning()?'photo':'trailIdle';
+    if(playerActioning()&&npc.state==='photo'){npc.t++;if(npc.t>40)npc.t=0;} else if(npc.state!=='photo')npc.t=0; }
   npc.x=Math.max(0,Math.min(BGW-NPCW,npc.x)); npc.y=groundAt(npc.x+NPCW/2)-NPCH;
 }
 function npcFrame(){ if(npc.state==='walkin'||npc.state==='walk'||npc.state==='trail') return Math.floor(npc.anim)%6;
@@ -1718,7 +1722,7 @@ function arenaEnter(){
 }
 function arenaNextWave(){
   arenaWave++;
-  const count=Math.min(34, 12+Math.floor(arenaWave*2.4));  // lots of them, fills the whole Void
+  const count=Math.min(50, 18+Math.floor(arenaWave*3));   // MORE of them, still spread across the whole Void
   const hpMul=1+(arenaWave-1)*0.40;                        // tougher to kill each wave
   const spd=ESPEED*(1+(arenaWave-1)*0.05);                 // a touch faster
   const dmg=EDMG+(arenaWave-1)*2;                          // hits harder
