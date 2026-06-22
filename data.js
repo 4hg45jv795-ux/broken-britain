@@ -210,7 +210,11 @@ const SECTIONS=[
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
   {id:'in_gunstore', name:'Inside &mdash; FAFO Ammo &amp; Arms', bgKey:'room_gunstore', BGW:591, srcY:46, flatGround:273, charScale:1.3, interior:true, enemies:[],
    doors:[ {x:250, w:95, label:'Buy weapons', target:'shop'}, {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
-  {id:'in_restore', name:'Inside &mdash; Restore Britain', bgKey:'room_restore', BGW:580, srcY:46, flatGround:277, charScale:1.7, interior:true, enemies:[],
+  /* walking path was sitting too high — flatGround nudged 277->285 to drop the feet (this
+     is the safe lever within the current view). If he's STILL floating above the painted
+     floor, the camera needs to pan down: send a screenshot and I'll set srcY+flatGround
+     exactly (raise flatGround to drop him; raise srcY to reveal more floor below). */
+  {id:'in_restore', name:'Inside &mdash; Restore Britain', bgKey:'room_restore', BGW:580, srcY:46, flatGround:285, charScale:1.7, interior:true, enemies:[],
    doors:[ {x:495, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
   {id:'in_cinema', name:'Inside &mdash; The Cinema', bgKey:'room_cinema', BGW:591, srcY:46, flatGround:273, charScale:1.3, interior:true, enemies:[],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
@@ -218,10 +222,16 @@ const SECTIONS=[
    doors:[ {x:290, w:74, label:'Departures', menu:'easyjet'}, {x:495, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
   {id:'in_trainstation', name:'Inside &mdash; DigiTown Station', bgKey:'room_trainstation', BGW:580, srcY:46, flatGround:281, charScale:1.3, interior:true, enemies:[],
    doors:[ {x:290, w:74, label:'Departures', menu:'trainstation'}, {x:495, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
-  {id:'in_library', name:'Inside &mdash; The Library', bgKey:'room_library', BGW:591, srcY:46, flatGround:281, charScale:1.3, interior:true, enemies:[],
-   doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
-  {id:'in_winchester', name:'Inside &mdash; The Winchester', bgKey:'room_winchester', BGW:591, srcY:46, flatGround:275, charScale:1.8, interior:true, enemies:[],
-   doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
+  /* LIBRARY swapped to the wide Alexandria panorama (room library.jpeg now 2172x375).
+     zoom:1.0 shows an 800px-wide slice; walk RIGHT to explore, walk off the far LEFT to
+     leave (exitLeft:'home'). Nudge flatGround/srcY/charScale to taste. */
+  {id:'in_library', name:'Inside &mdash; The Library', bgKey:'room_library', BGW:2172, zoom:1.0, srcY:8, flatGround:332, charScale:1.7, interior:true, exitLeft:'home', enemies:[],
+   doors:[]},
+  /* WINCHESTER swapped to the wide pub panorama (room winchester.jpeg now 2172x387).
+     zoom:1.0 shows an 800px-wide slice; walk RIGHT along the bar, walk off the far LEFT to
+     leave (exitLeft:'home'). flatGround:348 lands feet on the front walkway — nudge to taste. */
+  {id:'in_winchester', name:'Inside &mdash; The Winchester', bgKey:'room_winchester', BGW:2172, zoom:1.0, srcY:12, flatGround:348, charScale:1.7, interior:true, exitLeft:'home', enemies:[],
+   doors:[]},
 
   /* ── NEW INTERIOR ROOMS ───────────────────────────────────────────────
      Same shape as the rooms above: enter from the hub, EXIT door (right side)
@@ -391,7 +401,6 @@ const SHOP=[
   {id:'vest',    name:'Bulletproof Vest', price:0},
   {id:'littleblaster', name:'Little Blaster',    price:0},
   {id:'bigblaster',    name:'Big Blaster',       price:0},
-  {id:'fireblaster',   name:'Fire Blaster',      price:0},
   {id:'weapon01', name:'Weapon 1', price:0},
   {id:'weapon02', name:'Weapon 2', price:0},
   {id:'weapon03', name:'Weapon 3', price:0},
@@ -406,8 +415,8 @@ const WEAPONS={
   grenade: {name:'Grenade', auto:false, cooldown:48, type:'grenade', speed:8, dmg:80, radius:95, knock:22 },
   littleblaster:{name:'Little Blaster', auto:false, cooldown:16, type:'bullet', pellets:1, spread:0.02, speed:12, range:600, dmg:34, knock:9,  sprite:'littleblaster', spriteH:30, shake:false},
   bigblaster:   {name:'Big Blaster',    auto:false, cooldown:34, type:'bullet', pellets:1, spread:0.00, speed:10, range:680, dmg:90, knock:24, sprite:'bigblaster',    spriteH:58, shake:true },
-  // Fire Blaster — fast, hard-hitting fireball gun (sprite from the explosion sheet).
-  fireblaster:  {name:'Fire Blaster',   auto:true,  cooldown:8,  type:'bullet', pellets:1, spread:0.04, speed:13, range:660, dmg:40, knock:12, sprite:'fireblaster', spriteH:34, shake:false},
+  // NOTE: the 'fireblaster' weapon was removed by request. The fireblaster.png ASSET
+  // is intentionally KEPT — shooter enemies (e.g. Boss Man) reuse it as their fireball.
   // 8 NAMELESS neon weapons (rename freely — the key/sprite stay the same).
   weapon01: {name:'Weapon 1', auto:false, cooldown:12, type:'bullet', pellets:1, spread:0.03, speed:14, range:660, dmg:30, knock:8,  sprite:'weapon01', spriteH:26, shake:false},
   weapon02: {name:'Weapon 2', auto:true,  cooldown:10, type:'bullet', pellets:1, spread:0.04, speed:13, range:640, dmg:26, knock:7,  sprite:'weapon02', spriteH:26, shake:false},
