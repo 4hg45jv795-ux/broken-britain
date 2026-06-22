@@ -10,15 +10,6 @@ const CLIPS_BRIT={
   die:    {start:20, count:2, fps:7,  loop:false},   // kneel -> lying
   shoot:  {start:13, count:2, fps:16, loop:false},   // raise -> fire
 };
-const CLIPS_CRU={
-  idle:   {start:0,  count:4, fps:5,  loop:true},
-  walk:   {start:4,  count:8, fps:10, loop:true},
-  run:    {start:12, count:8, fps:14, loop:true},
-  jump:   {start:20, count:8, fps:12, loop:false},
-  punch:  {start:28, count:8, fps:14, loop:false},
-  headbutt:{start:28,count:8, fps:14, loop:false},
-  die:    {start:36, count:3, fps:8,  loop:false},
-};
 /* ── K-9 dog gunner ───────────────────────────────────────────
    Single row of 19 frames, repacked from his 4-col sheet in order:
      0-3   walk (rifle slung on back)
@@ -69,7 +60,6 @@ const CLIPS_TEMPLAR={
 const META=[
   {id:'brit',     name:'The Patriot',  flag:'GREAT BRITAIN', fw:233, fh:220, clips:CLIPS_BRIT,
                   noWeaponArt:true, scale:1.1, muzzle:{fwd:0.34, yfac:0.40}},
-  {id:'crusader', name:'The Crusader', flag:'CHRISTENDOM',   fw:134, fh:179, clips:CLIPS_CRU},
   {id:'dog',      name:'K-9 Unit',     flag:'ARMED RESPONSE',fw:224, fh:240, clips:CLIPS_DOG,
                   noWeaponArt:true, muzzle:{fwd:0.62, yfac:0.34}},
   {id:'boss',     name:'The Boss',     flag:'THE FIRM',      fw:294, fh:299, clips:CLIPS_BOSS,
@@ -104,7 +94,6 @@ const ASSETS = [
   {key:'dundee',   type:'img', src:'dundee.jpeg'},
   {key:'bg3',      type:'img', src:'bg3.jpeg'},
   {key:'brit',     type:'img', src:'patriot.png'},
-  {key:'crusader', type:'img', src:'crusader2.png'},
   {key:'dog',      type:'img', src:'dog.png', optional:true},
   {key:'boss',     type:'img', src:'boss.png', optional:true},
   {key:'templar',  type:'img', src:'templar.png', optional:true},
@@ -208,7 +197,7 @@ const SECTIONS=[
      more HP, faster, hits harder). Kills bank score; top runs save to this device
      and show when you fall. Walk off the far LEFT to leave. Add future tougher
      enemy kinds to arenaPool() in engine.js, gated behind a higher wave number. */
-  {id:'blacklevel', name:'The Void', bgKey:'__black__', black:true, BGW:8534, srcY:0, flatGround:200, chain:true, next:null, prev:null,
+  {id:'blacklevel', name:'Survive Waves in the Void', bgKey:'__black__', black:true, BGW:8534, srcY:0, flatGround:200, chain:true, next:null, prev:null,
    arena:true, enemies:[]},
 
   /* ── HOLODECK (entered from the hub Portal -> travel menu) ─────────────
@@ -244,7 +233,7 @@ const SECTIONS=[
   /* LIBRARY swapped to the wide Alexandria panorama (room library.jpeg now 2172x375).
      zoom:1.0 shows an 800px-wide slice; walk RIGHT to explore, walk off the far LEFT to
      leave (exitLeft:'home'). Nudge flatGround/srcY/charScale to taste. */
-  {id:'in_library', name:'Inside &mdash; The Library', bgKey:'room_library', BGW:2172, zoom:1.0, srcY:8, flatGround:332, charScale:1.7, interior:true, exitLeft:'home', enemies:[],
+  {id:'in_library', name:'Inside &mdash; The Library', bgKey:'room_library', BGW:2172, zoom:1.0, srcY:8, flatGround:332, charScale:1.7, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
    doors:[]},
   /* WINCHESTER swapped to the wide pub panorama (room winchester.jpeg now 2172x387).
      zoom:1.0 shows an 800px-wide slice. Character made BIGGER (charScale 2.2) and the view
@@ -316,7 +305,9 @@ const SECTIONS=[
      zoom:0.72 fits the wall+railing above and the brick towpath below; flatGround:620 stands
      the player on the front bricks (railing/canal behind). Reached from the Crackadilly
      underpass door; walk off the far LEFT to return to the hub (exitLeft:'home'). */
-  {id:'in_cottagers', name:'Cottagers Cove', bgKey:'room_cottagers', BGW:2172, zoom:0.72, srcY:160, flatGround:620, charScale:2.5, interior:true, exitLeft:'home',
+  {id:'in_cottagers', name:'Cottagers Cove', bgKey:'room_cottagers', BGW:2172, zoom:0.72, srcY:160, flatGround:620, charScale:2.5, interior:true,
+   exitLeft:{target:'in_crackadilly', x:5500, face:-1},   // far LEFT -> back to the Crackadilly underpass entrance
+   exitRight:'home',                                       // far RIGHT -> out to the main hub
    enemies:[ {at:650,kind:9,hp:60}, {at:1250,kind:9,hp:60}, {at:1850,kind:9,hp:60} ],
    doors:[]},
 
@@ -399,7 +390,7 @@ const TRAVEL_MENUS={
   portal: { title:'The Portal', dests:[
     {label:'The Streets', target:'street'},          // already wired to the original level chain
     {label:'Mortal Kombat', target:'mk'},            // the UMK3 "Blue Portal" bridge arena
-    {label:'The Void', target:'blacklevel'},         // black level: tiled MP4 wall + floor scenery
+    {label:'Survive Waves in the Void', target:'blacklevel'},         // black level: tiled MP4 wall + floor scenery
     {label:'The Holodeck', target:'holodeck'},       // full-screen MP4 backdrop, doubled side-by-side
   ]},
   easyjet: { title:'easyJet Holidays', dests:[
