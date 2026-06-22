@@ -52,6 +52,30 @@ const CLIPS_BOSS={
   die:    {start:6, count:2, fps:6,  loop:false},   // kneel -> lying
   shoot:  {start:2, count:3, fps:15, loop:false},   // aim -> fire -> smoke
 };
+/* ── NEW CANDIDATE CHARACTERS (A/B test, keep one later) ──────────────
+   THE TEMPLAR (templar.png): single row, 5 frames -> 0-3 walk, 4 dead(lying).
+   Carries a rifle in-sprite, so noWeaponArt + muzzle (bullets leave the barrel). */
+const CLIPS_TEMPLAR={
+  idle:   {start:0, count:1, fps:2,  loop:true},
+  walk:   {start:0, count:4, fps:9,  loop:true},
+  run:    {start:0, count:4, fps:13, loop:true},
+  jump:   {start:1, count:1, fps:8,  loop:false},
+  punch:  {start:0, count:2, fps:13, loop:false},   // gun-thrust melee
+  headbutt:{start:0,count:2, fps:13, loop:false},
+  shoot:  {start:0, count:2, fps:15, loop:false},
+  die:    {start:4, count:1, fps:6,  loop:false},
+};
+/* THE KNIGHT (knight.png): single row, 11 frames -> 0-7 walk, 8-9 shoot, 10 dead. */
+const CLIPS_KNIGHT={
+  idle:   {start:0,  count:1, fps:2,  loop:true},
+  walk:   {start:0,  count:8, fps:11, loop:true},
+  run:    {start:0,  count:8, fps:14, loop:true},
+  jump:   {start:1,  count:1, fps:8,  loop:false},
+  punch:  {start:8,  count:2, fps:14, loop:false},
+  headbutt:{start:8, count:2, fps:14, loop:false},
+  shoot:  {start:8,  count:2, fps:16, loop:false},
+  die:    {start:10, count:1, fps:6,  loop:false},
+};
 /* ── FIGHTER META ────────────────────────────────────────── */
 const META=[
   {id:'brit',     name:'The Patriot',  flag:'GREAT BRITAIN', fw:233, fh:220, clips:CLIPS_BRIT,
@@ -61,6 +85,12 @@ const META=[
                   noWeaponArt:true, muzzle:{fwd:0.62, yfac:0.34}},
   {id:'boss',     name:'The Boss',     flag:'THE FIRM',      fw:294, fh:299, clips:CLIPS_BOSS,
                   noWeaponArt:true, muzzle:{fwd:0.62, yfac:0.46}},
+  /* ── NEW CANDIDATES (muzzle fwd/yfac are starting guesses — nudge if the
+        bullet doesn't leave the barrel cleanly) ── */
+  {id:'templar',  name:'The Templar',  flag:'TEMPLAR ORDER', fw:240, fh:345, clips:CLIPS_TEMPLAR,
+                  noWeaponArt:true, muzzle:{fwd:0.52, yfac:0.46}},
+  {id:'knight',   name:'The Knight',   flag:'CRUSADER',      fw:154, fh:197, clips:CLIPS_KNIGHT,
+                  noWeaponArt:true, muzzle:{fwd:0.58, yfac:0.50}},
 ];
 /* ── ASSETS ──────────────────────────────────────────────── */
 const ASSETS = [
@@ -90,6 +120,9 @@ const ASSETS = [
   {key:'crusader', type:'img', src:'crusader2.png'},
   {key:'dog',      type:'img', src:'dog.png', optional:true},
   {key:'boss',     type:'img', src:'boss.png', optional:true},
+  {key:'templar',  type:'img', src:'templar.png', optional:true},
+  {key:'knight',   type:'img', src:'knight.png', optional:true},
+  {key:'ufoship',  type:'img', src:'ufoship.png', optional:true},   // shooting UFO enemy (kind 9)
   {key:'photog',   type:'img', src:'photog2.png'},
   {key:'athlete',  type:'img', src:'athlete.png', optional:true},
   {key:'police',   type:'img', src:'police4.png', optional:true},
@@ -201,7 +234,8 @@ const SECTIONS=[
      below if you ever want a flip-screen camera instead (snaps panel-to-panel,
      no scroll). black underneath, the video is silent, Holodeck.mp3 is the
      sound. Want it longer? Add screens: set BGW to (number-of-screens x 534). */
-  {id:'holodeck', name:'The Holodeck', bgKey:'__black__', black:true, BGW:1068, srcY:0, flatGround:180, chain:true, next:null, prev:null, enemies:[]},
+  {id:'holodeck', name:'The Holodeck', bgKey:'__black__', black:true, BGW:1068, srcY:0, flatGround:180, chain:true, next:null, prev:null,
+   enemies:[ {at:760, kind:9, hp:120} ]},   // TEST: shooting UFO (kind 9). Move/remove once you've seen it work.
 
   /* ── INTERIOR ROOMS (entered from the hub; EXIT door returns to the street) ── */
   {id:'in_house', name:'Inside &mdash; My House', bgKey:'room_house', BGW:591, srcY:46, flatGround:277, charScale:1.3, interior:true, enemies:[],
