@@ -1578,17 +1578,20 @@ function update(){
       returnToHub();
     } else if(bannerShown && player.x < BGW-PW-120){ bannerShown=false; }
   }
-  // interior rooms flagged `exitLeft`: just walk off the LEFT edge to leave (no STRIKE needed)
+  // interior rooms flagged `exitLeft`/`exitRight`: just walk off that edge to leave.
+  // Each value is either a section-id string (land at the default hub-return spot) or
+  // an object {target, x, face} to land at a specific spot in the destination level.
   const curSec=SECTIONS[sectionIndex];
-  if(curSec.exitLeft && player.x<=2 && keys.left && !transitioning){
-    transitioning=true; const tgt=curSec.exitLeft;
-    doFade('Out to the street', ()=>{ gotoId(tgt,{x:hubReturnX,face:1}); transitioning=false; });
-  }
-  // …and `exitRight`: walk off the far RIGHT edge to leave the same way.
-  if(curSec.exitRight && player.x>=BGW-PW-2 && keys.right && !transitioning){
-    transitioning=true; const tgt=curSec.exitRight;
-    doFade('Out to the street', ()=>{ gotoId(tgt,{x:hubReturnX,face:1}); transitioning=false; });
-  }
+  if(curSec.exitLeft && player.x<=2 && keys.left && !transitioning) exitVia(curSec.exitLeft);
+  if(curSec.exitRight && player.x>=BGW-PW-2 && keys.right && !transitioning) exitVia(curSec.exitRight);
+}
+function exitVia(spec){
+  const tgt  = (typeof spec==='string') ? spec : spec.target;
+  const dest = SECTIONS.find(s=>s.id===tgt);
+  const x    = (typeof spec==='object' && typeof spec.x==='number')    ? spec.x    : hubReturnX;
+  const face = (typeof spec==='object' && typeof spec.face==='number') ? spec.face : 1;
+  transitioning=true;
+  doFade(dest?dest.name:'Out to the street', ()=>{ gotoId(tgt,{x,face}); transitioning=false; });
 }
 function frameIndex(){
   const c=CLIPS[player.clip];
@@ -1724,12 +1727,10 @@ function loop(){ if(!paused) update(); draw(); raf=requestAnimationFrame(loop); 
        wave number, so they only start appearing once the early waves are dead. */
 let arenaActive=false, arenaWave=0, arenaScore=0, arenaGrace=0, arenaScored=false;
 function isArena(){ return !!SECTIONS[sectionIndex].arena; }
-function arenaPool(w){
-  const pool=[0,3];                 // 0 police, 3 geezer
-  if(w>=3) pool.push(4,2);          // 4 knifeman, 2 alien
-  if(w>=5) pool.push(1,5);          // 1 clown, 5 deliveroo
-  if(w>=7) pool.push(7);            // 7 ufo (hovers)
-  return pool;
+function arenaPool(){
+  // every NORMAL wave is a roughly-even mix of EVERY enemy in the game.
+  // (kind 8 = UFO gunship is reserved for the every-5th "UFO assault" rounds.)
+  return [0,1,2,3,4,5,6,7,9]; // 0 police,1 clown,2 alien,3 geezer,4 knifeman,5 deliveroo,6 bikeboy,7 ufo,9 bruiser
 }
 function arenaEnter(){
   arenaActive=true; arenaWave=0; arenaScore=0; arenaGrace=0; arenaScored=false;
@@ -1738,21 +1739,34 @@ function arenaEnter(){
 }
 function arenaNextWave(){
   arenaWave++;
-  const count=Math.min(50, 18+Math.floor(arenaWave*3));   // MORE of them, still spread across the whole Void
-  const hpMul=1+(arenaWave-1)*0.40;                        // tougher to kill each wave
-  const spd=ESPEED*(1+(arenaWave-1)*0.05);                 // a touch faster
-  const dmg=EDMG+(arenaWave-1)*2;                          // hits harder
-  const pool=arenaPool(arenaWave);
+  const w=arenaWave;
+  const ufoWave = (w%5===0);                               // waves 5,10,15… = UFO ASSAULT
+  const spd=ESPEED*(1+(w-1)*0.05);                         // a touch faster each wave
+  const dmg=EDMG+(w-1)*2;                                  // hits harder each wave
+  let kinds, count, hp;
+  if(ufoWave){
+    kinds=[8];                                             // ONLY UFO gunships (fire the Big Blaster)
+    count=10;                                              // ~10 of them
+    hp=Math.round(220*(1+(w/5-1)*0.6));                    // very tanky — hard to kill, tougher each UFO round
+  } else {
+    kinds=arenaPool();                                     // an even mix of everything else
+    count=Math.min(50, 18+Math.floor(w*3));
+    hp=Math.round(40*(1+(w-1)*0.40));                      // tougher each wave
+  }
+  // build a bag with roughly equal numbers of each kind, then shuffle it
+  const bag=[];
+  for(let i=0;i<count;i++) bag.push(kinds[i % kinds.length]);
+  for(let i=bag.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; const t=bag[i]; bag[i]=bag[j]; bag[j]=t; }
   const lo=200, hi=BGW-200;                                // spread across the entire level width
   for(let i=0;i<count;i++){
-    const kind=pool[Math.floor(Math.random()*pool.length)];
+    const kind=bag[i];
     let at = lo + (hi-lo)*((i+Math.random())/count);       // evenly spaced with jitter, whole map
     if(Math.abs(at-player.x)<260) at += (at<player.x?-1:1)*320;  // never spawn right on top of you
     at=Math.max(40,Math.min(BGW-60,at));
-    const e=pushEnemy(kind, at, null, {hp:Math.round(40*hpMul)});
+    const e=pushEnemy(kind, at, null, {hp});
     if(e){ e.spd=spd; e.dmg=dmg; }
   }
-  flashBanner('WAVE '+arenaWave);
+  flashBanner(ufoWave ? ('WAVE '+w+' \u2014 UFO ASSAULT') : ('WAVE '+w));
   blip(420,640,0.12,'square',0.14);
 }
 function arenaUpdate(){
