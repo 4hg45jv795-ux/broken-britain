@@ -160,15 +160,16 @@ const ENEMY_KINDS=[
    clips:{walk:{start:0,count:2,fps:3,loop:true}, die:{start:2,count:2,fps:6,loop:false}}},
   {img:'ufo', fw:119, fh:90, hover:34, color:'#bfe4ff', hair:'#3a5a8a',
    clips:{walk:{start:0,count:8,fps:10,loop:true}, die:{start:0,count:1,fps:6,loop:false}}},
-  // 8 = BOSS MAN: big, very tanky, SHOOTS fireballs at the player (appears in the MK level).
-  // Single static frame for now (re-export a walk/die strip later and bump the counts).
-  {img:'bossman', fw:103, fh:84, scale:1.9, shooter:true, shotDmg:16, color:'#c64a4a', hair:'#8aa0b8',
-   clips:{walk:{start:0,count:1,fps:1,loop:true}, die:{start:0,count:1,fps:2,loop:false}}},
-  // 9 = UFO GUNSHIP: hovering saucer that SHOOTS fireballs at the player. New art
-  //     (ufoship.png): frames 0-2 fly, 3 damaged, 4 exploding. hover lifts it off the
-  //     ground; scale sizes the saucer. Dropped in the Holodeck (data.js) for testing.
+  // 8 = UFO GUNSHIP: hovering saucer that SHOOTS the Big Blaster bolt at the player.
+  //     ufoship.png frames: 0-2 fly, 3 damaged, 4 exploding. hover lifts it off the
+  //     ground; scale sizes the saucer. Spawned in the Holodeck (data.js) for testing.
   {img:'ufoship', fw:360, fh:194, scale:0.9, hover:80, shooter:true, shotDmg:12, color:'#7fd0ff', hair:'#2a4a7a',
    clips:{walk:{start:0,count:3,fps:8,loop:true}, die:{start:3,count:2,fps:9,loop:false}}},
+  // 9 = BRUISER: heavyset bare-knuckle thug (bruiser.png). 18 frames -> 0-5 running,
+  //     6-11 punching (unused by the simple enemy AI), 12-17 dying. Melee only; lives in
+  //     Cottagers Cove. `scale` sizes him against the big-room player — nudge to taste.
+  {img:'bruiser', fw:196, fh:237, scale:2.0, color:'#cdb89a', hair:'#3a2a1e',
+   clips:{walk:{start:0,count:6,fps:11,loop:true}, die:{start:12,count:6,fps:10,loop:false}}},
 ];
 const EH=78;
 let enemies=[];
@@ -214,7 +215,7 @@ function updateEnemies(){
       damagePlayer(e.dmg||EDMG); e.dmgCool=70;
       player.x += (dx>0?-10:10); // knockback
     }
-    // shooter enemies (e.g. Boss Man) lob fireballs at the player from a distance
+    // shooter enemies (the UFO) lob Big-Blaster bolts at the player from a distance
     if(ENEMY_KINDS[e.kind].shooter && !player.dead){
       if(e.fireCd>0) e.fireCd--;
       if(e.fireCd<=0 && Math.abs(dx)<900){ enemyFire(e); e.fireCd=70+Math.floor(Math.random()*50); }
@@ -268,7 +269,7 @@ function drawEnemyStandin(dw,dh,k,e){
   ctx.restore();
 }
 
-/* ── ENEMY PROJECTILES: fireballs thrown by shooter enemies like Boss Man ── */
+/* ── ENEMY PROJECTILES: Big-Blaster bolts thrown by shooter enemies (the UFO) ── */
 let enemyBullets=[];
 function enemyFire(e){
   const px=player.x+PW/2, py=player.y+PH*0.45;
@@ -293,10 +294,11 @@ function drawEnemyBullets(){
   for(const b of enemyBullets){
     const sx=(b.x-camX)*ZOOM, sy=(b.y-SRCY)*ZOOM;
     if(sx<-30||sx>VW+30) continue;
-    if(imgOk(loaded.fireblaster)){
-      const bi=loaded.fireblaster, bh=30*ZOOM, bw=bh*bi.naturalWidth/bi.naturalHeight;
+    if(imgOk(loaded.bigblaster)){
+      const bi=loaded.bigblaster, bh=30*ZOOM, bw=bh*bi.naturalWidth/bi.naturalHeight;
       ctx.save(); ctx.translate(sx,sy);
-      ctx.shadowColor='rgba(255,140,20,0.9)'; ctx.shadowBlur=12;
+      if(b.vx<0) ctx.scale(-1,1);                         // sprite art points RIGHT; flip when flying left
+      ctx.shadowColor='rgba(120,200,255,0.9)'; ctx.shadowBlur=12;
       try{ ctx.drawImage(bi,-bw/2,-bh/2,bw,bh); }catch(_){}
       ctx.restore();
     } else {
