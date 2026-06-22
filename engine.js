@@ -164,6 +164,11 @@ const ENEMY_KINDS=[
   // Single static frame for now (re-export a walk/die strip later and bump the counts).
   {img:'bossman', fw:103, fh:84, scale:1.9, shooter:true, shotDmg:16, color:'#c64a4a', hair:'#8aa0b8',
    clips:{walk:{start:0,count:1,fps:1,loop:true}, die:{start:0,count:1,fps:2,loop:false}}},
+  // 9 = UFO GUNSHIP: hovering saucer that SHOOTS fireballs at the player. New art
+  //     (ufoship.png): frames 0-2 fly, 3 damaged, 4 exploding. hover lifts it off the
+  //     ground; scale sizes the saucer. Dropped in the Holodeck (data.js) for testing.
+  {img:'ufoship', fw:360, fh:194, scale:0.9, hover:80, shooter:true, shotDmg:12, color:'#7fd0ff', hair:'#2a4a7a',
+   clips:{walk:{start:0,count:3,fps:8,loop:true}, die:{start:3,count:2,fps:9,loop:false}}},
 ];
 const EH=78;
 let enemies=[];
@@ -904,7 +909,11 @@ function updateArmourHUD(){ const el=document.getElementById('armour'); if(el) e
 
 function muzzlePoint(){
   const mz=(cur&&cur.muzzle)||{fwd:0.55,yfac:0.46};
-  return { x: player.x+PW/2 + player.face*(PW*mz.fwd+6), y: player.y+PH*mz.yfac };
+  // Offsets scale with the room's character scale (CSCALE) so the muzzle tracks the
+  // BIGGER sprite in zoomed rooms (pub/underpass). At CSCALE=1 this equals the old
+  // formula exactly, so normal rooms are unchanged. Fixes bullets firing too low.
+  return { x: player.x+PW/2 + player.face*(PW*mz.fwd*CSCALE+6),
+           y: (player.y+PH) - PH*(1-mz.yfac)*CSCALE };
 }
 const HELD_WEAPON={
   pistol:  {fwd:0.24, up:-0.14, scale:0.50},
