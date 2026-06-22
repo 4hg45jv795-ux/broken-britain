@@ -1573,6 +1573,11 @@ function update(){
     transitioning=true; const tgt=curSec.exitLeft;
     doFade('Out to the street', ()=>{ gotoId(tgt,{x:hubReturnX,face:1}); transitioning=false; });
   }
+  // …and `exitRight`: walk off the far RIGHT edge to leave the same way.
+  if(curSec.exitRight && player.x>=BGW-PW-2 && keys.right && !transitioning){
+    transitioning=true; const tgt=curSec.exitRight;
+    doFade('Out to the street', ()=>{ gotoId(tgt,{x:hubReturnX,face:1}); transitioning=false; });
+  }
 }
 function frameIndex(){
   const c=CLIPS[player.clip];
