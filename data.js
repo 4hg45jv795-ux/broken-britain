@@ -52,7 +52,7 @@ const CLIPS_BOSS={
   die:    {start:6, count:2, fps:6,  loop:false},   // kneel -> lying
   shoot:  {start:2, count:3, fps:15, loop:false},   // aim -> fire -> smoke
 };
-/* ── NEW CANDIDATE CHARACTERS (A/B test, keep one later) ──────────────
+/* ── NEW CHARACTER (candidate playable fighter) ──────────────────────
    THE TEMPLAR (templar.png): single row, 5 frames -> 0-3 walk, 4 dead(lying).
    Carries a rifle in-sprite, so noWeaponArt + muzzle (bullets leave the barrel). */
 const CLIPS_TEMPLAR={
@@ -65,17 +65,6 @@ const CLIPS_TEMPLAR={
   shoot:  {start:0, count:2, fps:15, loop:false},
   die:    {start:4, count:1, fps:6,  loop:false},
 };
-/* THE KNIGHT (knight.png): single row, 11 frames -> 0-7 walk, 8-9 shoot, 10 dead. */
-const CLIPS_KNIGHT={
-  idle:   {start:0,  count:1, fps:2,  loop:true},
-  walk:   {start:0,  count:8, fps:11, loop:true},
-  run:    {start:0,  count:8, fps:14, loop:true},
-  jump:   {start:1,  count:1, fps:8,  loop:false},
-  punch:  {start:8,  count:2, fps:14, loop:false},
-  headbutt:{start:8, count:2, fps:14, loop:false},
-  shoot:  {start:8,  count:2, fps:16, loop:false},
-  die:    {start:10, count:1, fps:6,  loop:false},
-};
 /* ── FIGHTER META ────────────────────────────────────────── */
 const META=[
   {id:'brit',     name:'The Patriot',  flag:'GREAT BRITAIN', fw:233, fh:220, clips:CLIPS_BRIT,
@@ -85,12 +74,10 @@ const META=[
                   noWeaponArt:true, muzzle:{fwd:0.62, yfac:0.34}},
   {id:'boss',     name:'The Boss',     flag:'THE FIRM',      fw:294, fh:299, clips:CLIPS_BOSS,
                   noWeaponArt:true, muzzle:{fwd:0.62, yfac:0.46}},
-  /* ── NEW CANDIDATES (muzzle fwd/yfac are starting guesses — nudge if the
+  /* ── NEW CANDIDATE (muzzle fwd/yfac are starting guesses — nudge if the
         bullet doesn't leave the barrel cleanly) ── */
   {id:'templar',  name:'The Templar',  flag:'TEMPLAR ORDER', fw:240, fh:345, clips:CLIPS_TEMPLAR,
                   noWeaponArt:true, muzzle:{fwd:0.52, yfac:0.46}},
-  {id:'knight',   name:'The Knight',   flag:'CRUSADER',      fw:154, fh:197, clips:CLIPS_KNIGHT,
-                  noWeaponArt:true, muzzle:{fwd:0.58, yfac:0.50}},
 ];
 /* ── ASSETS ──────────────────────────────────────────────── */
 const ASSETS = [
@@ -121,8 +108,8 @@ const ASSETS = [
   {key:'dog',      type:'img', src:'dog.png', optional:true},
   {key:'boss',     type:'img', src:'boss.png', optional:true},
   {key:'templar',  type:'img', src:'templar.png', optional:true},
-  {key:'knight',   type:'img', src:'knight.png', optional:true},
-  {key:'ufoship',  type:'img', src:'ufoship.png', optional:true},   // shooting UFO enemy (kind 9)
+  {key:'ufoship',  type:'img', src:'ufoship.png', optional:true},   // shooting UFO enemy (kind 8)
+  {key:'bruiser',  type:'img', src:'bruiser.png', optional:true},   // Cottagers Cove thug enemy (kind 9)
   {key:'photog',   type:'img', src:'photog2.png'},
   {key:'athlete',  type:'img', src:'athlete.png', optional:true},
   {key:'police',   type:'img', src:'police4.png', optional:true},
@@ -149,8 +136,6 @@ const ASSETS = [
   {key:'weapons',  type:'img', src:'weapons.png', optional:true},
   {key:'bigblaster',   type:'img', src:'bigblaster.png', optional:true},
   {key:'littleblaster',type:'img', src:'littleblaster.png', optional:true},
-  {key:'fireblaster',  type:'img', src:'fireblaster.png', optional:true},
-  {key:'bossman',      type:'img', src:'bossman.png', optional:true},
   {key:'weapon01', type:'img', src:'weapon01.png', optional:true},
   {key:'weapon02', type:'img', src:'weapon02.png', optional:true},
   {key:'weapon03', type:'img', src:'weapon03.png', optional:true},
@@ -209,7 +194,7 @@ const SECTIONS=[
      edge gives the "THE END" exit and the left edge returns to the hub.
      Ambient MK characters (NPCs) are wired separately in MK_NPCS below. */
   {id:'mk', name:'The Portal &mdash; Mortal Kombat', bgKey:'mk', BGW:1432, srcY:0, flatGround:206, chain:true, next:null, prev:null,
-   enemies:[ {at:360,kind:4},{at:620,kind:0},{at:880,kind:1},{at:1120,kind:4},{at:1340,kind:0},{at:1000,kind:8,hp:600} ]},
+   enemies:[ {at:360,kind:4},{at:620,kind:0},{at:880,kind:1},{at:1120,kind:4},{at:1340,kind:0} ]},
 
   /* ── BLACK LEVEL (entered from the hub Portal -> travel menu) ──────────
      A long, currently-black stage that hosts the MP4 scenery system below
@@ -235,7 +220,7 @@ const SECTIONS=[
      no scroll). black underneath, the video is silent, Holodeck.mp3 is the
      sound. Want it longer? Add screens: set BGW to (number-of-screens x 534). */
   {id:'holodeck', name:'The Holodeck', bgKey:'__black__', black:true, BGW:1068, srcY:0, flatGround:180, chain:true, next:null, prev:null,
-   enemies:[ {at:760, kind:9, hp:120} ]},   // TEST: shooting UFO (kind 9). Move/remove once you've seen it work.
+   enemies:[ {at:760, kind:8, hp:120} ]},   // TEST: shooting UFO (kind 8). Move/remove once you've seen it work.
 
   /* ── INTERIOR ROOMS (entered from the hub; EXIT door returns to the street) ── */
   {id:'in_house', name:'Inside &mdash; My House', bgKey:'room_house', BGW:591, srcY:46, flatGround:277, charScale:1.3, interior:true, enemies:[],
@@ -331,7 +316,8 @@ const SECTIONS=[
      zoom:0.72 fits the wall+railing above and the brick towpath below; flatGround:620 stands
      the player on the front bricks (railing/canal behind). Reached from the Crackadilly
      underpass door; walk off the far LEFT to return to the hub (exitLeft:'home'). */
-  {id:'in_cottagers', name:'Cottagers Cove', bgKey:'room_cottagers', BGW:2172, zoom:0.72, srcY:160, flatGround:620, charScale:2.5, interior:true, exitLeft:'home', enemies:[],
+  {id:'in_cottagers', name:'Cottagers Cove', bgKey:'room_cottagers', BGW:2172, zoom:0.72, srcY:160, flatGround:620, charScale:2.5, interior:true, exitLeft:'home',
+   enemies:[ {at:650,kind:9,hp:60}, {at:1250,kind:9,hp:60}, {at:1850,kind:9,hp:60} ],
    doors:[]},
 
   /* Placeholder for travel destinations that aren't built yet (easyJet / train
@@ -455,8 +441,9 @@ const WEAPONS={
   grenade: {name:'Grenade', auto:false, cooldown:48, type:'grenade', speed:8, dmg:80, radius:95, knock:22 },
   littleblaster:{name:'Little Blaster', auto:false, cooldown:16, type:'bullet', pellets:1, spread:0.02, speed:12, range:600, dmg:34, knock:9,  sprite:'littleblaster', spriteH:30, shake:false},
   bigblaster:   {name:'Big Blaster',    auto:false, cooldown:34, type:'bullet', pellets:1, spread:0.00, speed:10, range:680, dmg:90, knock:24, sprite:'bigblaster',    spriteH:58, shake:true },
-  // NOTE: the 'fireblaster' weapon was removed by request. The fireblaster.png ASSET
-  // is intentionally KEPT — shooter enemies (e.g. Boss Man) reuse it as their fireball.
+  // NOTE: the 'fireblaster' weapon AND its asset were removed completely by request.
+  // Shooter enemies (the UFO) now fire the BIG BLASTER bolt instead (bigblaster.png),
+  // which also remains a buyable weapon below.
   // 8 NAMELESS neon weapons (rename freely — the key/sprite stay the same).
   weapon01: {name:'Weapon 1', auto:false, cooldown:12, type:'bullet', pellets:1, spread:0.03, speed:14, range:660, dmg:30, knock:8,  sprite:'weapon01', spriteH:26, shake:false},
   weapon02: {name:'Weapon 2', auto:true,  cooldown:10, type:'bullet', pellets:1, spread:0.04, speed:13, range:640, dmg:26, knock:7,  sprite:'weapon02', spriteH:26, shake:false},
