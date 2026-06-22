@@ -1718,15 +1718,16 @@ function arenaEnter(){
 }
 function arenaNextWave(){
   arenaWave++;
-  const count=Math.min(14, 3+Math.floor(arenaWave*1.3));   // more each wave, capped so it stays playable
+  const count=Math.min(34, 12+Math.floor(arenaWave*2.4));  // lots of them, fills the whole Void
   const hpMul=1+(arenaWave-1)*0.40;                        // tougher to kill each wave
   const spd=ESPEED*(1+(arenaWave-1)*0.05);                 // a touch faster
   const dmg=EDMG+(arenaWave-1)*2;                          // hits harder
   const pool=arenaPool(arenaWave);
+  const lo=200, hi=BGW-200;                                // spread across the entire level width
   for(let i=0;i<count;i++){
     const kind=pool[Math.floor(Math.random()*pool.length)];
-    const side=Math.random()<0.5?-1:1;
-    let at=player.x + side*(SRCW*0.55 + Math.random()*SRCW*0.4);   // just off-screen, within aggro range
+    let at = lo + (hi-lo)*((i+Math.random())/count);       // evenly spaced with jitter, whole map
+    if(Math.abs(at-player.x)<260) at += (at<player.x?-1:1)*320;  // never spawn right on top of you
     at=Math.max(40,Math.min(BGW-60,at));
     const e=pushEnemy(kind, at, null, {hp:Math.round(40*hpMul)});
     if(e){ e.spd=spd; e.dmg=dmg; }
@@ -1756,14 +1757,19 @@ function arenaBankScore(){
 }
 function drawArenaHud(){
   if(!isArena()) return;
-  ctx.save(); ctx.textAlign='left'; ctx.lineWidth=3; ctx.strokeStyle='#000';
-  const y=92;
+  ctx.save();
+  // dark backing panel so the stats read clearly over the bright moon, and clear of the screen edge
+  const px=14, py=70, pw=150, ph=66;
+  ctx.globalAlpha=0.62; ctx.fillStyle='#05070c'; roundRect(px,py,pw,ph,10); ctx.fill();
+  ctx.globalAlpha=1; ctx.lineWidth=1.5; ctx.strokeStyle='rgba(255,211,77,0.55)'; roundRect(px,py,pw,ph,10); ctx.stroke();
+  ctx.textAlign='left'; ctx.lineWidth=3; ctx.strokeStyle='#000';
+  const tx=px+14, y=py+22;
   ctx.font='900 16px monospace';
-  ctx.strokeText('WAVE '+arenaWave,12,y);    ctx.fillStyle='#9fe0ff'; ctx.fillText('WAVE '+arenaWave,12,y);
-  ctx.strokeText('SCORE '+arenaScore,12,y+20); ctx.fillStyle='#ffe46b'; ctx.fillText('SCORE '+arenaScore,12,y+20);
+  ctx.strokeText('WAVE '+arenaWave,tx,y);      ctx.fillStyle='#9fe0ff'; ctx.fillText('WAVE '+arenaWave,tx,y);
+  ctx.strokeText('SCORE '+arenaScore,tx,y+20); ctx.fillStyle='#ffe46b'; ctx.fillText('SCORE '+arenaScore,tx,y+20);
   ctx.font='700 11px monospace';
   const best=Math.max(arenaBest(),arenaScore);
-  ctx.strokeText('BEST '+best,12,y+37);      ctx.fillStyle='#cdd6e6'; ctx.fillText('BEST '+best,12,y+37);
+  ctx.strokeText('BEST '+best,tx,y+37);        ctx.fillStyle='#cdd6e6'; ctx.fillText('BEST '+best,tx,y+37);
   ctx.restore();
   if(player.dead) drawArenaBoard();
 }
