@@ -240,9 +240,9 @@ const SECTIONS=[
      painted door, and tune srcY/flatGround/charScale so feet land on the floor in
      front of them (mirrors the police-room camera as a sensible starting point). */
   {id:'in_nightclub', name:"Inside &mdash; Slammin' Vinyl", bgKey:'room_nightclub', BGW:2048, zoom:0.85, srcY:150, flatGround:540, charScale:2.5, interior:true, exitLeft:'home', enemies:[],
-   doors:[ {x:745,  w:90, label:'Room 1 &mdash; Drum &amp; Bass', target:'in_dnb'},
-           {x:1025, w:90, label:'Room 2 &mdash; Hardcore',       target:'in_hardcore'},
-           {x:1305, w:90, label:'Room 3 &mdash; Special Guest',  target:'in_special'} ]},
+   doors:[ {x:958,  w:100, label:'Room 1 &mdash; Drum &amp; Bass', target:'in_dnb'},
+           {x:1335, w:100, label:'Room 2 &mdash; Hardcore',       target:'in_hardcore'},
+           {x:1712, w:100, label:'Room 3 &mdash; Special Guest',  target:'in_special'} ]},
   /* ── CRACKADILLY GARDENS (the stitched 3-panorama park; end of the hub) ──
      One wide outdoor walk-through built from Park1+Park2+Park3 stitched into a
      single seamless jpeg (room crackadilly.jpeg, 5946px wide). interior:true so
@@ -387,19 +387,19 @@ const TRAVEL_MENUS={
   ]},
 };
 const SHOP=[
-  {id:'rifle',   name:'Bullets',          price:350},
-  {id:'vest',    name:'Bulletproof Vest', price:250},
-  {id:'littleblaster', name:'Little Blaster',    price:300},
-  {id:'bigblaster',    name:'Big Blaster',       price:600},
-  {id:'fireblaster',   name:'Fire Blaster',      price:800},
-  {id:'weapon01', name:'Weapon 1', price:450},
-  {id:'weapon02', name:'Weapon 2', price:500},
-  {id:'weapon03', name:'Weapon 3', price:700},
-  {id:'weapon04', name:'Weapon 4', price:950},
-  {id:'weapon05', name:'Weapon 5', price:650},
-  {id:'weapon06', name:'Weapon 6', price:1100},
-  {id:'weapon07', name:'Weapon 7', price:600},
-  {id:'weapon08', name:'Weapon 8', price:1500},
+  {id:'rifle',   name:'Bullets',          price:0},
+  {id:'vest',    name:'Bulletproof Vest', price:0},
+  {id:'littleblaster', name:'Little Blaster',    price:0},
+  {id:'bigblaster',    name:'Big Blaster',       price:0},
+  {id:'fireblaster',   name:'Fire Blaster',      price:0},
+  {id:'weapon01', name:'Weapon 1', price:0},
+  {id:'weapon02', name:'Weapon 2', price:0},
+  {id:'weapon03', name:'Weapon 3', price:0},
+  {id:'weapon04', name:'Weapon 4', price:0},
+  {id:'weapon05', name:'Weapon 5', price:0},
+  {id:'weapon06', name:'Weapon 6', price:0},
+  {id:'weapon07', name:'Weapon 7', price:0},
+  {id:'weapon08', name:'Weapon 8', price:0},
 ];
 const WEAPONS={
   rifle:   {name:'Bullets', auto:true,  cooldown:6,  type:'bullet', pellets:1, spread:0.05, speed:14, range:640, dmg:18, knock:6 },
