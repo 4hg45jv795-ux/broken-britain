@@ -99,6 +99,8 @@ const ASSETS = [
   {key:'templar',  type:'img', src:'templar.png', optional:true},
   {key:'ufoship',  type:'img', src:'ufoship.png', optional:true},   // shooting UFO enemy (kind 8)
   {key:'bruiser',  type:'img', src:'bruiser.png', optional:true},   // Cottagers Cove thug enemy (kind 9)
+  {key:'shooter',  type:'img', src:'shooter.png', optional:true},   // gunman enemy (kind 10)
+  {key:'dancer',   type:'img', src:'dancer.png', optional:true},    // dancer enemy (kind 11)
   {key:'photog',   type:'img', src:'photog2.png'},
   {key:'athlete',  type:'img', src:'athlete.png', optional:true},
   {key:'police',   type:'img', src:'police4.png', optional:true},
@@ -209,7 +211,7 @@ const SECTIONS=[
      no scroll). black underneath, the video is silent, Holodeck.mp3 is the
      sound. Want it longer? Add screens: set BGW to (number-of-screens x 534). */
   {id:'holodeck', name:'The Holodeck', bgKey:'__black__', black:true, BGW:1068, srcY:0, flatGround:180, chain:true, next:null, prev:null,
-   enemies:[ {at:760, kind:8, hp:120} ]},   // TEST: shooting UFO (kind 8). Move/remove once you've seen it work.
+   enemies:[ {at:760, kind:8, hp:120}, {at:380, kind:10, hp:80} ]},   // TEST: UFO (kind 8) + gunman (kind 10). Move/remove once seen.
 
   /* ── INTERIOR ROOMS (entered from the hub; EXIT door returns to the street) ── */
   {id:'in_house', name:'Inside &mdash; My House', bgKey:'room_house', BGW:591, srcY:46, flatGround:277, charScale:1.3, interior:true, enemies:[],
@@ -233,7 +235,8 @@ const SECTIONS=[
   /* LIBRARY swapped to the wide Alexandria panorama (room library.jpeg now 2172x375).
      zoom:1.0 shows an 800px-wide slice; walk RIGHT to explore, walk off the far LEFT to
      leave (exitLeft:'home'). Nudge flatGround/srcY/charScale to taste. */
-  {id:'in_library', name:'Inside &mdash; The Library', bgKey:'room_library', BGW:2172, zoom:1.0, srcY:8, flatGround:332, charScale:1.7, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
+  {id:'in_library', name:'Inside &mdash; The Library', bgKey:'room_library', BGW:2172, zoom:1.0, srcY:8, flatGround:332, charScale:1.7, interior:true, walkMul:1.7, exitLeft:'home', exitRight:'home',
+   enemies:[ {at:1100, kind:11, hp:70} ],
    doors:[]},
   /* WINCHESTER swapped to the wide pub panorama (room winchester.jpeg now 2172x387).
      zoom:1.0 shows an 800px-wide slice. Character made BIGGER (charScale 2.2) and the view
@@ -305,7 +308,7 @@ const SECTIONS=[
      zoom:0.72 fits the wall+railing above and the brick towpath below; flatGround:620 stands
      the player on the front bricks (railing/canal behind). Reached from the Crackadilly
      underpass door; walk off the far LEFT to return to the hub (exitLeft:'home'). */
-  {id:'in_cottagers', name:'Cottagers Cove', bgKey:'room_cottagers', BGW:2172, zoom:0.72, srcY:160, flatGround:620, charScale:2.5, interior:true,
+  {id:'in_cottagers', name:'Cottagers Cove', bgKey:'room_cottagers', BGW:2172, zoom:0.72, srcY:160, flatGround:620, charScale:2.5, interior:true, walkMul:2.2,
    exitLeft:{target:'in_crackadilly', x:5500, face:-1},   // far LEFT -> back to the Crackadilly underpass entrance
    exitRight:'home',                                       // far RIGHT -> out to the main hub
    enemies:[ {at:650,kind:9,hp:60}, {at:1250,kind:9,hp:60}, {at:1850,kind:9,hp:60} ],
