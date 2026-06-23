@@ -86,7 +86,7 @@ const ASSETS = [
   {key:'room_nightclub',    type:'img', src:'room nightclub.jpeg', optional:true},
   {key:'room_crackadilly',  type:'img', src:'room crackadilly.jpeg', optional:true},
   {key:'room_dnb',          type:'img', src:'room dnb.jpeg', optional:true},
-  {key:'room_hardcore',     type:'img', src:'room hardcore.jpeg', optional:true},
+  {key:'room_hiphop',       type:'img', src:'room hiphop.jpeg', optional:true},
   {key:'room_special',      type:'img', src:'room special.jpeg', optional:true},
   {key:'room_cottagers',    type:'img', src:'room cottagers.jpeg', optional:true},
   {key:'bg',       type:'img', src:'bg.jpg'},
@@ -282,7 +282,7 @@ const SECTIONS=[
      front of them (mirrors the police-room camera as a sensible starting point). */
   {id:'in_nightclub', name:"Inside &mdash; Slammin' Vinyl", bgKey:'room_nightclub', BGW:2048, zoom:0.85, srcY:150, flatGround:540, charScale:2.5, interior:true, exitLeft:'home', enemies:[],
    doors:[ {x:958,  w:100, label:'Room 1 &mdash; Drum &amp; Bass', target:'in_dnb'},
-           {x:1335, w:100, label:'Room 2 &mdash; Hardcore',       target:'in_hardcore'},
+           {x:1335, w:100, label:'Room 2 &mdash; Hip-Hop',        target:'in_hiphop'},
            {x:1712, w:100, label:'Room 3 &mdash; Special Guest',  target:'in_special'} ]},
   /* ── CRACKADILLY GARDENS (the stitched 3-panorama park; end of the hub) ──
      One wide outdoor walk-through built from Park1+Park2+Park3 stitched into a
@@ -309,14 +309,14 @@ const SECTIONS=[
    doors:[ {x:5500, w:150, label:'Cottagers Cove &mdash; underpass', target:'in_cottagers'} ]},
 
   /* ── SLAMMIN' VINYL ROOMS (entered from the club lobby; EXIT door -> lobby) ──
-     Placeholder interiors until you make their backgrounds (room dnb/hardcore/
+     Interiors for the three club rooms (room dnb/hiphop/
      special.jpeg). Each loops its own track (see TRACKS). The engine draws a dark
      room until the art exists; nudge BGW/srcY/flatGround/charScale once it does. */
-  {id:'in_dnb', name:'Room 1 &mdash; Drum &amp; Bass', bgKey:'room_dnb', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
+  {id:'in_dnb', name:'Room 1 &mdash; Drum &amp; Bass', bgKey:'room_dnb', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
-  {id:'in_hardcore', name:'Room 2 &mdash; Hardcore', bgKey:'room_hardcore', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
+  {id:'in_hiphop', name:'Room 2 &mdash; Hip-Hop', bgKey:'room_hiphop', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
-  {id:'in_special', name:'Room 3 &mdash; Special Guest', bgKey:'room_special', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
+  {id:'in_special', name:'Room 3 &mdash; Special Guest', bgKey:'room_special', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
 
   /* ── COTTAGERS COVE (the underpass at the far end of Crackadilly Gardens) ──
@@ -353,7 +353,7 @@ const TRACKS={ select:'Character selection screen.mp3', home:'Home.mp3', street:
   in_trainstation:'Trainstation.mp3', in_library:'Library.mp3', in_winchester:'Winchester.mp3',
   /* ── NEW ROOM MUSIC SLOTS (upload these three .mp3s next to index.html) ── */
   in_police:'Police.mp3', in_nightclub:'Slamminvinyl.mp3', in_crackadilly:'Crackadilly.mp3',
-  in_dnb:'Dnb.mp3', in_hardcore:'Hardcore.mp3', in_special:'Specialguest.mp3', in_cottagers:'Cottagerscove.mp3',
+  in_dnb:'Dnb.mp3', in_hiphop:'Hiphop.mp3', in_special:'Specialguest.mp3', in_cottagers:'Cottagerscove.mp3',
   /* ── BLACK LEVEL + HOLODECK MUSIC (the MP4s are silent; these are the sound) ── */
   blacklevel:'Void.mp3', holodeck:'Holodeck.mp3' };
 /* ── ROOM SCREENS (looping .mp4s with sound, painted onto wall screens) ──
