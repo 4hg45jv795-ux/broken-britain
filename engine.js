@@ -144,40 +144,36 @@ let bannerShown=false;
 /* enemy strip layout (single horizontal row, uniform FWxFH cells):
    walk frames first (start:0), then die frames last.              */
 const ENEMY_KINDS=[
-  {img:'police', fw:167, fh:130, color:'#d8e23a', hair:'#1a2233',
+  {img:'police', fw:167, fh:130, color:'#d8e23a', hair:'#1a2233', mp3:'Policeenemy.mp3',
    clips:{walk:{start:0,count:6,fps:9,loop:true}, die:{start:6,count:1,fps:6,loop:false}}},
-  {img:'clown', fw:109, fh:130, color:'#e8c43a', hair:'#2f8a3a',
+  {img:'clown', fw:109, fh:130, color:'#e8c43a', hair:'#2f8a3a', mp3:'Clown.mp3',
    clips:{walk:{start:0,count:5,fps:9,loop:true}, die:{start:5,count:1,fps:6,loop:false}}},
-  {img:'alien', fw:71, fh:142, color:'#83a86a', hair:'#41603a',
+  {img:'alien', fw:71, fh:142, color:'#83a86a', hair:'#41603a', mp3:'Alien.mp3',
    clips:{walk:{start:0,count:8,fps:10,loop:true}, die:{start:8,count:6,fps:11,loop:false}}},
-  {img:'geezer', fw:63, fh:160, color:'#2f3238', hair:'#7a4a26',
+  {img:'geezer', fw:63, fh:160, color:'#2f3238', hair:'#7a4a26', mp3:'Geezer.mp3',
    clips:{walk:{start:0,count:7,fps:9,loop:true}, die:{start:7,count:4,fps:8,loop:false}}},
-  {img:'knifeman', fw:89, fh:151, color:'#3a5a8a', hair:'#241712',
+  {img:'knifeman', fw:89, fh:151, color:'#3a5a8a', hair:'#241712', mp3:'Knifeman.mp3',
    clips:{walk:{start:0,count:8,fps:9,loop:true}, die:{start:8,count:6,fps:10,loop:false}}},
-  {img:'deliveroo', fw:134, fh:120, color:'#2c2f36', hair:'#101216',
+  {img:'deliveroo', fw:134, fh:120, color:'#2c2f36', hair:'#101216', mp3:'Deliveroo.mp3',
    clips:{walk:{start:0,count:6,fps:12,loop:true}, die:{start:6,count:4,fps:9,loop:false}}},
-  {img:'bikeboy', fw:175, fh:130, color:'#8a8f96', hair:'#2a2622',
+  {img:'bikeboy', fw:175, fh:130, color:'#8a8f96', hair:'#2a2622', mp3:'Bikeboy.mp3',
    clips:{walk:{start:0,count:2,fps:3,loop:true}, die:{start:2,count:2,fps:6,loop:false}}},
-  {img:'ufo', fw:119, fh:90, hover:34, color:'#bfe4ff', hair:'#3a5a8a',
+  {img:'ufo', fw:119, fh:90, hover:34, color:'#bfe4ff', hair:'#3a5a8a', mp3:'Ufo.mp3',
    clips:{walk:{start:0,count:8,fps:10,loop:true}, die:{start:0,count:1,fps:6,loop:false}}},
   // 8 = UFO GUNSHIP: hovering saucer that SHOOTS the Big Blaster bolt at the player.
   //     ufoship.png frames: 0-2 fly, 3 damaged, 4 exploding. hover lifts it off the
   //     ground; scale sizes the saucer. Spawned in the Holodeck (data.js) for testing.
-  {img:'ufoship', fw:360, fh:194, scale:0.9, hover:80, shooter:true, shotDmg:12, color:'#7fd0ff', hair:'#2a4a7a',
+  {img:'ufoship', fw:360, fh:194, scale:0.9, hover:80, shooter:true, shotDmg:12, color:'#7fd0ff', hair:'#2a4a7a', mp3:'Ufoship.mp3',
    clips:{walk:{start:0,count:3,fps:8,loop:true}, die:{start:3,count:2,fps:9,loop:false}}},
   // 9 = BRUISER: heavyset bare-knuckle thug (bruiser.png). 18 frames -> 0-5 running,
   //     6-11 punching (unused by the simple enemy AI), 12-17 dying. Melee only; lives in
   //     Cottagers Cove. `scale` sizes him against the big-room player — nudge to taste.
-  {img:'bruiser', fw:196, fh:237, scale:2.0, color:'#cdb89a', hair:'#3a2a1e',
+  {img:'bruiser', fw:196, fh:237, scale:2.0, color:'#cdb89a', hair:'#3a2a1e', mp3:'Bruiser.mp3',
    clips:{walk:{start:0,count:6,fps:11,loop:true}, die:{start:12,count:6,fps:10,loop:false}}},
   // 10 = GUNMAN: hooded shooter (shooter.png). 12 frames -> 0-3 walk, 4-7 aim/fire, 8-11 die.
   //      Fires the Big-Blaster bolt and plays its SHOOT pose while firing. In the Holodeck.
-  {img:'shooter', fw:292, fh:343, scale:1.7, shooter:true, shotDmg:10, color:'#3a4250', hair:'#20242c',
+  {img:'shooter', fw:292, fh:343, scale:1.7, shooter:true, shotDmg:10, color:'#3a4250', hair:'#20242c', mp3:'Gunman.mp3',
    clips:{walk:{start:0,count:4,fps:9,loop:true}, shoot:{start:4,count:4,fps:11,loop:false}, die:{start:8,count:4,fps:9,loop:false}}},
-  // 11 = DANCER: walks a few steps, then breaks into 'The Wobble' (dancer.png). 15 frames ->
-  //      0-7 walk, 8-13 dance, 14 die (placeholder pose — sheet had no death frames). In the Library.
-  {img:'dancer', fw:163, fh:310, scale:1.7, dancer:true, color:'#2a2a30', hair:'#1a1a1e',
-   clips:{walk:{start:0,count:8,fps:11,loop:true}, dance:{start:8,count:6,fps:9,loop:true}, die:{start:14,count:1,fps:5,loop:false}}},
 ];
 const EH=78;
 let enemies=[];
@@ -292,6 +288,36 @@ function drawEnemyStandin(dw,dh,k,e){
   ctx.fillStyle='#d9caa6'; ctx.fillRect(dw*0.74,dh*0.10,dw*0.22,dh*0.16);
   ctx.strokeStyle='#5a4a2a'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(dw*0.80,dh*0.26); ctx.lineTo(dw*0.80,dh*0.55); ctx.stroke();
   ctx.restore();
+}
+
+/* ── SCENERY NPCs: decorative, non-combat animated sprites (dancers etc.) ─────
+   Defined per-section in data.js as
+     npcs:[{img, fw, fh, clip:{start,count,fps,loop}, at, h, yOff, face, mp3, range}]
+   They just loop an animation in place — no collision, no damage, can't be hit.
+   yOff is added to the ground line: a NEGATIVE yOff lifts them UP the path (further
+   back / higher on screen) so they read as background. mp3 = proximity track slot. */
+let scenery=[];
+function spawnScenery(){
+  scenery=[];
+  const list=SECTIONS[sectionIndex].npcs||[];
+  for(const d of list) scenery.push({def:d, x:d.at, ct:(Math.random()*120)|0});
+}
+function updateScenery(){ for(const s of scenery) s.ct++; }
+function drawScenery(){
+  for(const s of scenery){
+    const d=s.def; const h=d.h||120, w=Math.round(h*d.fw/d.fh);
+    const top=groundAt(s.x+w/2)+(d.yOff||0)-h;
+    const sx=(s.x-camX)*ZOOM, sy=(top-SRCY)*ZOOM, dw=w*ZOOM, dh=h*ZOOM;
+    if(sx<-dw*2||sx>VW+dw*2) continue;
+    ctx.save();
+    if((d.face||1)<0){ ctx.translate(sx+dw,sy); ctx.scale(-1,1); } else { ctx.translate(sx,sy); }
+    const img=loaded[d.img];
+    if(imgOk(img)){
+      const c=d.clip; let f=Math.floor(s.ct*c.fps/60); f=(c.loop===false)?Math.min(f,c.count-1):(f%c.count);
+      try{ ctx.drawImage(img,(c.start+f)*d.fw,0,d.fw,d.fh,0,0,dw,dh); }catch(_){}
+    }
+    ctx.restore();
+  }
 }
 
 /* ── ENEMY PROJECTILES: Big-Blaster bolts thrown by shooter enemies (the UFO) ── */
@@ -574,6 +600,7 @@ function enterSection(opts){
   initLibraryNpc();
   initMkNpcs();
   spawnEnemiesForSection();
+  spawnScenery();
   refreshHelperBtns();
   updateHelperBarVisibility();
   playSectionTrack();   // plays this room's track, or silence for screen rooms / trackless interiors
@@ -1518,6 +1545,34 @@ function updateProxAudio(){
     if(want){ a.muted=musicMuted; a.volume=Math.max(0,Math.min(0.8,vol)); if(a.paused) a.play().catch(()=>{}); }
     else if(!a.paused){ a.pause(); }
   }
+  const live = !musicMuted && !paused && cur && !player.dead;
+  // per ENEMY KIND: every enemy has an mp3 slot; the NEAREST live instance sets the volume
+  for(let k=0;k<ENEMY_KINDS.length;k++){
+    const K=ENEMY_KINDS[k]; if(!K.mp3) continue;
+    const a=_proxEl(K.mp3); let vol=0;
+    if(live){
+      let nd=1e9;
+      for(const e of enemies){ if(e.kind===k && e.state!=='dead'){ const dd=Math.abs((player.x+PW/2)-(e.x+e.w/2)); if(dd<nd) nd=dd; } }
+      const rng=K.mp3range||240;
+      if(nd<rng) vol=0.2+0.55*(1-nd/rng);
+    }
+    if(vol>0){ a.muted=musicMuted; a.volume=Math.max(0,Math.min(0.8,vol)); if(a.paused) a.play().catch(()=>{}); }
+    else if(!a.paused){ a.pause(); }
+  }
+  // per SCENERY NPC: every NPC has an mp3 slot; the NEAREST instance of each src sets the volume
+  const _npcVol={};
+  if(live){
+    for(const s of scenery){ const d=s.def; if(!d.mp3) continue;
+      const w=(d.h||120)*d.fw/d.fh; const dd=Math.abs((player.x+PW/2)-(s.x+w/2)); const rng=d.range||180;
+      const v=dd<rng ? (0.25+0.55*(1-dd/rng)) : 0;
+      if(!(d.mp3 in _npcVol) || v>_npcVol[d.mp3]) _npcVol[d.mp3]=v;
+    }
+  } else { for(const s of scenery){ if(s.def.mp3) _npcVol[s.def.mp3]=0; } }
+  for(const src in _npcVol){
+    const a=_proxEl(src); const vol=_npcVol[src];
+    if(vol>0){ a.muted=musicMuted; a.volume=Math.max(0,Math.min(0.8,vol)); if(a.paused) a.play().catch(()=>{}); }
+    else if(!a.paused){ a.pause(); }
+  }
 }
 
 /* ── UPDATE / DRAW / LOOP ────────────────────────────────── */
@@ -1591,6 +1646,7 @@ function update(){
   updateChurchNpc();
   updateLibraryNpc();
   updateMkNpcs();
+  updateScenery();
   updateUfo();
   updateWanderer();
   updatePickup();
@@ -1661,6 +1717,7 @@ function draw(){
   if(shakeT>0){ const k=shakeT/Math.max(1,shakeDur), m=shakeMag*k;
     ctx.save(); ctx.translate(Math.round((Math.random()*2-1)*m), Math.round((Math.random()*2-1)*m)); _shaking=true; shakeT--; }
   drawBg();
+  drawScenery();   // decorative background NPCs (dancers/couples) — drawn behind everything
 
   drawTV();
 
