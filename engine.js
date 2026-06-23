@@ -22,9 +22,11 @@ function imgOk(im){ return im && im.complete && im.naturalWidth>0; }
 let sectionIndex=0;
 let SRCY=120, BGW=4047;
 let CSCALE=1;
+let BGSCALE=1;                 // background image resolution multiplier (image px per world px); 1 = legacy 1:1
 function loadSectionConfig(){
   const s=SECTIONS[sectionIndex];
   SRCY=s.srcY; BGW=s.BGW; CSCALE=s.charScale||1;
+  BGSCALE=s.bgScale||1;        // a >1 value lets a higher-res bg image render crisp without changing layout
   ZOOM=s.zoom||1.5; SRCW=VW/ZOOM; SRCH=VH/ZOOM;     // per-section camera zoom (default 1.5)
   document.getElementById('flag').textContent=' '+s.name.replace(/&mdash;/g,'—').toUpperCase();
 }
@@ -1719,7 +1721,7 @@ function drawBg(){
     return;
   }
   const bgKey=sec.bgKey;
-  if(imgOk(loaded[bgKey])){ try{ ctx.drawImage(loaded[bgKey],camX,SRCY,SRCW,SRCH,0,0,VW,VH); }catch(e){ drawNoBg(); } } else drawNoBg();
+  if(imgOk(loaded[bgKey])){ const bs=BGSCALE; try{ ctx.drawImage(loaded[bgKey],camX*bs,SRCY*bs,SRCW*bs,SRCH*bs,0,0,VW,VH); }catch(e){ drawNoBg(); } } else drawNoBg();
 }
 function draw(){
   const dsec=SECTIONS[sectionIndex];
