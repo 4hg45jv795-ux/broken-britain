@@ -202,18 +202,19 @@ const SECTIONS=[
      enemy kinds to arenaPool() in engine.js, gated behind a higher wave number. */
   {id:'blacklevel', name:'Survive Waves in the Void', bgKey:'__black__', black:true, BGW:8534, srcY:0, flatGround:200, chain:true, next:null, prev:null,
    arena:true, enemies:[],
-   /* 8 dancing-couple NPCs (NOT enemies) spread evenly across the Void, raised up the
-      path (yOff negative) so they sit higher than the player as background dancers.
-      Dancingcouple.mp3 fades in near them. Nudge `at`/`yOff`/`h` to taste.            */
+   /* 8 dancing-couple NPCs (NOT enemies) — placed across the FINAL 2 MP4 panels
+      (tileW 1200 each, so x 6000-8400 = the last quarter of the level), 4 per panel.
+      Raised up the path (yOff) so they sit higher than the player as background
+      dancers. Dancingcouple.mp3 fades in near them. Nudge `at`/`yOff`/`h` to taste. */
    npcs:[
-     {img:'couple', fw:234, fh:231, at:533,  h:105, yOff:-55, face:1,  clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
-     {img:'couple', fw:234, fh:231, at:1600, h:105, yOff:-55, face:-1, clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
-     {img:'couple', fw:234, fh:231, at:2667, h:105, yOff:-55, face:1,  clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
-     {img:'couple', fw:234, fh:231, at:3734, h:105, yOff:-55, face:-1, clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
-     {img:'couple', fw:234, fh:231, at:4800, h:105, yOff:-55, face:1,  clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
-     {img:'couple', fw:234, fh:231, at:5867, h:105, yOff:-55, face:-1, clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
-     {img:'couple', fw:234, fh:231, at:6934, h:105, yOff:-55, face:1,  clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
-     {img:'couple', fw:234, fh:231, at:8001, h:105, yOff:-55, face:-1, clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220} ]},
+     {img:'couple', fw:234, fh:231, at:6150, h:105, yOff:-40, face:1,  clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
+     {img:'couple', fw:234, fh:231, at:6450, h:105, yOff:-40, face:-1, clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
+     {img:'couple', fw:234, fh:231, at:6750, h:105, yOff:-40, face:1,  clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
+     {img:'couple', fw:234, fh:231, at:7050, h:105, yOff:-40, face:-1, clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
+     {img:'couple', fw:234, fh:231, at:7350, h:105, yOff:-40, face:1,  clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
+     {img:'couple', fw:234, fh:231, at:7650, h:105, yOff:-40, face:-1, clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
+     {img:'couple', fw:234, fh:231, at:7950, h:105, yOff:-40, face:1,  clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
+     {img:'couple', fw:234, fh:231, at:8250, h:105, yOff:-40, face:-1, clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220} ]},
 
   /* ── HOLODECK (entered from the hub Portal -> travel menu) ─────────────
      A full-screen MP4 backdrop: one widescreen clip (holodeck.mp4) fills the
