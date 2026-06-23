@@ -100,7 +100,8 @@ const ASSETS = [
   {key:'ufoship',  type:'img', src:'ufoship.png', optional:true},   // shooting UFO enemy (kind 8)
   {key:'bruiser',  type:'img', src:'bruiser.png', optional:true},   // Cottagers Cove thug enemy (kind 9)
   {key:'shooter',  type:'img', src:'shooter.png', optional:true},   // gunman enemy (kind 10)
-  {key:'dancer',   type:'img', src:'dancer.png', optional:true},    // dancer enemy (kind 11)
+  {key:'dancer',   type:'img', src:'dancer.png', optional:true},    // Library dancing NPC (no longer an enemy)
+  {key:'couple',   type:'img', src:'couple.png', optional:true},    // Void dancing-couple NPCs
   {key:'photog',   type:'img', src:'photog2.png'},
   {key:'athlete',  type:'img', src:'athlete.png', optional:true},
   {key:'police',   type:'img', src:'police4.png', optional:true},
@@ -200,7 +201,19 @@ const SECTIONS=[
      and show when you fall. Walk off the far LEFT to leave. Add future tougher
      enemy kinds to arenaPool() in engine.js, gated behind a higher wave number. */
   {id:'blacklevel', name:'Survive Waves in the Void', bgKey:'__black__', black:true, BGW:8534, srcY:0, flatGround:200, chain:true, next:null, prev:null,
-   arena:true, enemies:[]},
+   arena:true, enemies:[],
+   /* 8 dancing-couple NPCs (NOT enemies) spread evenly across the Void, raised up the
+      path (yOff negative) so they sit higher than the player as background dancers.
+      Dancingcouple.mp3 fades in near them. Nudge `at`/`yOff`/`h` to taste.            */
+   npcs:[
+     {img:'couple', fw:234, fh:231, at:533,  h:105, yOff:-55, face:1,  clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
+     {img:'couple', fw:234, fh:231, at:1600, h:105, yOff:-55, face:-1, clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
+     {img:'couple', fw:234, fh:231, at:2667, h:105, yOff:-55, face:1,  clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
+     {img:'couple', fw:234, fh:231, at:3734, h:105, yOff:-55, face:-1, clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
+     {img:'couple', fw:234, fh:231, at:4800, h:105, yOff:-55, face:1,  clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
+     {img:'couple', fw:234, fh:231, at:5867, h:105, yOff:-55, face:-1, clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
+     {img:'couple', fw:234, fh:231, at:6934, h:105, yOff:-55, face:1,  clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
+     {img:'couple', fw:234, fh:231, at:8001, h:105, yOff:-55, face:-1, clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220} ]},
 
   /* ── HOLODECK (entered from the hub Portal -> travel menu) ─────────────
      A full-screen MP4 backdrop: one widescreen clip (holodeck.mp4) fills the
@@ -236,7 +249,11 @@ const SECTIONS=[
      zoom:1.0 shows an 800px-wide slice; walk RIGHT to explore, walk off the far LEFT to
      leave (exitLeft:'home'). Nudge flatGround/srcY/charScale to taste. */
   {id:'in_library', name:'Inside &mdash; The Library', bgKey:'room_library', BGW:2172, zoom:1.0, srcY:8, flatGround:332, charScale:1.7, interior:true, walkMul:1.7, exitLeft:'home', exitRight:'home',
-   enemies:[ {at:1100, kind:11, hp:70} ],
+   enemies:[],
+   /* The Dancer is now a harmless background NPC — he just does 'The Wobble' on the
+      spot (no walking, not an enemy). Dancer.mp3 fades in as you get near him.       */
+   npcs:[ {img:'dancer', fw:163, fh:310, at:1100, h:135, face:1,
+           clip:{start:8, count:6, fps:9, loop:true}, mp3:'Dancer.mp3', range:180} ],
    doors:[]},
   /* WINCHESTER swapped to the wide pub panorama (room winchester.jpeg now 2172x387).
      zoom:1.0 shows an 800px-wide slice. Character made BIGGER (charScale 2.2) and the view
