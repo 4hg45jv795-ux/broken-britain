@@ -751,19 +751,27 @@ function drawTVMarker(){
   drawMarker(cx, cy, 'TV \u00B7 CH '+(sc.idx+1), 'STRIKE to change channel');
 }
 
-let sceneWallVid=null, sceneFloorVid=null;
+let sceneWallVid=null, sceneFloorVid=null;     // the CURRENT zone's pooled <video> elements
+const _sceneVidPool={};                        // src -> <video>, kept buffered so zones don't reload mid-level
 function curSceneCfg(){ return SCENE_VIDEOS[SECTIONS[sectionIndex].id] || null; }
-function sceneVid(which){
-  let v = which==='wall' ? sceneWallVid : sceneFloorVid;
+function sceneVidFor(src){
+  if(!src) return null;
+  let v=_sceneVidPool[src];
   if(!v){
     v=document.createElement('video');
     v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
     v.loop=true; v.preload='auto'; v.muted=true;
     v.style.cssText='position:fixed;left:-9999px;top:-9999px;width:2px;height:2px;opacity:0;pointer-events:none;';
     document.body.appendChild(v);
-    if(which==='wall') sceneWallVid=v; else sceneFloorVid=v;
+    v.src=src; try{ v.load(); }catch(_){}      // start buffering this clip immediately
+    _sceneVidPool[src]=v;
   }
   return v;
+}
+function scenePreloadAll(){                     // warm up EVERY zone's clips on entry so later zones are ready before you reach them
+  const cfg=curSceneCfg(); if(!cfg) return;
+  if(cfg.zones){ for(const z of cfg.zones){ sceneVidFor(z.wall); sceneVidFor(z.floor); } }
+  else { sceneVidFor(cfg.wall); sceneVidFor(cfg.floor); }
 }
 let sceneZoneIdx=-1;
 function sceneSrc(){
@@ -779,19 +787,15 @@ function sceneUpdate(){
 function sceneLoad(playNow){
   const cfg=curSceneCfg(); if(!cfg){ scenePause(); return; }
   const src=sceneSrc()||{};
-  const w=sceneVid('wall');
-  if(src.wall && w.getAttribute('data-src')!==src.wall){ w.setAttribute('data-src',src.wall); w.src=src.wall; try{w.load();}catch(_){} }
-  w.muted=true;
-  let f=null;
-  if(src.floor){
-    f=sceneVid('floor');
-    if(f.getAttribute('data-src')!==src.floor){ f.setAttribute('data-src',src.floor); f.src=src.floor; try{f.load();}catch(_){} }
-    f.muted=true;
-  } else if(sceneFloorVid){ try{ sceneFloorVid.pause(); }catch(_){} }
-  if(playNow && !paused){ w.play().catch(()=>{}); if(f) f.play().catch(()=>{}); requestWakeLock(); }
+  const w=sceneVidFor(src.wall), f=src.floor?sceneVidFor(src.floor):null;
+  if(sceneWallVid && sceneWallVid!==w){ try{ sceneWallVid.pause(); }catch(_){} }   // pause previous zone's clips
+  if(sceneFloorVid && sceneFloorVid!==f){ try{ sceneFloorVid.pause(); }catch(_){} }
+  sceneWallVid=w; sceneFloorVid=f;
+  if(w) w.muted=true; if(f) f.muted=true;
+  if(playNow && !paused){ if(w) w.play().catch(()=>{}); if(f) f.play().catch(()=>{}); requestWakeLock(); }
 }
-function sceneEnter(){ sceneZoneIdx=-1; if(curSceneCfg()) sceneLoad(true); else scenePause(); }
-function scenePause(){ try{ if(sceneWallVid) sceneWallVid.pause(); if(sceneFloorVid) sceneFloorVid.pause(); }catch(_){} }
+function sceneEnter(){ sceneZoneIdx=-1; if(curSceneCfg()){ scenePreloadAll(); sceneLoad(true); } else scenePause(); }
+function scenePause(){ try{ for(const k in _sceneVidPool){ _sceneVidPool[k].pause(); } }catch(_){} }
 function drawSceneVideos(){
   const cfg=curSceneCfg(); if(!cfg) return;
   const src=sceneSrc()||{};
@@ -800,8 +804,8 @@ function drawSceneVideos(){
   const floorY=wallH, floorH=VH-wallH;
   const tileScreenW=cfg.tileW*ZOOM;
   const w=sceneWallVid, f=sceneFloorVid;
-  const wallReady = w && w.readyState>=2 && w.videoWidth>0 && w.getAttribute('data-src')===src.wall;
-  const floorReady= hasFloor && f && f.readyState>=2 && f.videoWidth>0 && f.getAttribute('data-src')===src.floor;
+  const wallReady = w && w.readyState>=2 && w.videoWidth>0;     // w is already the current zone's pooled element
+  const floorReady= hasFloor && f && f.readyState>=2 && f.videoWidth>0;
   const startK=Math.floor(camX/cfg.tileW);
   for(let k=startK; k*cfg.tileW < camX+SRCW; k++){
     const sx=(k*cfg.tileW - camX)*ZOOM;
