@@ -693,27 +693,41 @@ document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible' && (tvRolling || sceneRolling)) requestWakeLock();
 });
 function curScreen(){ return SCREENS[SECTIONS[sectionIndex].id] || null; }
-function tvEl(){
-  if(!tvVideo){
-    tvVideo=document.createElement('video');
-    tvVideo.setAttribute('playsinline','');
-    tvVideo.setAttribute('webkit-playsinline','');
-    tvVideo.loop=true; tvVideo.preload='auto';
-    tvVideo.muted=musicMuted;
-    tvVideo.style.cssText='position:fixed;left:-9999px;top:-9999px;width:2px;height:2px;opacity:0;pointer-events:none;';
-    document.body.appendChild(tvVideo);
+const _tvVidPool={};                 // src -> <video>, kept buffered so channels don't reload on switch
+function tvVidFor(src){
+  if(!src) return null;
+  let v=_tvVidPool[src];
+  if(!v){
+    v=document.createElement('video');
+    v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
+    v.loop=true; v.preload='auto'; v.muted=musicMuted;
+    v.style.cssText='position:fixed;left:-9999px;top:-9999px;width:2px;height:2px;opacity:0;pointer-events:none;';
+    document.body.appendChild(v);
+    v.src=src; try{ v.load(); }catch(_){}    // begin buffering this channel immediately
+    _tvVidPool[src]=v;
   }
-  return tvVideo;
+  return v;
+}
+function tvPreloadOthers(){           // warm the OTHER channels (after the current one is playing) so switching is instant
+  const sc=curScreen(); if(!sc||!sc.files) return;
+  for(let i=0;i<sc.files.length;i++){ if(i!==sc.idx) tvVidFor(sc.files[i]); }
 }
 function screenLoad(playNow){
   const sc=curScreen(); if(!sc){ tvPause(); return; }
-  const v=tvEl(), src=sc.files[sc.idx];
-  if(v.getAttribute('data-src')!==src){ v.setAttribute('data-src',src); v.src=src; try{ v.load(); }catch(_){} }
-  v.muted=musicMuted;
+  const v=tvVidFor(sc.files[sc.idx]);
+  if(tvVideo && tvVideo!==v){ try{ tvVideo.pause(); }catch(_){} }   // pause the previous channel
+  tvVideo=v; v.muted=musicMuted;
   if(playNow && !paused){ v.play().catch(()=>{}); requestWakeLock(); }
 }
-function tvEnter(){ if(curScreen()) screenLoad(true); else tvPause(); }
-function tvPause(){ if(tvVideo){ try{ tvVideo.pause(); }catch(_){} } releaseWakeLock(); }
+function tvEnter(){
+  if(!curScreen()){ tvPause(); return; }
+  screenLoad(true);                  // load + PLAY the current channel first (gives it bandwidth priority)
+  if(tvVideo){                       // then warm the other channels once the current one has data
+    if(tvVideo.readyState>=2) tvPreloadOthers();
+    else tvVideo.addEventListener('loadeddata', tvPreloadOthers, {once:true});
+  }
+}
+function tvPause(){ try{ for(const k in _tvVidPool){ _tvVidPool[k].pause(); } }catch(_){} releaseWakeLock(); }
 function tvNextChannel(){
   const sc=curScreen(); if(!sc||!sc.switchable) return;
   sc.idx=(sc.idx+1)%sc.files.length; screenLoad(true);
@@ -731,7 +745,7 @@ function drawTV(){
   const r=sc.rect;
   const sx=(r.x-camX)*ZOOM, sy=(r.y-SRCY)*ZOOM, sw=r.w*ZOOM, sh=r.h*ZOOM;
   const v=tvVideo;
-  if(v && v.readyState>=2 && v.videoWidth>0 && v.getAttribute('data-src')===sc.files[sc.idx]){
+  if(v && v.readyState>=2 && v.videoWidth>0){     // v is the current channel's pooled element
     try{ ctx.drawImage(v, sx, sy, sw, sh); }catch(_){}
   } else {
     ctx.save();
@@ -1291,7 +1305,7 @@ document.getElementById('mute').onclick=(e)=>{
   e.stopPropagation(); musicMuted=!musicMuted;
   const bgm=document.getElementById('bgm'); bgm.muted=musicMuted;
   if(musicMuted) pauseAllProxAudio();
-  if(tvVideo) tvVideo.muted=musicMuted;
+  for(const k in _tvVidPool){ _tvVidPool[k].muted=musicMuted; }
   if(!musicMuted && cur && !paused && sectionMusic()) bgm.play().catch(()=>{});
   document.getElementById('mute').innerHTML = musicMuted ? '&#128263;' : '&#128266;';
 };
