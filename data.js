@@ -102,6 +102,8 @@ const ASSETS = [
   {key:'shooter',  type:'img', src:'shooter.png', optional:true},   // gunman enemy (kind 10)
   {key:'dancer',   type:'img', src:'dancer.png', optional:true},    // Library dancing NPC (no longer an enemy)
   {key:'couple',   type:'img', src:'couple.png', optional:true},    // Void dancing-couple NPCs
+  {key:'dgreen',   type:'img', src:'dancer_green.png',  optional:true},  // Hip-Hop room dancer (green)
+  {key:'dpurple',  type:'img', src:'dancer_purple.png', optional:true},  // Hip-Hop room dancer (purple)
   {key:'photog',   type:'img', src:'photog2.png'},
   {key:'athlete',  type:'img', src:'athlete.png', optional:true},
   {key:'police',   type:'img', src:'police4.png', optional:true},
@@ -280,7 +282,7 @@ const SECTIONS=[
      The 3 doors lead to the club rooms — nudge each x so the marker sits over the
      painted door, and tune srcY/flatGround/charScale so feet land on the floor in
      front of them (mirrors the police-room camera as a sensible starting point). */
-  {id:'in_nightclub', name:"Inside &mdash; Slammin' Vinyl", bgKey:'room_nightclub', BGW:2048, zoom:0.85, srcY:150, flatGround:540, charScale:2.5, interior:true, exitLeft:'home', enemies:[],
+  {id:'in_nightclub', name:"Inside &mdash; Slammin' Vinyl", bgKey:'room_nightclub', BGW:2048, zoom:0.85, srcY:150, flatGround:560, charScale:2.5, interior:true, exitLeft:'home', enemies:[],
    doors:[ {x:958,  w:100, label:'Room 1 &mdash; Drum &amp; Bass', target:'in_dnb'},
            {x:1335, w:100, label:'Room 2 &mdash; Hip-Hop',        target:'in_hiphop'},
            {x:1712, w:100, label:'Room 3 &mdash; Special Guest',  target:'in_special'} ]},
@@ -315,6 +317,9 @@ const SECTIONS=[
   {id:'in_dnb', name:'Room 1 &mdash; Drum &amp; Bass', bgKey:'room_dnb', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
   {id:'in_hiphop', name:'Room 2 &mdash; Hip-Hop', bgKey:'room_hiphop', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
+   /* three background dancers (NOT enemies) just looping a dance on the floor */
+   npcs:[ {img:'dgreen',  fw:156, fh:231, at:185, h:104, yOff:0, face:1,  clip:{start:0,count:6,fps:9,loop:true}},
+          {img:'dpurple', fw:157, fh:240, at:400, h:110, yOff:0, face:-1, clip:{start:0,count:6,fps:8,loop:true}} ],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
   {id:'in_special', name:'Room 3 &mdash; Special Guest', bgKey:'room_special', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
