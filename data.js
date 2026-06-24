@@ -103,6 +103,8 @@ const ASSETS = [
   {key:'bruiser',  type:'img', src:'bruiser.png', optional:true},   // Cottagers Cove thug enemy (kind 9)
   {key:'shooter',  type:'img', src:'shooter.png', optional:true},   // gunman enemy (kind 10)
   {key:'tracksuit',type:'img', src:'tracksuit.png', optional:true}, // Cottagers Cove tracksuit enemy (kind 11)
+  {key:'hippie',   type:'img', src:'hippie.png', optional:true},    // Park/street enemy (kind 12)
+  {key:'crackman', type:'img', src:'crackman.png', optional:true},  // Crackadilly Gardens enemy (kind 13)
   {key:'hologram', type:'img', src:'hologram.png', optional:true},  // Library blue AI hologram NPC (centre)
   {key:'dancer',   type:'img', src:'dancer.png', optional:true},    // dancing NPC (now in the Hip-Hop room)
   {key:'couple',   type:'img', src:'couple.png', optional:true},    // Void dancing-couple NPCs
@@ -181,7 +183,7 @@ const SECTIONS=[
   {id:'southampton', name:'Southampton &mdash; Above Bar Street', bgKey:'southampton', BGW:1879, srcY:90, flatGround:296, chain:true, next:'park', prev:null,
    enemies:[ {at:430,kind:0},{at:640,kind:0},{at:850,kind:0},{at:1050,kind:0},{at:1250,kind:0},{at:1450,kind:0},{at:1650,kind:0},{at:1800,kind:0} ]},
   {id:'park', name:'Standard UK Park', bgKey:'park', BGW:1763, srcY:0, flatGround:196, chain:true, next:'belfast', prev:'southampton',
-   enemies:[ {at:520,kind:3},{at:880,kind:3},{at:1240,kind:3} ],
+   enemies:[ {at:520,kind:3},{at:880,kind:3},{at:1240,kind:3},{at:680,kind:12},{at:1040,kind:12},{at:1400,kind:12} ],
    aliens:[ {at:700,kind:2},{at:1020,kind:2},{at:1360,kind:2},{at:1560,kind:2} ]},
   {id:'belfast', name:'Ballymacarrett &mdash; the loyal mile', bgKey:'bg3', BGW:2172, srcY:380, flatGround:560, chain:true, next:'pub', prev:'park',
    enemies:[ {at:760,kind:4},{at:1120,kind:4},{at:1480,kind:4},{at:1800,kind:4},{at:2020,kind:4} ]},
@@ -194,7 +196,7 @@ const SECTIONS=[
   {id:'glasgow', name:'Glasgow &mdash; the Trongate', bgKey:'glasgow', BGW:2672, srcY:90, flatGround:296, chain:true, next:'street', prev:'dundee',
    enemies:[ {at:230,kind:6,hp:1,static:true},{at:760,kind:5},{at:1080,kind:0},{at:1380,kind:5},{at:1700,kind:1},{at:2000,kind:5},{at:2480,kind:5} ]},
   {id:'street', name:'Southside &mdash; the street', bgKey:'bg',  BGW:4047, srcY:120, flatGround:null, chain:true, next:null, prev:'glasgow',
-   enemies:[ {at:1200,kind:0},{at:1700,kind:1},{at:2300,kind:0},{at:3300,kind:1},{at:3700,kind:0} ]},
+   enemies:[ {at:1200,kind:0},{at:1700,kind:1},{at:2300,kind:0},{at:3300,kind:1},{at:3700,kind:0},{at:2000,kind:12},{at:2800,kind:12} ]},
 
   /* ── MORTAL KOMBAT (entered from the hub Portal -> travel menu) ──
      Standalone fight arena: the UMK3 "Blue Portal" bridge. Background
@@ -333,7 +335,7 @@ const SECTIONS=[
      very bottom of the view); flatGround:350 stays as a fallback if the image ever
      fails to load. Nudge the underpass door x (5300) to sit over the tunnel mouth.
      Music: Crackadilly.mp3 (already in TRACKS). */
-  {id:'in_crackadilly', name:'Crackadilly Gardens', bgKey:'room_crackadilly', BGW:5946, srcY:140, flatGround:350, charScale:1.2, interior:true, exitLeft:'home', enemies:[],
+  {id:'in_crackadilly', name:'Crackadilly Gardens', bgKey:'room_crackadilly', BGW:5946, srcY:140, flatGround:350, charScale:1.2, interior:true, exitLeft:'home', enemies:[ {at:800,kind:13},{at:1600,kind:13},{at:2400,kind:13},{at:3200,kind:13},{at:4000,kind:13},{at:4800,kind:13} ],
    groundStep:100,
    groundPts:[350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,352,360,364,366,366,366,362,354,350,350,350,350,350,350,350,350,350],
    doors:[ {x:5500, w:150, label:'Cottagers Cove &mdash; underpass', target:'in_cottagers'} ]},
