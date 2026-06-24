@@ -180,6 +180,15 @@ const ENEMY_KINDS=[
   //      "walk", 10-11 used as the death flourish. Melee only; lives in Cottagers Cove.
   {img:'tracksuit', fw:239, fh:426, scale:2.2, color:'#1fb6c9', hair:'#e8e4d8', mp3:'Tracksuit.mp3',
    clips:{walk:{start:0,count:10,fps:8,loop:true}, die:{start:10,count:2,fps:6,loop:false}}},
+  // 12 = HIPPIE (hippie.png). 8-frame walk cycle (tie-dye top, blue hair, keffiyeh scarf).
+  //      No bespoke death art, so the last walk frame is reused as the fading death frame.
+  {img:'hippie', fw:78, fh:124, color:'#7ac0e0', hair:'#3a6ea5', mp3:'Hippie.mp3',
+   clips:{walk:{start:0,count:8,fps:9,loop:true}, die:{start:7,count:1,fps:6,loop:false}}},
+  // 13 = CRACKMAN (crackman.png). 6-frame walk cycle; lives in Crackadilly Gardens. The
+  //      source punch frames aren't used (basic enemies have no melee-attack anim) and the
+  //      knockdown frames were cropped, so death reuses the last walk frame (it fades out).
+  {img:'crackman', fw:181, fh:348, scale:1.3, color:'#8a5a3a', hair:'#161616', mp3:'Crackman.mp3',
+   clips:{walk:{start:0,count:6,fps:9,loop:true}, die:{start:5,count:1,fps:6,loop:false}}},
 ];
 const EH=78;
 let enemies=[];
@@ -2018,7 +2027,7 @@ function isArena(){ return !!SECTIONS[sectionIndex].arena; }
 function arenaPool(){
   // every NORMAL wave is a roughly-even mix of EVERY enemy in the game.
   // (kind 8 = UFO gunship is reserved for the every-5th "UFO assault" rounds.)
-  return [0,1,2,3,4,5,7,9]; // 0 police,1 clown,2 alien,3 geezer,4 knifeman,5 deliveroo,7 ufo,9 bruiser  (bikeboy/6 stays in Glasgow)
+  return [0,1,2,3,4,5,7,9,12]; // police,clown,alien,geezer,knifeman,deliveroo,ufo,bruiser,hippie  (bikeboy/6 stays in Glasgow)
 }
 function arenaEnter(){
   arenaActive=true; arenaWave=0; arenaScore=0; arenaGrace=0; arenaScored=false;
