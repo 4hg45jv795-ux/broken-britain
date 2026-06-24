@@ -170,7 +170,7 @@ const ENEMY_KINDS=[
   // 9 = BRUISER: heavyset bare-knuckle thug (bruiser.png). 18 frames -> 0-5 running,
   //     6-11 punching (unused by the simple enemy AI), 12-17 dying. Melee only; lives in
   //     Cottagers Cove. `scale` sizes him against the big-room player — nudge to taste.
-  {img:'bruiser', fw:196, fh:237, scale:4.0, color:'#cdb89a', hair:'#3a2a1e', mp3:'Bruiser.mp3',
+  {img:'bruiser', fw:196, fh:237, scale:2.5, color:'#cdb89a', hair:'#3a2a1e', mp3:'Bruiser.mp3',
    clips:{walk:{start:0,count:6,fps:11,loop:true}, die:{start:12,count:6,fps:10,loop:false}}},
   // 10 = GUNMAN: hooded shooter (shooter.png). 12 frames -> 0-3 walk, 4-7 aim/fire, 8-11 die.
   //      Fires the Big-Blaster bolt and plays its SHOOT pose while firing. In the Holodeck.
@@ -178,7 +178,7 @@ const ENEMY_KINDS=[
    clips:{walk:{start:0,count:4,fps:9,loop:true}, shoot:{start:4,count:4,fps:11,loop:false}, die:{start:8,count:4,fps:9,loop:false}}},
   // 11 = TRACKSUIT (tracksuit.png). 12 dance-pose frames -> 0-9 a strut/dance loop used as the
   //      "walk", 10-11 used as the death flourish. Melee only; lives in Cottagers Cove.
-  {img:'tracksuit', fw:239, fh:426, scale:2.2, color:'#1fb6c9', hair:'#e8e4d8', mp3:'Tracksuit.mp3',
+  {img:'tracksuit', fw:239, fh:426, scale:3.2, color:'#1fb6c9', hair:'#e8e4d8', mp3:'Tracksuit.mp3',
    clips:{walk:{start:0,count:10,fps:8,loop:true}, die:{start:10,count:2,fps:6,loop:false}}},
   // 12 = HIPPIE (hippie.png). 8-frame walk cycle (tie-dye top, blue hair, keffiyeh scarf).
   //      No bespoke death art, so the last walk frame is reused as the fading death frame.
