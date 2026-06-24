@@ -513,7 +513,7 @@ const WEAPONS={
   weapon02: {name:'Weapon 2', auto:true,  cooldown:10, type:'bullet', pellets:1, spread:0.04, speed:13, range:640, dmg:26, knock:7,  sprite:'weapon02', spriteH:26, shake:false},
   weapon03: {name:'Weapon 3', auto:false, cooldown:16, type:'bullet', pellets:1, spread:0.02, speed:12, range:660, dmg:44, knock:11, sprite:'weapon03', spriteH:28, shake:false},
   weapon04: {name:'Weapon 4', auto:false, cooldown:22, type:'bullet', pellets:1, spread:0.00, speed:11, range:680, dmg:55, knock:18, sprite:'weapon04', spriteH:30, shake:true },
-  weapon05: {name:'Weapon 5', auto:false, cooldown:14, type:'bullet', pellets:1, spread:0.03, speed:13, range:650, dmg:38, knock:10, sprite:'weapon05', spriteH:26, shake:false},
+  weapon05: {name:'Weapon 5', auto:false, cooldown:14, type:'bullet', pellets:1, spread:0.03, speed:13, range:650, dmg:38, knock:10, sprite:'weapon05', spriteH:26, shake:false, hitfx:'electric'},
   weapon06: {name:'Weapon 6', auto:true,  cooldown:10, type:'bullet', pellets:1, spread:0.03, speed:16, range:700, dmg:48, knock:9,  sprite:'weapon06', spriteH:22, shake:false},
   weapon07: {name:'Weapon 7', auto:false, cooldown:12, type:'bullet', pellets:1, spread:0.03, speed:14, range:650, dmg:34, knock:9,  sprite:'weapon07', spriteH:24, shake:false},
   weapon08: {name:'Weapon 8', auto:false, cooldown:26, type:'bullet', pellets:1, spread:0.00, speed:12, range:700, dmg:70, knock:20, sprite:'weapon08', spriteH:30, shake:true },
