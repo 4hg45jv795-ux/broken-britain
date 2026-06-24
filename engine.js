@@ -322,6 +322,64 @@ function drawScenery(){
   }
 }
 
+/* ── COLLECTIBLE ITEMS (keys etc.) ─────────────────────────────────────────
+   Per-section in data.js as items:[{id, at, h, label}]. Walk over one to pick
+   it up; it drops into `inventory` (a Set of ids that PERSISTS across rooms for
+   the whole playthrough, cleared only on a new game). Doors can require an item
+   via {locked:true, key:'<id>'}. If loaded[id] is a real png it's drawn; if not,
+   a gold key is drawn so the toilet key is visible even before toiletkey.png is
+   uploaded. */
+let items=[];
+const inventory=new Set();
+function spawnItems(){
+  items=[];
+  const list=SECTIONS[sectionIndex].items||[];
+  for(const d of list){ if(!inventory.has(d.id)) items.push({def:d, x:d.at, taken:false}); }
+}
+function updateItems(){
+  if(player.dead) return;
+  for(const it of items){
+    if(it.taken) continue;
+    const d=it.def;
+    if(Math.abs((player.x+PW/2)-it.x) < PW/2+34){
+      it.taken=true; inventory.add(d.id);
+      flashBanner('Picked up '+(d.label||d.id));
+      [0,4,7,12].forEach((s,i)=>setTimeout(()=>blip(520*Math.pow(2,s/12),0,0.12,'triangle',0.16),i*60));
+    }
+  }
+}
+function drawKeyFallback(cx, top, hh){
+  // a simple gold key, scaled to height hh, drawn with its top-left near (cx-?, top)
+  ctx.save(); ctx.translate(cx, top+hh/2); const s=hh/34; ctx.scale(s,s);
+  ctx.shadowColor='rgba(255,200,40,0.85)'; ctx.shadowBlur=8;
+  ctx.fillStyle='#f4c430'; ctx.strokeStyle='#7a5a10'; ctx.lineWidth=1.6;
+  ctx.beginPath(); ctx.arc(-9,0,7.5,0,7); ctx.fill(); ctx.stroke();           // bow (round head)
+  ctx.beginPath(); ctx.arc(-9,0,3,0,7); ctx.fillStyle='#221900'; ctx.fill();  // hole
+  ctx.fillStyle='#f4c430';
+  ctx.fillRect(-2,-2.4,17,4.8);                                               // shaft
+  ctx.fillRect(11,-2.4,2.6,8); ctx.fillRect(14.5,-2.4,2.6,6);                 // teeth
+  ctx.restore();
+}
+function drawItems(){
+  for(const it of items){
+    if(it.taken) continue;
+    const d=it.def; const h=(d.h||34);
+    const gy=groundAt(it.x);
+    const bob=Math.sin(performance.now()/360)*3;
+    const sx=(it.x-camX)*ZOOM, sy=(gy-h-SRCY)*ZOOM+bob;
+    if(sx<-80||sx>VW+80) continue;
+    const img=loaded[d.id];
+    if(imgOk(img)){
+      const dh=h*ZOOM, dw=dh*img.naturalWidth/img.naturalHeight;
+      ctx.save(); ctx.shadowColor='rgba(255,210,80,0.7)'; ctx.shadowBlur=10;
+      try{ ctx.drawImage(img, sx-dw/2, sy, dw, dh); }catch(_){}
+      ctx.restore();
+    } else {
+      drawKeyFallback(sx, sy, h*ZOOM);
+    }
+  }
+}
+
 /* ── ENEMY PROJECTILES: Big-Blaster bolts thrown by shooter enemies (the UFO) ── */
 let enemyBullets=[];
 function enemyFire(e){
@@ -540,9 +598,9 @@ function nextSection(){
       swap:()=>{ gotoId('dundee'); }, done:()=>{ transitioning=false; }});
     return;
   }
-  if(nextId==='glasgow'){ // Dundee -> Glasgow: title card with a 3s cut-scene track
+  if(nextId==='glasgow'){ // Dundee -> Glasgow: title card (cut-scene track removed by request)
     transitioning=true;
-    showCard({text:next.name, sound:'Glasgowcut.mp3',
+    showCard({text:next.name,
       swap:()=>{ gotoId('glasgow'); }, done:()=>{ transitioning=false; }});
     return;
   }
@@ -590,8 +648,8 @@ function enterSection(opts){
   player.y=groundAt(player.x+PW/2)-PH; player.vx=0; player.vy=0; player.onGround=true; setClip('idle');
   if(opts && typeof opts.face==='number') player.face=opts.face;
   bannerShown=false; helper.active=false; helperCool=[0,0]; activeDoor=null;
-  if(SECTIONS[sectionIndex].id==='home' && !photographerMet){
-    photographerMet=true; initNPC();              // first time on the street: the photographer turns up
+  if(SECTIONS[sectionIndex].id==='southampton' && !photographerMet){
+    photographerMet=true; initNPC();              // first time on Southampton (the streets start): the photographer turns up
   } else if(typeof npc!=='undefined' && npc.active){
     npc.x=Math.max(0,Math.min(BGW-NPCW, player.x-130)); npc.state='trail'; npc.y=groundAt(npc.x+NPCW/2)-NPCH;
   }
@@ -603,6 +661,7 @@ function enterSection(opts){
   initMkNpcs();
   spawnEnemiesForSection();
   spawnScenery();
+  spawnItems();
   refreshHelperBtns();
   updateHelperBarVisibility();
   playSectionTrack();   // plays this room's track, or silence for screen rooms / trackless interiors
@@ -627,6 +686,9 @@ function updateDoors(){
 }
 function useDoor(d){
   if(transitioning||!d) return;
+  if(d.locked && !inventory.has(d.key)){          // locked door: needs the matching item in your inventory
+    flashBanner('It&rsquo;s locked &mdash; you need a key'); blip(200,110,0.12,'square',0.16); return;
+  }
   if(d.menu){                                         // travel point (portal / departures): open its menu
     const sec=SECTIONS[sectionIndex];
     if(sec.hub) hubReturnX=d.x;                        // pop back to this spot when returning to the hub
@@ -656,6 +718,7 @@ function drawDoors(){
   let name, hint;
   if(d.menu){ name=label; hint='STRIKE to travel'; }
   else if(d.target===null){ name=label; hint='locked for now'; }
+  else if(d.locked && !inventory.has(d.key)){ name=label; hint='LOCKED \u2014 need a key'; }
   else if(d.target==='home'){ name='EXIT'; hint='STRIKE to leave'; }
   else if(d.target==='shop'){ name=label; hint='STRIKE to open'; }
   else { name=label; hint='STRIKE to enter'; }
@@ -690,9 +753,10 @@ async function requestWakeLock(){
 }
 function releaseWakeLock(){ try{ if(wakeLock){ wakeLock.release(); wakeLock=null; } }catch(_){} }
 document.addEventListener('visibilitychange',()=>{
-  const tvRolling = tvVideo && !tvVideo.paused;
-  const sceneRolling = (sceneWallVid && !sceneWallVid.paused) || (sceneFloorVid && !sceneFloorVid.paused);
-  if(document.visibilityState==='visible' && (tvRolling || sceneRolling)) requestWakeLock();
+  // Re-acquire the screen wake lock whenever we come back to the foreground during play.
+  // The browser auto-releases the lock when the tab is hidden (e.g. the phone sleeps), so
+  // this keeps the screen awake for the WHOLE game session, not just while a video rolls.
+  if(document.visibilityState==='visible' && cur && !paused) requestWakeLock();
 });
 function curScreen(){ return SCREENS[SECTIONS[sectionIndex].id] || null; }
 const _tvVidPool={};                 // src -> <video>, kept buffered so channels don't reload on switch
@@ -729,7 +793,7 @@ function tvEnter(){
     else tvVideo.addEventListener('loadeddata', tvPreloadOthers, {once:true});
   }
 }
-function tvPause(){ try{ for(const k in _tvVidPool){ _tvVidPool[k].pause(); } }catch(_){} releaseWakeLock(); }
+function tvPause(){ try{ for(const k in _tvVidPool){ _tvVidPool[k].pause(); } }catch(_){} }
 function tvNextChannel(){
   const sc=curScreen(); if(!sc||!sc.switchable) return;
   sc.idx=(sc.idx+1)%sc.files.length; screenLoad(true);
@@ -765,6 +829,31 @@ function drawTVMarker(){
   const cx=(screenCenterX(sc)-camX)*ZOOM;
   const cy=Math.max(8,(r.y-SRCY)*ZOOM-50) + Math.sin(performance.now()/260)*4;
   drawMarker(cx, cy, 'TV \u00B7 CH '+(sc.idx+1), 'STRIKE to change channel');
+}
+
+/* ── THE WINCHESTER JUKEBOX (works like the TV, but switches MUSIC) ──────────
+   When the current section has a JUKEBOX (data.js), stand within `reach` of its
+   `x` and STRIKE to flip to the next track. The chosen file becomes the room's
+   music via sectionMusic()/playSectionTrack(). Purely audio — no video, no rect. */
+function curJukebox(){ return (typeof JUKEBOX!=='undefined' && JUKEBOX[SECTIONS[sectionIndex].id]) || null; }
+let jukeHot=false;
+function updateJukebox(){
+  const jb=curJukebox();
+  jukeHot = !!jb && Math.abs((player.x+PW/2) - jb.x) <= (jb.reach||140);
+}
+function jukeNext(){
+  const jb=curJukebox(); if(!jb) return;
+  jb.idx=(jb.idx+1)%jb.files.length;
+  blip(540,820,0.05,'square',0.12); blip(300,300,0.04,'square',0.08);
+  flashBanner('Jukebox &mdash; Track '+(jb.idx+1));
+  playSectionTrack();                              // re-evaluates music; picks the new jukebox track
+}
+function drawJukeMarker(){
+  if(!jukeHot) return;
+  const jb=curJukebox();
+  const cx=(jb.x-camX)*ZOOM;
+  const cy=30 + Math.sin(performance.now()/260)*4;
+  drawMarker(cx, cy, 'JUKEBOX \u00B7 '+(jb.idx+1), 'STRIKE to change track');
 }
 
 let sceneWallVid=null, sceneFloorVid=null;     // the CURRENT zone's pooled <video> elements
@@ -1262,7 +1351,7 @@ function goFullscreen(){
 }
 function start(m){
   cur=m; FW=m.fw; FH=m.fh; PW=Math.round(PH*FW/FH); CLIPS=m.clips;
-  goFullscreen(); actx();
+  goFullscreen(); actx(); requestWakeLock();          // keep the screen awake for the whole session
   document.getElementById('select').style.display='none';
   document.getElementById('kbhint').style.display='none';
   document.getElementById('game').style.display='block';
@@ -1277,7 +1366,7 @@ function start(m){
   player.armour=0; updateArmourHUD(); refreshWeaponBtn();
   hubReturnX=200;
   helper.active=false; helperCool=[0,0]; buildHelperThumbs(); refreshHelperBtns();
-  killedEnemies.clear(); pickup.active=false;
+  killedEnemies.clear(); pickup.active=false; inventory.clear();
   setPaused(false);
   gotoId('in_house', {x:90, face:1});
   if(!raf)loop();
@@ -1290,8 +1379,9 @@ function setPaused(p){
   document.getElementById('pausemenu').classList.toggle('on',p);
   document.getElementById('pause').innerHTML=p?'&#9654;':'&#10073;&#10073;';
   const bgm=document.getElementById('bgm');
-  if(p){ bgm.pause(); tvPause(); scenePause(); pauseAllProxAudio(); }
+  if(p){ bgm.pause(); tvPause(); scenePause(); pauseAllProxAudio(); releaseWakeLock(); }
   else if(cur){
+    requestWakeLock();                               // re-acquire the wake lock on resume
     if(!musicMuted && sectionMusic()) bgm.play().catch(()=>{});
     if(curScreen()) screenLoad(true);
     if(curSceneCfg()) sceneLoad(true);
@@ -1526,6 +1616,8 @@ function drawPickup(){
 
 function sectionMusic(){
   const id=SECTIONS[sectionIndex].id;
+  const jb=(typeof JUKEBOX!=='undefined') ? JUKEBOX[id] : null;
+  if(jb) return jb.files[jb.idx];                    // jukebox rooms play the selected track
   return (!SCREENS[id] && TRACKS[id]) ? TRACKS[id] : null;
 }
 function playTrack(src){
@@ -1601,6 +1693,7 @@ function update(){
   if(player.hurtCool>0) player.hurtCool--;
   updateDoors();
   updateTV();
+  updateJukebox();
 
   if(player.dead){
     player.ct++; player.vy+=GRAV; player.y+=player.vy;
@@ -1613,7 +1706,8 @@ function update(){
   const armed=isArmed();
   if(punchEdge){
     punchEdge=false;
-    if(tvHot){ tvNextChannel(); }
+    if(jukeHot){ jukeNext(); }
+    else if(tvHot){ tvNextChannel(); }
     else if(activeDoor){ useDoor(activeDoor); }
     else if(armed){ tryFire(); }
     else if(player.onGround){
@@ -1621,7 +1715,7 @@ function update(){
       else if(player.clip==='punch'){ setClip('headbutt'); player.attackId++; sfxPunch(); }
     }
   }
-  if(armed && punchDown && !activeDoor && !tvHot){ const w=curWeapon(); if(w&&w.auto) tryFire(); }
+  if(armed && punchDown && !activeDoor && !tvHot && !jukeHot){ const w=curWeapon(); if(w&&w.auto) tryFire(); }
   const attacking=playerAttacking() && !clipDone();
 
   let moving=false;
@@ -1667,6 +1761,7 @@ function update(){
   updateLibraryNpc();
   updateMkNpcs();
   updateScenery();
+  updateItems();
   updateUfo();
   updateWanderer();
   updatePickup();
@@ -1744,6 +1839,7 @@ function draw(){
   drawUfo();
   drawWanderer();
   drawPickup();
+  drawItems();
   for(const e of enemies) drawEnemy(e);
   drawNPC();
   drawHubNpcs();
@@ -1771,6 +1867,7 @@ function draw(){
   drawBlood();
   drawDoors();
   drawTVMarker();
+  drawJukeMarker();
   drawFloaters();
   drawArenaHud();         // WAVE / SCORE / leaderboard (only shows in the arena)
   if(_shaking) ctx.restore();
