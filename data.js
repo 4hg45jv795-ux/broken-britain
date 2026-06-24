@@ -102,7 +102,9 @@ const ASSETS = [
   {key:'ufoship',  type:'img', src:'ufoship.png', optional:true},   // shooting UFO enemy (kind 8)
   {key:'bruiser',  type:'img', src:'bruiser.png', optional:true},   // Cottagers Cove thug enemy (kind 9)
   {key:'shooter',  type:'img', src:'shooter.png', optional:true},   // gunman enemy (kind 10)
-  {key:'dancer',   type:'img', src:'dancer.png', optional:true},    // Library dancing NPC (no longer an enemy)
+  {key:'tracksuit',type:'img', src:'tracksuit.png', optional:true}, // Cottagers Cove tracksuit enemy (kind 11)
+  {key:'hologram', type:'img', src:'hologram.png', optional:true},  // Library blue AI hologram NPC (centre)
+  {key:'dancer',   type:'img', src:'dancer.png', optional:true},    // dancing NPC (now in the Hip-Hop room)
   {key:'couple',   type:'img', src:'couple.png', optional:true},    // Void dancing-couple NPCs
   {key:'dgreen',   type:'img', src:'dancer_green.png',  optional:true},  // Hip-Hop room dancer (green)
   {key:'dpurple',  type:'img', src:'dancer_purple.png', optional:true},  // Hip-Hop room dancer (purple)
@@ -266,22 +268,24 @@ const SECTIONS=[
      leave (exitLeft:'home'). Nudge flatGround/srcY/charScale to taste. */
   {id:'in_library', name:'Inside &mdash; The Library', bgKey:'room_library', BGW:2172, zoom:1.0, srcY:8, flatGround:332, charScale:1.7, interior:true, walkMul:1.7, exitLeft:'home', exitRight:'home',
    enemies:[],
-   /* The Dancer is now a harmless background NPC — he just does 'The Wobble' on the
-      spot (no walking, not an enemy). Dancer.mp3 fades in as you get near him.       */
-   npcs:[ {img:'dancer', fw:163, fh:310, at:1100, h:135, face:1,
-           clip:{start:8, count:6, fps:9, loop:true}, mp3:'Dancer.mp3', range:180} ],
+   /* A blue AI HOLOGRAM hums in the CENTRE of the library (x:1086, room is 2172 wide).
+      Harmless background NPC with a proximity-audio slot — Hologram.mp3 fades in as you
+      approach. Optional art: hologram.png as a single-row strip; until it exists nothing
+      is drawn, but the proximity sound still works. Nudge fw/fh/h/range once art is in. */
+   npcs:[ {img:'hologram', fw:240, fh:360, at:1086, h:170, face:1,
+           clip:{start:0, count:6, fps:8, loop:true}, mp3:'Hologram.mp3', range:220} ],
    doors:[]},
   /* WINCHESTER swapped to the wide pub panorama (room winchester.jpeg now 2172x387).
      zoom:1.0 shows an 800px-wide slice. Character made BIGGER (charScale 2.2) and the view
      panned down (srcY:27) with flatGround:360 so he walks the front floorboards IN FRONT of
      the bar stools (seats behind him). EXIT from EITHER end by walking off the edge
      (exitLeft + exitRight). Nudge flatGround/charScale to taste. */
-  /* The TOILET door sits on the LEFT of the bar (x:170, by the Toilets sign) and is LOCKED
-     until you carry 'toiletkey' (now found in DUNDEE). The JUKEBOX (see JUKEBOX below) sits
-     on the RIGHT at x:1850 — STRIKE near it to flip through its track slots, like the house
-     TV but for music. Nudge these x values to line them up with your bar art. */
+  /* Positions measured against room winchester.jpeg (2172 wide): the TOILET door sits under
+     the green "Toilets" sign (x:880) and is LOCKED until you carry 'toiletkey' (found in
+     DUNDEE). The JUKEBOX (see JUKEBOX below) is the Wurlitzer at the far right (x:1994) —
+     STRIKE near it to flip through its track slots, like the house TV but for music. */
   {id:'in_winchester', name:'Inside &mdash; The Winchester', bgKey:'room_winchester', BGW:2172, zoom:1.0, srcY:27, flatGround:360, charScale:2.2, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
-   doors:[ {x:170, w:110, label:'The Toilet', target:'in_toilet', locked:true, key:'toiletkey'} ]},
+   doors:[ {x:880, w:110, label:'The Toilet', target:'in_toilet', locked:true, key:'toiletkey'} ]},
 
   /* ── THE WINCHESTER TOILET (the gents). Reached from the locked door inside the
      Winchester. Placeholder dark room until room toilet.jpeg exists; EXIT door goes
@@ -297,9 +301,8 @@ const SECTIONS=[
      TRACKS (see below) and a room-background image in ASSETS. */
   /* Police Station is a wide walk-through (enquiries -> custody cells -> staff
      room) so it uses the full 2182px-wide image. srcY/flatGround/charScale are
-     starting guesses — nudge on the phone. EXIT door sits near the entrance.
-     walkMul:2.0 makes him cover ground at a sensible pace in this low-zoom room. */
-  {id:'in_police', name:'Inside &mdash; Police Station', bgKey:'room_police', BGW:2182, zoom:0.85, srcY:150, flatGround:545, charScale:2.2, interior:true, walkMul:2.0, exitLeft:'home', enemies:[],
+     starting guesses — nudge on the phone. EXIT door sits near the entrance. */
+  {id:'in_police', name:'Inside &mdash; Police Station', bgKey:'room_police', BGW:2182, zoom:0.85, srcY:150, flatGround:545, charScale:2.2, interior:true, exitLeft:'home', enemies:[],
    doors:[]},   // EXIT by walking off the far LEFT of the room (no STRIKE) — exitLeft:'home'
   /* ── SLAMMIN' VINYL (the club lobby; room nightclub.jpeg, 2048px wide). Leave
      by walking off the far LEFT, back through the turnstiles (exitLeft:'home').
@@ -347,7 +350,8 @@ const SECTIONS=[
   {id:'in_hiphop', name:'Room 2 &mdash; Hip-Hop', bgKey:'room_hiphop', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
    /* three background dancers (NOT enemies) just looping a dance on the floor */
    npcs:[ {img:'dgreen',  fw:156, fh:231, at:185, h:104, yOff:0, face:1,  clip:{start:0,count:6,fps:9,loop:true}},
-          {img:'dpurple', fw:157, fh:240, at:400, h:110, yOff:0, face:-1, clip:{start:0,count:6,fps:8,loop:true}} ],
+          {img:'dpurple', fw:157, fh:240, at:400, h:110, yOff:0, face:-1, clip:{start:0,count:6,fps:8,loop:true}},
+          {img:'dancer',  fw:163, fh:310, at:300, h:135, yOff:0, face:1,  clip:{start:8,count:6,fps:9,loop:true}, mp3:'Dancer.mp3', range:180} ],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
   {id:'in_special', name:'Room 3 &mdash; Special Guest', bgKey:'room_special', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
@@ -362,7 +366,8 @@ const SECTIONS=[
   {id:'in_cottagers', name:'Cottagers Cove', bgKey:'room_cottagers', BGW:2172, zoom:0.72, srcY:160, flatGround:620, charScale:2.5, interior:true, walkMul:2.2,
    exitLeft:{target:'in_crackadilly', x:5500, face:-1},   // far LEFT -> back to the Crackadilly underpass entrance
    exitRight:'home',                                       // far RIGHT -> out to the main hub
-   enemies:[ {at:650,kind:9,hp:60}, {at:1250,kind:9,hp:60}, {at:1850,kind:9,hp:60} ],
+   enemies:[ {at:650,kind:9,hp:60}, {at:1250,kind:9,hp:60}, {at:1850,kind:9,hp:60},
+             {at:950,kind:11,hp:50}, {at:1550,kind:11,hp:50} ],   // bruisers + tracksuit dancers
    doors:[]},
 
   /* Placeholder for travel destinations that aren't built yet (easyJet / train
@@ -400,7 +405,7 @@ const TRACKS={ select:'Character selection screen.mp3', home:'Home.mp3', street:
    index.html (EXACT lower-case names) to fill the rest. Missing files just stay
    silent. Add a jukebox to any other room by adding another `id:{...}` entry. */
 const JUKEBOX={
-  in_winchester:{ x:1850, reach:150, idx:0,
+  in_winchester:{ x:1994, reach:150, idx:0,
     files:['Winchester.mp3','Juke2.mp3','Juke3.mp3','Juke4.mp3','Juke5.mp3',
            'Juke6.mp3','Juke7.mp3','Juke8.mp3','Juke9.mp3','Juke10.mp3'] },
 };
@@ -472,13 +477,13 @@ const TRAVEL_MENUS={
      drops you straight into that level (you can still walk it through to the
      next, or run off the left edge to come back to the hub).                */
   trainstation: { title:'DigiTown Station', dests:[
-    {label:'The Streets',         target:'southampton'},   // start of the run, kept at the top
-    {label:'Southampton',         target:'southampton'},   // then the rest in PLAY order:
-    {label:'The Park',            target:'park'},
-    {label:'Belfast',             target:'belfast'},
-    {label:'The Red Hand (Pub)',  target:'pub'},
-    {label:'Dundee',              target:'dundee'},
-    {label:'Glasgow',             target:'glasgow'},
+    {label:'Southampton',            target:'southampton'},   // the streets, named back-to-back
+    {label:'The Park',               target:'park'},          // in the order you play them
+    {label:'Belfast',                target:'belfast'},
+    {label:'The Red Hand (Pub)',     target:'pub'},
+    {label:'Dundee',                 target:'dundee'},
+    {label:'Glasgow',                target:'glasgow'},
+    {label:'Southside (the Street)', target:'street'},
   ]},
 };
 const SHOP=[
