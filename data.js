@@ -89,6 +89,8 @@ const ASSETS = [
   {key:'room_hiphop',       type:'img', src:'room hiphop.jpeg', optional:true},
   {key:'room_special',      type:'img', src:'room special.jpeg', optional:true},
   {key:'room_cottagers',    type:'img', src:'room cottagers.jpeg', optional:true},
+  /* ── NEW: the Winchester gents toilet (placeholder until room toilet.jpeg exists) ── */
+  {key:'room_toilet',       type:'img', src:'room toilet.jpeg', optional:true},
   {key:'bg',       type:'img', src:'bg.jpg'},
   {key:'pub',      type:'img', src:'pub2.jpeg'},
   {key:'dundee',   type:'img', src:'dundee.jpeg'},
@@ -104,6 +106,11 @@ const ASSETS = [
   {key:'couple',   type:'img', src:'couple.png', optional:true},    // Void dancing-couple NPCs
   {key:'dgreen',   type:'img', src:'dancer_green.png',  optional:true},  // Hip-Hop room dancer (green)
   {key:'dpurple',  type:'img', src:'dancer_purple.png', optional:true},  // Hip-Hop room dancer (purple)
+  /* ── NEW: Drum & Bass room dancing couples ── */
+  {key:'dnbcouple1', type:'img', src:'dnbcouple1.png', optional:true},   // Freddy + Queen couple (18 frames)
+  {key:'dnbcouple2', type:'img', src:'dnbcouple2.png', optional:true},   // green alien + raver couple (15 frames)
+  /* ── NEW: the Winchester toilet KEY pickup (drawn as a gold key if no png) ── */
+  {key:'toiletkey',  type:'img', src:'toiletkey.png', optional:true},
   {key:'photog',   type:'img', src:'photog2.png'},
   {key:'athlete',  type:'img', src:'athlete.png', optional:true},
   {key:'police',   type:'img', src:'police4.png', optional:true},
@@ -165,9 +172,13 @@ const SECTIONS=[
      {x:2490, w:110, label:"Slammin' Vinyl",    target:'in_nightclub'},
      {x:2700, w:120, label:'Crackadilly Gardens',  target:'in_crackadilly'}
    ]},
-  {id:'street', name:'Southside &mdash; the street', bgKey:'bg',  BGW:4047, srcY:120, flatGround:null, chain:true, next:'park',
-   enemies:[ {at:1200,kind:0},{at:1700,kind:1},{at:2300,kind:0},{at:3300,kind:1},{at:3700,kind:0} ]},
-  {id:'park', name:'Standard UK Park', bgKey:'park', BGW:1763, srcY:0, flatGround:196, chain:true, next:'belfast', prev:'street',
+  /* ── THE STREETS chain. SOUTHAMPTON is now the FIRST level (entered from the
+     Portal / Train Station "The Streets"); the old Southside "street" level is now
+     the LAST stop before the chain loops back to the hub. The photographer's first
+     appearance + cutscene now triggers at the start of Southampton (see engine.js). */
+  {id:'southampton', name:'Southampton &mdash; Above Bar Street', bgKey:'southampton', BGW:1879, srcY:90, flatGround:296, chain:true, next:'park', prev:null,
+   enemies:[ {at:430,kind:0},{at:640,kind:0},{at:850,kind:0},{at:1050,kind:0},{at:1250,kind:0},{at:1450,kind:0},{at:1650,kind:0},{at:1800,kind:0} ]},
+  {id:'park', name:'Standard UK Park', bgKey:'park', BGW:1763, srcY:0, flatGround:196, chain:true, next:'belfast', prev:'southampton',
    enemies:[ {at:520,kind:3},{at:880,kind:3},{at:1240,kind:3} ],
    aliens:[ {at:700,kind:2},{at:1020,kind:2},{at:1360,kind:2},{at:1560,kind:2} ]},
   {id:'belfast', name:'Ballymacarrett &mdash; the loyal mile', bgKey:'bg3', BGW:2172, srcY:380, flatGround:560, chain:true, next:'pub', prev:'park',
@@ -176,10 +187,10 @@ const SECTIONS=[
    enemies:[ ]},
   {id:'dundee',  name:'Welcome to Dundee', bgKey:'dundee', BGW:560, srcY:65, flatGround:270, chain:true, next:'glasgow', prev:'pub',
    enemies:[ ]},
-  {id:'glasgow', name:'Glasgow &mdash; the Trongate', bgKey:'glasgow', BGW:2672, srcY:90, flatGround:296, chain:true, next:'southampton', prev:'dundee',
+  {id:'glasgow', name:'Glasgow &mdash; the Trongate', bgKey:'glasgow', BGW:2672, srcY:90, flatGround:296, chain:true, next:'street', prev:'dundee',
    enemies:[ {at:230,kind:6,hp:1,static:true},{at:760,kind:5},{at:1080,kind:0},{at:1380,kind:5},{at:1700,kind:1},{at:2000,kind:5},{at:2480,kind:5} ]},
-  {id:'southampton', name:'Southampton &mdash; Above Bar Street', bgKey:'southampton', BGW:1879, srcY:90, flatGround:296, chain:true, next:null, prev:'glasgow',
-   enemies:[ {at:430,kind:0},{at:640,kind:0},{at:850,kind:0},{at:1050,kind:0},{at:1250,kind:0},{at:1450,kind:0},{at:1650,kind:0},{at:1800,kind:0} ]},
+  {id:'street', name:'Southside &mdash; the street', bgKey:'bg',  BGW:4047, srcY:120, flatGround:null, chain:true, next:null, prev:'glasgow',
+   enemies:[ {at:1200,kind:0},{at:1700,kind:1},{at:2300,kind:0},{at:3300,kind:1},{at:3700,kind:0} ]},
 
   /* ── MORTAL KOMBAT (entered from the hub Portal -> travel menu) ──
      Standalone fight arena: the UMK3 "Blue Portal" bridge. Background
@@ -188,7 +199,7 @@ const SECTIONS=[
      edge gives the "THE END" exit and the left edge returns to the hub.
      Ambient MK characters (NPCs) are wired separately in MK_NPCS below. */
   {id:'mk', name:'The Portal &mdash; Mortal Kombat', bgKey:'mk', BGW:1432, srcY:0, flatGround:206, chain:true, next:null, prev:null,
-   enemies:[ {at:360,kind:4},{at:620,kind:0},{at:880,kind:1},{at:1120,kind:4},{at:1340,kind:0} ]},
+   enemies:[ {at:360,kind:4},{at:620,kind:0},{at:880,kind:1},{at:1000,kind:10,hp:80},{at:1120,kind:4},{at:1340,kind:0} ]},
 
   /* ── BLACK LEVEL (entered from the hub Portal -> travel menu) ──────────
      A long, currently-black stage that hosts the MP4 scenery system below
@@ -257,14 +268,27 @@ const SECTIONS=[
       spot (no walking, not an enemy). Dancer.mp3 fades in as you get near him.       */
    npcs:[ {img:'dancer', fw:163, fh:310, at:1100, h:135, face:1,
            clip:{start:8, count:6, fps:9, loop:true}, mp3:'Dancer.mp3', range:180} ],
+   /* ── THE TOILET KEY lives here, on a shelf deep in the Library (walk right to find
+      it). Pick it up to unlock the Winchester toilet door. Nudge `at`/`h` to taste, or
+      move this whole `items` block to any other level to hide the key elsewhere. ── */
+   items:[ {id:'toiletkey', at:1700, h:34, label:'the Winchester toilet key'} ],
    doors:[]},
   /* WINCHESTER swapped to the wide pub panorama (room winchester.jpeg now 2172x387).
      zoom:1.0 shows an 800px-wide slice. Character made BIGGER (charScale 2.2) and the view
      panned down (srcY:27) with flatGround:360 so he walks the front floorboards IN FRONT of
      the bar stools (seats behind him). EXIT from EITHER end by walking off the edge
      (exitLeft + exitRight). Nudge flatGround/charScale to taste. */
+  /* The TOILET door sits mid-room (x:1400) and is LOCKED until you carry 'toiletkey'
+     (found in the Library). The JUKEBOX (see JUKEBOX below) sits at x:300 — STRIKE near
+     it to flip through its track slots, exactly like the house TV but for music. */
   {id:'in_winchester', name:'Inside &mdash; The Winchester', bgKey:'room_winchester', BGW:2172, zoom:1.0, srcY:27, flatGround:360, charScale:2.2, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
-   doors:[]},
+   doors:[ {x:1400, w:90, label:'The Toilet', target:'in_toilet', locked:true, key:'toiletkey'} ]},
+
+  /* ── THE WINCHESTER TOILET (the gents). Reached from the locked door inside the
+     Winchester. Placeholder dark room until room toilet.jpeg exists; EXIT door goes
+     back to the bar. Nudge BGW/srcY/flatGround/charScale once the art is in. */
+  {id:'in_toilet', name:'Inside &mdash; The Gents', bgKey:'room_toilet', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
+   doors:[ {x:506, w:92, label:'EXIT &mdash; back to the bar', target:'in_winchester'} ]},
 
   /* ── NEW INTERIOR ROOMS ───────────────────────────────────────────────
      Same shape as the rooms above: enter from the hub, EXIT door (right side)
@@ -274,15 +298,17 @@ const SECTIONS=[
      TRACKS (see below) and a room-background image in ASSETS. */
   /* Police Station is a wide walk-through (enquiries -> custody cells -> staff
      room) so it uses the full 2182px-wide image. srcY/flatGround/charScale are
-     starting guesses — nudge on the phone. EXIT door sits near the entrance. */
-  {id:'in_police', name:'Inside &mdash; Police Station', bgKey:'room_police', BGW:2182, zoom:0.85, srcY:150, flatGround:545, charScale:2.2, interior:true, exitLeft:'home', enemies:[],
+     starting guesses — nudge on the phone. EXIT door sits near the entrance.
+     walkMul:2.0 makes him cover ground at a sensible pace in this low-zoom room. */
+  {id:'in_police', name:'Inside &mdash; Police Station', bgKey:'room_police', BGW:2182, zoom:0.85, srcY:150, flatGround:545, charScale:2.2, interior:true, walkMul:2.0, exitLeft:'home', enemies:[],
    doors:[]},   // EXIT by walking off the far LEFT of the room (no STRIKE) — exitLeft:'home'
   /* ── SLAMMIN' VINYL (the club lobby; room nightclub.jpeg, 2048px wide). Leave
      by walking off the far LEFT, back through the turnstiles (exitLeft:'home').
      The 3 doors lead to the club rooms — nudge each x so the marker sits over the
      painted door, and tune srcY/flatGround/charScale so feet land on the floor in
-     front of them (mirrors the police-room camera as a sensible starting point). */
-  {id:'in_nightclub', name:"Inside &mdash; Slammin' Vinyl", bgKey:'room_nightclub', BGW:2048, zoom:0.85, srcY:150, flatGround:560, charScale:2.5, interior:true, exitLeft:'home', enemies:[],
+     front of them (mirrors the police-room camera as a sensible starting point).
+     walkMul:2.0 stops the walk feeling sluggish at this low zoom. */
+  {id:'in_nightclub', name:"Inside &mdash; Slammin' Vinyl", bgKey:'room_nightclub', BGW:2048, zoom:0.85, srcY:150, flatGround:560, charScale:2.5, interior:true, walkMul:2.0, exitLeft:'home', enemies:[],
    doors:[ {x:958,  w:100, label:'Room 1 &mdash; Drum &amp; Bass', target:'in_dnb'},
            {x:1335, w:100, label:'Room 2 &mdash; Hip-Hop',        target:'in_hiphop'},
            {x:1712, w:100, label:'Room 3 &mdash; Special Guest',  target:'in_special'} ]},
@@ -315,6 +341,9 @@ const SECTIONS=[
      special.jpeg). Each loops its own track (see TRACKS). The engine draws a dark
      room until the art exists; nudge BGW/srcY/flatGround/charScale once it does. */
   {id:'in_dnb', name:'Room 1 &mdash; Drum &amp; Bass', bgKey:'room_dnb', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
+   /* two background dancing couples (NOT enemies) just looping a dance on the floor */
+   npcs:[ {img:'dnbcouple1', fw:203, fh:240, at:175, h:120, yOff:0, face:1,  clip:{start:0,count:18,fps:8,loop:true}},
+          {img:'dnbcouple2', fw:244, fh:240, at:410, h:120, yOff:0, face:-1, clip:{start:0,count:15,fps:8,loop:true}} ],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
   {id:'in_hiphop', name:'Room 2 &mdash; Hip-Hop', bgKey:'room_hiphop', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
    /* three background dancers (NOT enemies) just looping a dance on the floor */
@@ -356,11 +385,26 @@ const TRACKS={ select:'Character selection screen.mp3', home:'Home.mp3', street:
      their sound from the .mp4 instead and are deliberately left out here.  */
   in_church:'Church.mp3', in_gunstore:'Gunstore.mp3', in_easyjet:'Easyjet.mp3',
   in_trainstation:'Trainstation.mp3', in_library:'Library.mp3', in_winchester:'Winchester.mp3',
+  in_toilet:'Toilet.mp3',
   /* ── NEW ROOM MUSIC SLOTS (upload these three .mp3s next to index.html) ── */
   in_police:'Police.mp3', in_nightclub:'Slamminvinyl.mp3', in_crackadilly:'Crackadilly.mp3',
   in_dnb:'Dnb.mp3', in_hiphop:'Hiphop.mp3', in_special:'Specialguest.mp3', in_cottagers:'Cottagerscove.mp3',
   /* ── BLACK LEVEL + HOLODECK MUSIC (the MP4s are silent; these are the sound) ── */
   blacklevel:'Void.mp3', holodeck:'Holodeck.mp3' };
+/* ── THE WINCHESTER JUKEBOX ────────────────────────────────────────────────
+   Works exactly like the house TV, but for MUSIC. Stand near the jukebox in the
+   Winchester and STRIKE to flip to the next track; the chosen .mp3 becomes the
+   room's music. `x` is the jukebox spot in ROOM pixels (room is 2172 wide) and
+   `reach` is how close you must be before the STRIKE-to-change prompt appears.
+   TEN slots are provided below — Track 1 is the existing Winchester.mp3 so the
+   room sounds the same until you flip it; upload Juke2.mp3 .. Juke10.mp3 next to
+   index.html (EXACT lower-case names) to fill the rest. Missing files just stay
+   silent. Add a jukebox to any other room by adding another `id:{...}` entry. */
+const JUKEBOX={
+  in_winchester:{ x:300, reach:150, idx:0,
+    files:['Winchester.mp3','Juke2.mp3','Juke3.mp3','Juke4.mp3','Juke5.mp3',
+           'Juke6.mp3','Juke7.mp3','Juke8.mp3','Juke9.mp3','Juke10.mp3'] },
+};
 /* ── ROOM SCREENS (looping .mp4s with sound, painted onto wall screens) ──
    Each room id below maps to a screen rectangle (measured in THAT room's
    background-image pixels, same space as the room jpeg) plus the video
@@ -414,7 +458,7 @@ const SCENE_VIDEOS = {
    placeholder. Add/replace destinations here as new levels are built.       */
 const TRAVEL_MENUS={
   portal: { title:'The Portal', dests:[
-    {label:'The Streets', target:'street'},          // already wired to the original level chain
+    {label:'The Streets', target:'southampton'},     // streets chain now STARTS at Southampton
     {label:'Mortal Kombat', target:'mk'},            // the UMK3 "Blue Portal" bridge arena
     {label:'Survive Waves in the Void', target:'blacklevel'},         // black level: tiled MP4 wall + floor scenery
     {label:'The Holodeck', target:'holodeck'},       // full-screen MP4 backdrop, doubled side-by-side
@@ -430,7 +474,7 @@ const TRAVEL_MENUS={
      drops you straight into that level (you can still walk it through to the
      next, or run off the left edge to come back to the hub).                */
   trainstation: { title:'DigiTown Station', dests:[
-    {label:'The Streets',         target:'street'},
+    {label:'The Streets',         target:'southampton'},
     {label:'The Park',            target:'park'},
     {label:'Belfast',             target:'belfast'},
     {label:'The Red Hand (Pub)',  target:'pub'},
