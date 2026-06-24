@@ -107,7 +107,7 @@ const ASSETS = [
   {key:'dgreen',   type:'img', src:'dancer_green.png',  optional:true},  // Hip-Hop room dancer (green)
   {key:'dpurple',  type:'img', src:'dancer_purple.png', optional:true},  // Hip-Hop room dancer (purple)
   /* ── NEW: Drum & Bass room dancing couples ── */
-  {key:'dnbcouple1', type:'img', src:'dnbcouple1.png', optional:true},   // Freddy + Queen couple (18 frames)
+  {key:'dnbcouple1', type:'img', src:'dnbcouple1.png', optional:true},   // Freddy + Queen couple (15 frames)
   {key:'dnbcouple2', type:'img', src:'dnbcouple2.png', optional:true},   // green alien + raver couple (15 frames)
   /* ── NEW: the Winchester toilet KEY pickup (drawn as a gold key if no png) ── */
   {key:'toiletkey',  type:'img', src:'toiletkey.png', optional:true},
@@ -342,8 +342,8 @@ const SECTIONS=[
      room until the art exists; nudge BGW/srcY/flatGround/charScale once it does. */
   {id:'in_dnb', name:'Room 1 &mdash; Drum &amp; Bass', bgKey:'room_dnb', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
    /* two background dancing couples (NOT enemies) just looping a dance on the floor */
-   npcs:[ {img:'dnbcouple1', fw:203, fh:240, at:175, h:120, yOff:0, face:1,  clip:{start:0,count:18,fps:8,loop:true}},
-          {img:'dnbcouple2', fw:244, fh:240, at:410, h:120, yOff:0, face:-1, clip:{start:0,count:15,fps:8,loop:true}} ],
+   npcs:[ {img:'dnbcouple1', fw:328, fh:310, at:175, h:130, yOff:0, face:1,  clip:{start:0,count:15,fps:8,loop:true}},
+          {img:'dnbcouple2', fw:260, fh:272, at:410, h:130, yOff:0, face:-1, clip:{start:0,count:15,fps:8,loop:true}} ],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
   {id:'in_hiphop', name:'Room 2 &mdash; Hip-Hop', bgKey:'room_hiphop', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
    /* three background dancers (NOT enemies) just looping a dance on the floor */
