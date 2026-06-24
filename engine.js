@@ -1128,7 +1128,7 @@ function fireWeapon(w){
     const spread=(Math.random()*2-1)*w.spread;
     bullets.push({ x:m.x, y:m.y, vx:player.face*w.speed*Math.cos(spread), vy:w.speed*Math.sin(spread),
                    dmg:w.dmg, knock:w.knock, range:w.range, traveled:0, sprite:w.sprite, spriteH:w.spriteH,
-                   hitfx:(w.sprite?'electric':'fire') });   // neon/plasma weapons electrocute, plain bullets burn
+                   hitfx:w.hitfx });   // only weapons with an explicit hitfx get the fire/electric burst
   }
 }
 function tryFire(){
@@ -1167,10 +1167,12 @@ function updateBullets(){
       if(Math.abs(b.x-ex) < e.w*0.5+5 && Math.abs(b.y-ey) < e.h*0.5){
         hitEnemy(e, b.dmg, b.knock, b.vx>=0?1:-1);
         vfx.push({type:'spark', x:b.x, y:b.y, t:0, life:8});
-        spawnBlood(b.x, b.y, b.vx>=0?1:-1);          // blood stays; plus a weapon-specific burst:
-        spawnHitFx(b.x, b.y, b.hitfx);
-        if(b.hitfx==='electric') e.shockT=Math.max(e.shockT||0,16);  // crackles over them a moment
-        else e.burnT=Math.max(e.burnT||0,22);                         // flames lick up off them
+        spawnBlood(b.x, b.y, b.vx>=0?1:-1);          // blood stays for every weapon
+        if(b.hitfx){                                 // only weapons with a hitfx add the extra burst
+          spawnHitFx(b.x, b.y, b.hitfx);
+          if(b.hitfx==='electric') e.shockT=Math.max(e.shockT||0,16);  // crackles over them a moment
+          else e.burnT=Math.max(e.burnT||0,22);                         // flames lick up off them
+        }
         b.dead=true; break;
       }
     }
