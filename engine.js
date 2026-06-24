@@ -170,12 +170,16 @@ const ENEMY_KINDS=[
   // 9 = BRUISER: heavyset bare-knuckle thug (bruiser.png). 18 frames -> 0-5 running,
   //     6-11 punching (unused by the simple enemy AI), 12-17 dying. Melee only; lives in
   //     Cottagers Cove. `scale` sizes him against the big-room player — nudge to taste.
-  {img:'bruiser', fw:196, fh:237, scale:2.0, color:'#cdb89a', hair:'#3a2a1e', mp3:'Bruiser.mp3',
+  {img:'bruiser', fw:196, fh:237, scale:4.0, color:'#cdb89a', hair:'#3a2a1e', mp3:'Bruiser.mp3',
    clips:{walk:{start:0,count:6,fps:11,loop:true}, die:{start:12,count:6,fps:10,loop:false}}},
   // 10 = GUNMAN: hooded shooter (shooter.png). 12 frames -> 0-3 walk, 4-7 aim/fire, 8-11 die.
   //      Fires the Big-Blaster bolt and plays its SHOOT pose while firing. In the Holodeck.
   {img:'shooter', fw:292, fh:343, scale:1.7, shooter:true, shotDmg:10, color:'#3a4250', hair:'#20242c', mp3:'Gunman.mp3',
    clips:{walk:{start:0,count:4,fps:9,loop:true}, shoot:{start:4,count:4,fps:11,loop:false}, die:{start:8,count:4,fps:9,loop:false}}},
+  // 11 = TRACKSUIT (tracksuit.png). 12 dance-pose frames -> 0-9 a strut/dance loop used as the
+  //      "walk", 10-11 used as the death flourish. Melee only; lives in Cottagers Cove.
+  {img:'tracksuit', fw:239, fh:426, scale:2.2, color:'#1fb6c9', hair:'#e8e4d8', mp3:'Tracksuit.mp3',
+   clips:{walk:{start:0,count:10,fps:8,loop:true}, die:{start:10,count:2,fps:6,loop:false}}},
 ];
 const EH=78;
 let enemies=[];
@@ -207,6 +211,8 @@ function updateEnemies(){
   for(const e of enemies){
     e.y=groundAt(e.x+e.w/2)-e.h-(ENEMY_KINDS[e.kind].hover||0);
     if(e.state==='dead') continue;
+    if(e.shockT>0){ e.shockT--; if(e.shockT%2===0) vfx.push({type:'electric', x:e.x+e.w/2+(Math.random()*e.w*0.5-e.w*0.25), y:e.y+e.h*0.4+(Math.random()*e.h*0.3), t:0, life:6}); }
+    if(e.burnT>0){ e.burnT--; for(let i=0;i<2;i++) vfx.push({type:'fire', x:e.x+e.w/2+(Math.random()*e.w*0.6-e.w*0.3), y:e.y+e.h*0.72, vx:(Math.random()-0.5)*0.6, vy:-1-Math.random()*1.4, t:0, life:14+Math.floor(Math.random()*10)}); }
     if(e.state==='die'){ e.ct++; if(enemyClipDone(e)){ e.state='dead'; if(e.id) killedEnemies.add(e.id); } continue; }
     // walking / chasing the player
     const K=ENEMY_KINDS[e.kind];
@@ -1121,7 +1127,8 @@ function fireWeapon(w){
   for(let i=0;i<w.pellets;i++){
     const spread=(Math.random()*2-1)*w.spread;
     bullets.push({ x:m.x, y:m.y, vx:player.face*w.speed*Math.cos(spread), vy:w.speed*Math.sin(spread),
-                   dmg:w.dmg, knock:w.knock, range:w.range, traveled:0, sprite:w.sprite, spriteH:w.spriteH });
+                   dmg:w.dmg, knock:w.knock, range:w.range, traveled:0, sprite:w.sprite, spriteH:w.spriteH,
+                   hitfx:(w.sprite?'electric':'fire') });   // neon/plasma weapons electrocute, plain bullets burn
   }
 }
 function tryFire(){
@@ -1160,14 +1167,29 @@ function updateBullets(){
       if(Math.abs(b.x-ex) < e.w*0.5+5 && Math.abs(b.y-ey) < e.h*0.5){
         hitEnemy(e, b.dmg, b.knock, b.vx>=0?1:-1);
         vfx.push({type:'spark', x:b.x, y:b.y, t:0, life:8});
-        spawnBlood(b.x, b.y, b.vx>=0?1:-1);
+        spawnBlood(b.x, b.y, b.vx>=0?1:-1);          // blood stays; plus a weapon-specific burst:
+        spawnHitFx(b.x, b.y, b.hitfx);
+        if(b.hitfx==='electric') e.shockT=Math.max(e.shockT||0,16);  // crackles over them a moment
+        else e.burnT=Math.max(e.burnT||0,22);                         // flames lick up off them
         b.dead=true; break;
       }
     }
   }
   bullets=bullets.filter(b=>!b.dead);
 }
-function updateVfx(){ for(const f of vfx) f.t++; vfx=vfx.filter(f=>f.t<f.life); }
+function spawnHitFx(x,y,kind){
+  if(kind==='electric'){
+    vfx.push({type:'electric', x, y, t:0, life:12});
+    for(let i=0;i<4;i++) vfx.push({type:'spark', x:x+(Math.random()*10-5), y:y+(Math.random()*10-5), t:0, life:7});
+  } else { // fire
+    for(let i=0;i<7;i++) vfx.push({type:'fire', x:x+(Math.random()*10-5), y:y+(Math.random()*8-4),
+      vx:(Math.random()-0.5)*1.4, vy:-1.0-Math.random()*2.0, t:0, life:16+Math.floor(Math.random()*12)});
+  }
+}
+function updateVfx(){
+  for(const f of vfx){ f.t++; if(f.type==='fire'){ f.x+=f.vx||0; f.y+=f.vy||0; f.vy=(f.vy||0)+0.04; } }
+  vfx=vfx.filter(f=>f.t<f.life);
+}
 function drawBullets(){
   for(const b of bullets){
     const sx=(b.x-camX)*ZOOM, sy=(b.y-SRCY)*ZOOM;
@@ -1211,8 +1233,68 @@ function drawVfx(){
       grd.addColorStop(0.5,'rgba(255,140,20,'+(0.8-p*0.8)+')');
       grd.addColorStop(1,'rgba(120,30,0,0)');
       ctx.fillStyle=grd; ctx.beginPath(); ctx.arc(sx,sy,rr,0,7); ctx.fill(); ctx.restore();
+    } else if(f.type==='fire'){
+      const r=(7*ZOOM)*(1-p*0.55);
+      ctx.save(); ctx.globalCompositeOperation='lighter';
+      const g=ctx.createRadialGradient(sx,sy,0,sx,sy,Math.max(1,r));
+      g.addColorStop(0,'rgba(255,246,205,'+(0.9*(1-p))+')');
+      g.addColorStop(0.45,'rgba(255,150,30,'+(0.75*(1-p))+')');
+      g.addColorStop(1,'rgba(190,40,0,0)');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(sx,sy,Math.max(1,r),0,7); ctx.fill(); ctx.restore();
+    } else if(f.type==='electric'){
+      ctx.save(); ctx.globalCompositeOperation='lighter';
+      ctx.strokeStyle='rgba(150,230,255,'+(1-p)+')'; ctx.shadowColor='#7fe8ff'; ctx.shadowBlur=8; ctx.lineWidth=2;
+      for(let b=0;b<3;b++){
+        let ang=Math.random()*Math.PI*2, len=(14+Math.random()*16)*ZOOM, x=sx, y=sy;
+        ctx.beginPath(); ctx.moveTo(x,y);
+        for(let s=0;s<4;s++){ x+=Math.cos(ang)*len/4+(Math.random()*8-4); y+=Math.sin(ang)*len/4+(Math.random()*8-4); ctx.lineTo(x,y); }
+        ctx.stroke();
+      }
+      ctx.restore();
     }
   }
+}
+
+/* ── RAVE FX (Drum & Bass room): drifting coloured haze, a sweeping laser fan and the
+   odd strobe flash, all time-driven so the room feels alive. Screen-space overlay. ── */
+function raveActive(){ return SECTIONS[sectionIndex].id==='in_dnb'; }
+function drawRaveSmoke(){
+  if(!raveActive()) return;
+  const t=performance.now()/1000;
+  ctx.save(); ctx.globalCompositeOperation='lighter';
+  for(let i=0;i<5;i++){
+    const px=(Math.sin(t*0.15+i*1.7)*0.5+0.5)*VW;
+    const py=VH*(0.42+0.18*Math.sin(t*0.2+i));
+    const r=110+60*Math.sin(t*0.3+i*2);
+    const hue=(t*30+i*60)%360;
+    const g=ctx.createRadialGradient(px,py,0,px,py,Math.max(1,r));
+    g.addColorStop(0,'hsla('+hue+',80%,60%,0.06)');
+    g.addColorStop(1,'hsla('+hue+',80%,60%,0)');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(px,py,Math.max(1,r),0,7); ctx.fill();
+  }
+  ctx.restore();
+}
+function drawRaveLights(){
+  if(!raveActive()) return;
+  const t=performance.now()/1000;
+  ctx.save(); ctx.globalCompositeOperation='lighter';
+  const emitters=[{x:VW*0.25,y:-8},{x:VW*0.75,y:-8}];
+  for(let e=0;e<emitters.length;e++){
+    const em=emitters[e];
+    for(let b=0;b<5;b++){
+      const ang=Math.PI/2 + Math.sin(t*0.8+b*0.6+e*1.3)*0.7;   // sweep around straight-down
+      const len=VH*1.25, x2=em.x+Math.cos(ang)*len, y2=em.y+Math.sin(ang)*len;
+      const hue=(t*60+b*40+e*120)%360;
+      const g=ctx.createLinearGradient(em.x,em.y,x2,y2);
+      g.addColorStop(0,'hsla('+hue+',100%,65%,0)');
+      g.addColorStop(0.15,'hsla('+hue+',100%,65%,0.32)');
+      g.addColorStop(1,'hsla('+hue+',100%,60%,0)');
+      ctx.strokeStyle=g; ctx.lineWidth=3+2*Math.sin(t*2+b);
+      ctx.beginPath(); ctx.moveTo(em.x,em.y); ctx.lineTo(x2,y2); ctx.stroke();
+    }
+  }
+  if(Math.sin(t*9)>0.93){ ctx.globalCompositeOperation='source-over'; ctx.fillStyle='rgba(255,255,255,0.12)'; ctx.fillRect(0,0,VW,VH); }
+  ctx.restore();
 }
 
 let blood=[];
@@ -1833,6 +1915,7 @@ function draw(){
     ctx.save(); ctx.translate(Math.round((Math.random()*2-1)*m), Math.round((Math.random()*2-1)*m)); _shaking=true; shakeT--; }
   drawBg();
   drawScenery();   // decorative background NPCs (dancers/couples) — drawn behind everything
+  drawRaveSmoke(); // DnB room: coloured haze behind the action
 
   drawTV();
 
@@ -1868,6 +1951,7 @@ function draw(){
   drawDoors();
   drawTVMarker();
   drawJukeMarker();
+  drawRaveLights();   // DnB room: sweeping laser fan + strobe, over the action
   drawFloaters();
   drawArenaHud();         // WAVE / SCORE / leaderboard (only shows in the arena)
   if(_shaking) ctx.restore();
