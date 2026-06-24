@@ -186,7 +186,9 @@ const SECTIONS=[
   {id:'pub',     name:'The Red Hand &mdash; loyalist till I die', bgKey:'pub', BGW:533, srcY:8, flatGround:212, charScale:1.4, chain:true, next:'dundee', prev:'belfast',
    enemies:[ ]},
   {id:'dundee',  name:'Welcome to Dundee', bgKey:'dundee', BGW:560, srcY:65, flatGround:270, chain:true, next:'glasgow', prev:'pub',
-   enemies:[ ]},
+   /* THE TOILET KEY now lives here in Dundee — walk over it to pick it up; it then unlocks
+      the Winchester toilet door. Nudge at/h to taste. */
+   enemies:[ ], items:[ {id:'toiletkey', at:300, h:34, label:'the Winchester toilet key'} ]},
   {id:'glasgow', name:'Glasgow &mdash; the Trongate', bgKey:'glasgow', BGW:2672, srcY:90, flatGround:296, chain:true, next:'street', prev:'dundee',
    enemies:[ {at:230,kind:6,hp:1,static:true},{at:760,kind:5},{at:1080,kind:0},{at:1380,kind:5},{at:1700,kind:1},{at:2000,kind:5},{at:2480,kind:5} ]},
   {id:'street', name:'Southside &mdash; the street', bgKey:'bg',  BGW:4047, srcY:120, flatGround:null, chain:true, next:null, prev:'glasgow',
@@ -268,21 +270,18 @@ const SECTIONS=[
       spot (no walking, not an enemy). Dancer.mp3 fades in as you get near him.       */
    npcs:[ {img:'dancer', fw:163, fh:310, at:1100, h:135, face:1,
            clip:{start:8, count:6, fps:9, loop:true}, mp3:'Dancer.mp3', range:180} ],
-   /* ── THE TOILET KEY lives here, on a shelf deep in the Library (walk right to find
-      it). Pick it up to unlock the Winchester toilet door. Nudge `at`/`h` to taste, or
-      move this whole `items` block to any other level to hide the key elsewhere. ── */
-   items:[ {id:'toiletkey', at:1700, h:34, label:'the Winchester toilet key'} ],
    doors:[]},
   /* WINCHESTER swapped to the wide pub panorama (room winchester.jpeg now 2172x387).
      zoom:1.0 shows an 800px-wide slice. Character made BIGGER (charScale 2.2) and the view
      panned down (srcY:27) with flatGround:360 so he walks the front floorboards IN FRONT of
      the bar stools (seats behind him). EXIT from EITHER end by walking off the edge
      (exitLeft + exitRight). Nudge flatGround/charScale to taste. */
-  /* The TOILET door sits mid-room (x:1400) and is LOCKED until you carry 'toiletkey'
-     (found in the Library). The JUKEBOX (see JUKEBOX below) sits at x:300 — STRIKE near
-     it to flip through its track slots, exactly like the house TV but for music. */
+  /* The TOILET door sits on the LEFT of the bar (x:170, by the Toilets sign) and is LOCKED
+     until you carry 'toiletkey' (now found in DUNDEE). The JUKEBOX (see JUKEBOX below) sits
+     on the RIGHT at x:1850 — STRIKE near it to flip through its track slots, like the house
+     TV but for music. Nudge these x values to line them up with your bar art. */
   {id:'in_winchester', name:'Inside &mdash; The Winchester', bgKey:'room_winchester', BGW:2172, zoom:1.0, srcY:27, flatGround:360, charScale:2.2, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
-   doors:[ {x:1400, w:90, label:'The Toilet', target:'in_toilet', locked:true, key:'toiletkey'} ]},
+   doors:[ {x:170, w:110, label:'The Toilet', target:'in_toilet', locked:true, key:'toiletkey'} ]},
 
   /* ── THE WINCHESTER TOILET (the gents). Reached from the locked door inside the
      Winchester. Placeholder dark room until room toilet.jpeg exists; EXIT door goes
@@ -342,7 +341,7 @@ const SECTIONS=[
      room until the art exists; nudge BGW/srcY/flatGround/charScale once it does. */
   {id:'in_dnb', name:'Room 1 &mdash; Drum &amp; Bass', bgKey:'room_dnb', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
    /* two background dancing couples (NOT enemies) just looping a dance on the floor */
-   npcs:[ {img:'dnbcouple1', fw:328, fh:310, at:175, h:130, yOff:0, face:1,  clip:{start:0,count:15,fps:8,loop:true}},
+   npcs:[ {img:'dnbcouple1', fw:328, fh:310, at:175, h:130, yOff:0, face:1,  clip:{start:0,count:15,fps:6,loop:true}},
           {img:'dnbcouple2', fw:260, fh:272, at:410, h:130, yOff:0, face:-1, clip:{start:0,count:15,fps:8,loop:true}} ],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
   {id:'in_hiphop', name:'Room 2 &mdash; Hip-Hop', bgKey:'room_hiphop', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
@@ -401,7 +400,7 @@ const TRACKS={ select:'Character selection screen.mp3', home:'Home.mp3', street:
    index.html (EXACT lower-case names) to fill the rest. Missing files just stay
    silent. Add a jukebox to any other room by adding another `id:{...}` entry. */
 const JUKEBOX={
-  in_winchester:{ x:300, reach:150, idx:0,
+  in_winchester:{ x:1850, reach:150, idx:0,
     files:['Winchester.mp3','Juke2.mp3','Juke3.mp3','Juke4.mp3','Juke5.mp3',
            'Juke6.mp3','Juke7.mp3','Juke8.mp3','Juke9.mp3','Juke10.mp3'] },
 };
@@ -458,7 +457,6 @@ const SCENE_VIDEOS = {
    placeholder. Add/replace destinations here as new levels are built.       */
 const TRAVEL_MENUS={
   portal: { title:'The Portal', dests:[
-    {label:'The Streets', target:'southampton'},     // streets chain now STARTS at Southampton
     {label:'Mortal Kombat', target:'mk'},            // the UMK3 "Blue Portal" bridge arena
     {label:'Survive Waves in the Void', target:'blacklevel'},         // black level: tiled MP4 wall + floor scenery
     {label:'The Holodeck', target:'holodeck'},       // full-screen MP4 backdrop, doubled side-by-side
@@ -474,13 +472,13 @@ const TRAVEL_MENUS={
      drops you straight into that level (you can still walk it through to the
      next, or run off the left edge to come back to the hub).                */
   trainstation: { title:'DigiTown Station', dests:[
-    {label:'The Streets',         target:'southampton'},
+    {label:'The Streets',         target:'southampton'},   // start of the run, kept at the top
+    {label:'Southampton',         target:'southampton'},   // then the rest in PLAY order:
     {label:'The Park',            target:'park'},
     {label:'Belfast',             target:'belfast'},
     {label:'The Red Hand (Pub)',  target:'pub'},
     {label:'Dundee',              target:'dundee'},
     {label:'Glasgow',             target:'glasgow'},
-    {label:'Southampton',         target:'southampton'},
   ]},
 };
 const SHOP=[
