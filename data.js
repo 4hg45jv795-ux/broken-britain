@@ -106,12 +106,10 @@ const ASSETS = [
   {key:'hippie',   type:'img', src:'hippie.png', optional:true},    // Park/street enemy (kind 12)
   {key:'crackman', type:'img', src:'crackman.png', optional:true},  // Crackadilly Gardens enemy (kind 13)
   {key:'stabber',  type:'img', src:'stabber.png', optional:true},   // Crackadilly Gardens hooded knife enemy (kind 14)
-  {key:'rider',    type:'img', src:'rider.png', optional:true},     // Crackadilly Gardens orange delivery cyclist (kind 15)
   {key:'hologram', type:'img', src:'hologram.png', optional:true},  // Library blue AI hologram NPC (centre)
   {key:'dancer',   type:'img', src:'dancer.png', optional:true},    // dancing NPC (now in the Hip-Hop room)
   {key:'couple',   type:'img', src:'couple.png', optional:true},    // Void dancing-couple NPCs
   {key:'dgreen',   type:'img', src:'dancer_green.png',  optional:true},  // Hip-Hop room dancer (green)
-  {key:'dpurple',  type:'img', src:'dancer_purple.png', optional:true},  // Hip-Hop room dancer (purple)
   {key:'tvguy',    type:'img', src:'tvguy.png', optional:true},     // Hip-Hop room safe-carrying dancing NPC (18 frames)
   /* ── NEW: Drum & Bass room dancing couples ── */
   {key:'dnbcouple1', type:'img', src:'dnbcouple1.png', optional:true},   // Freddy + Queen couple (15 frames)
@@ -344,7 +342,7 @@ const SECTIONS=[
      between them. Stabbers walk you down and knife you on contact — die anim is the
      hit -> kneel -> lying-dead-with-blood sequence. Nudge at/hp to taste. */
   {id:'in_crackadilly', name:'Crackadilly Gardens', bgKey:'room_crackadilly', BGW:5946, srcY:140, flatGround:350, charScale:1.2, interior:true, exitLeft:'home',
-   enemies:[ {at:800,kind:13},{at:1000,kind:15,hp:45},{at:1200,kind:14,hp:50},{at:1600,kind:13},{at:2000,kind:14,hp:50},{at:2400,kind:13},{at:2800,kind:15,hp:45},{at:3200,kind:13},{at:3600,kind:14,hp:50},{at:4000,kind:13},{at:4400,kind:15,hp:45},{at:4800,kind:13},{at:5200,kind:14,hp:50} ],
+   enemies:[ {at:800,kind:13},{at:1200,kind:14,hp:50},{at:1600,kind:13},{at:2000,kind:14,hp:50},{at:2400,kind:13},{at:3200,kind:13},{at:3600,kind:14,hp:50},{at:4000,kind:13},{at:4800,kind:13},{at:5200,kind:14,hp:50} ],
    groundStep:100,
    groundPts:[350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,352,360,364,366,366,366,362,354,350,350,350,350,350,350,350,350,350],
    doors:[ {x:5500, w:150, label:'Cottagers Cove &mdash; underpass', target:'in_cottagers'} ]},
@@ -358,15 +356,15 @@ const SECTIONS=[
    npcs:[ {img:'dnbcouple1', fw:328, fh:310, at:175, h:130, yOff:0, face:1,  clip:{start:0,count:15,fps:6,loop:true}},
           {img:'dnbcouple2', fw:260, fh:272, at:410, h:130, yOff:0, face:-1, clip:{start:0,count:15,fps:8,loop:true}} ],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
-  /* HIP-HOP room: three original dancers PLUS the new "TV guy" — the orange-shirt
-     bloke hugging a safe — boogieing on the spot in 18 looping poses (tvguy.png).
-     Decorative NPC: no collision, can't be hit. Nudge at/h/face to taste. */
+  /* HIP-HOP room: the original dancer + the green dancer + the "TV guy" (orange-shirt
+     bloke hugging a safe, tvguy.png) boogieing on the spot. The purple dancer was removed.
+     Decorative NPCs: no collision, can't be hit. Nudge at/h/face to taste. */
   {id:'in_hiphop', name:'Room 2 &mdash; Hip-Hop', bgKey:'room_hiphop', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
-   /* background dancers (NOT enemies) just looping a dance on the floor */
-   npcs:[ {img:'dgreen',  fw:156, fh:231, at:185, h:104, yOff:0, face:1,  clip:{start:0,count:6,fps:9,loop:true}},
-          {img:'dpurple', fw:157, fh:240, at:400, h:110, yOff:0, face:-1, clip:{start:0,count:6,fps:8,loop:true}},
-          {img:'dancer',  fw:163, fh:310, at:300, h:135, yOff:0, face:1,  clip:{start:8,count:6,fps:9,loop:true}, mp3:'Dancer.mp3', range:180},
-          {img:'tvguy',   fw:231, fh:369, at:480, h:128, yOff:0, face:-1, clip:{start:0,count:18,fps:7,loop:true}} ],
+   /* background dancers (NOT enemies) just looping a dance on the floor.
+      Green dancer sits in the MIDDLE, flanked by the original dancer (left) and the TV guy (right). */
+   npcs:[ {img:'dancer',  fw:163, fh:310, at:220, h:135, yOff:0, face:1,  clip:{start:8,count:6,fps:9,loop:true}, mp3:'Dancer.mp3', range:180},
+          {img:'dgreen',  fw:156, fh:231, at:355, h:104, yOff:0, face:1,  clip:{start:0,count:6,fps:9,loop:true}},
+          {img:'tvguy',   fw:231, fh:369, at:490, h:128, yOff:0, face:-1, clip:{start:0,count:18,fps:7,loop:true}} ],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
   {id:'in_special', name:'Room 3 &mdash; Special Guest', bgKey:'room_special', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
@@ -420,9 +418,107 @@ const TRACKS={ select:'Character selection screen.mp3', home:'Home.mp3', street:
    index.html (EXACT lower-case names) to fill the rest. Missing files just stay
    silent. Add a jukebox to any other room by adding another `id:{...}` entry. */
 const JUKEBOX={
-  in_winchester:{ x:1994, reach:150, idx:0,
+  in_winchester:{ x:1994, reach:150, idx:0, glowY:0.49, glowR:84,
     files:['Winchester.mp3','Juke2.mp3','Juke3.mp3','Juke4.mp3','Juke5.mp3',
            'Juke6.mp3','Juke7.mp3','Juke8.mp3','Juke9.mp3','Juke10.mp3'] },
+};
+/* ── AMBIENT GLOWS ─────────────────────────────────────────────────────────
+   Soft pulsing halos painted onto things that emit light (candles, neon, lamps,
+   signs) so rooms feel lit — the same idea as the jukebox glow, but data-driven
+   per room. Drawn additively BEHIND the characters. Each entry uses WORLD coords
+   (the same space as enemies/doors):
+     x,y   = world position of the light (room pixels; y measured like the floor line)
+     r     = base glow radius (world px)
+     mode  = 'warm'  -> flickering candle / warm-bulb amber (fire, lanterns, lamps)
+             'cycle' -> slow rainbow neon (clubs, signs)
+             (omit)  -> a steady glow at fixed `hue`
+     hue   = 0 red · 16 orange · 40 amber · 120 green · 200 cyan · 300 magenta (when no mode)
+     alpha = peak strength (default 0.22); sat/light optional fine-tuning
+   All positions are EYEBALLED — nudge x/y on the phone so each glow sits on the
+   actual candle / sign / lamp in the room art. Add lights to any room by adding an
+   `id:[ ... ]` block; remove a glow by deleting its line. */
+const GLOWS={
+  /* HIGH STREET (home4.png 2868x266) — daytime, so only the things that truly emit:
+     the portal vortex, the cinema marquee + poster boxes, the club neon, police sign. */
+  home: [
+    {x:1489, y:126, r:64, hue:205, sat:90, light:62, alpha:0.26},   // the blue PORTAL vortex
+    {x:905,  y:62,  r:42, hue:42,  sat:90, light:60, alpha:0.18},   // CINEMA marquee
+    {x:840,  y:172, r:26, hue:205, sat:70, light:60, alpha:0.12},   // cinema poster lightbox
+    {x:975,  y:172, r:26, hue:205, sat:70, light:60, alpha:0.12},
+    {x:2504, y:103, r:50, hue:305, sat:92, light:62, alpha:0.22},   // SLAMMIN VINYL neon
+    {x:2304, y:103, r:26, hue:215, sat:80, light:62, alpha:0.12},   // police 'DP' sign
+  ],
+  /* THE WINCHESTER (room_winchester.jpeg 2172x387) — warm bar dome lamps, wall sconces,
+     the pool-table pendant, the right-hand candle, the green Toilets sign. Read off the
+     art. The jukebox has its own glow (drawJukeGlow). */
+  in_winchester: [
+    {x:122,  y:70,  r:34, mode:'warm', alpha:0.22},                 // left wall sconce
+    {x:355,  y:55,  r:42, mode:'warm', alpha:0.22},                 // pool-table pendant
+    {x:575,  y:115, r:28, mode:'warm', alpha:0.18},                 // mid wall sconce
+    {x:815,  y:120, r:28, mode:'warm', alpha:0.18},                 // sconce by the dartboard
+    {x:878,  y:68,  r:22, hue:130, sat:85, light:55, alpha:0.16},   // green 'Toilets' sign
+    {x:1198, y:95,  r:44, mode:'warm', alpha:0.26},                 // bar dome lamp (left)
+    {x:1480, y:95,  r:44, mode:'warm', alpha:0.26},                 // bar dome lamp (right)
+    {x:1840, y:140, r:24, mode:'warm', alpha:0.32},                 // lit candle on the cabinet
+  ],
+  /* THE CHURCH (room_church.jpeg 591x323) — wall sconces, the altar candle, floor candle
+     stands in the front corners, a soft cool wash from the big window. */
+  in_church: [
+    {x:296, y:145, r:24, mode:'warm', alpha:0.32},                  // altar candle
+    {x:80,  y:110, r:30, mode:'warm', alpha:0.26},                  // left wall sconce
+    {x:508, y:110, r:30, mode:'warm', alpha:0.26},                  // right wall sconce
+    {x:35,  y:262, r:28, mode:'warm', alpha:0.28},                  // floor candle (front-left)
+    {x:556, y:262, r:28, mode:'warm', alpha:0.28},                  // floor candle (front-right)
+    {x:296, y:74,  r:58, hue:210, sat:30, light:78, alpha:0.08},    // cool wash from the window
+  ],
+  /* THE GUN STORE (room_gunstore.jpeg 591x323) — the red FAFO neon, two counter lamps,
+     the green EXIT sign, faint cool wash off the wall display cases. */
+  in_gunstore: [
+    {x:296, y:74,  r:78, hue:345, sat:95, light:58, alpha:0.26},    // FAFO neon (red/pink)
+    {x:139, y:178, r:28, mode:'warm', alpha:0.24},                  // green banker's lamp (left counter)
+    {x:561, y:181, r:24, mode:'warm', alpha:0.22},                  // lamp (right counter)
+    {x:405, y:97,  r:18, hue:130, sat:85, light:55, alpha:0.16},    // green EXIT sign
+    {x:45,  y:135, r:46, hue:200, sat:25, light:75, alpha:0.10},    // left wall display cases
+    {x:548, y:135, r:46, hue:200, sat:25, light:75, alpha:0.10},    // right wall display cases
+  ],
+  /* THE LIBRARY (room_library.jpeg 2172x375) — the central AI hologram glows cyan (body
+     + floor ring), warm wall lanterns, blue digital-archive kiosks. */
+  in_library: [
+    {x:1086, y:158, r:95, hue:195, sat:85, light:66, alpha:0.24},   // AI hologram (centre)
+    {x:1086, y:270, r:85, hue:200, sat:90, light:60, alpha:0.20},   // hologram floor ring
+    {x:98,   y:113, r:30, mode:'warm', alpha:0.18},                 // left lantern
+    {x:250,  y:113, r:26, mode:'warm', alpha:0.16},                 // left lantern 2
+    {x:2074, y:113, r:30, mode:'warm', alpha:0.18},                 // right lantern
+    {x:586,  y:233, r:26, hue:205, sat:80, light:60, alpha:0.16},   // blue archive kiosk
+    {x:977,  y:225, r:24, hue:205, sat:80, light:60, alpha:0.16},
+    {x:1346, y:225, r:24, hue:205, sat:80, light:60, alpha:0.16},
+    {x:1694, y:240, r:26, hue:205, sat:80, light:60, alpha:0.16},
+  ],
+  /* MY HOUSE (room_house.jpeg 591x323) — dim front room: the telly throws cool light,
+     two warm table lamps flank the sofa. */
+  in_house: [
+    {x:296, y:116, r:66, hue:208, sat:45, light:70, alpha:0.16},    // TV screen wash
+    {x:106, y:136, r:30, mode:'warm', alpha:0.26},                  // left table lamp
+    {x:485, y:136, r:30, mode:'warm', alpha:0.26},                  // right table lamp
+  ],
+  /* COTTAGERS COVE (room_cottagers.jpeg 2172x724) — only the two harsh strip-lights on
+     the right of the underpass. */
+  in_cottagers: [
+    {x:1553, y:195, r:56, hue:210, sat:12, light:88, alpha:0.20},   // strip light 1
+    {x:2020, y:188, r:56, hue:210, sat:12, light:88, alpha:0.20},   // strip light 2
+  ],
+  /* SLAMMIN' VINYL LOBBY (room_nightclub.jpeg 2048x768) — wall-to-wall neon: the club
+     sign, reception, the three coloured door signs, the SLAM MODE poster + spotlight. */
+  in_nightclub: [
+    {x:338,  y:276, r:48, hue:320, sat:95, light:62, alpha:0.20},   // SLAMMIN VINYL neon
+    {x:666,  y:161, r:40, hue:315, sat:95, light:62, alpha:0.18},   // RECEPTION sign
+    {x:686,  y:399, r:55, hue:315, sat:95, light:60, alpha:0.22},   // reception desk underglow
+    {x:1003, y:160, r:48, hue:205, sat:90, light:62, alpha:0.18},   // ROOM 1 — DNB (blue)
+    {x:1403, y:160, r:48, hue:25,  sat:95, light:60, alpha:0.18},   // ROOM 2 — HIP-HOP (orange)
+    {x:1700, y:160, r:48, hue:282, sat:90, light:62, alpha:0.18},   // ROOM 3 — SPECIAL GUEST (purple)
+    {x:1905, y:269, r:50, hue:282, sat:90, light:62, alpha:0.20},   // SLAM MODE poster
+    {x:1884, y:476, r:55, hue:285, sat:85, light:60, alpha:0.16},   // purple spotlight on the floor
+  ],
 };
 /* ── ROOM SCREENS (looping .mp4s with sound, painted onto wall screens) ──
    Each room id below maps to a screen rectangle (measured in THAT room's
@@ -506,14 +602,14 @@ const SHOP=[
   {id:'vest',    name:'Bulletproof Vest', price:0},
   {id:'littleblaster', name:'Little Blaster',    price:0},
   {id:'bigblaster',    name:'Big Blaster',       price:0},
-  {id:'weapon01', name:'Weapon 1', price:0},
-  {id:'weapon02', name:'Weapon 2', price:0},
-  {id:'weapon03', name:'Weapon 3', price:0},
-  {id:'weapon04', name:'Weapon 4', price:0},
-  {id:'weapon05', name:'Weapon 5', price:0},
-  {id:'weapon06', name:'Weapon 6', price:0},
-  {id:'weapon07', name:'Weapon 7', price:0},
-  {id:'weapon08', name:'Weapon 8', price:0},
+  {id:'weapon01', name:'Viper', price:0},
+  {id:'weapon02', name:'Hornet', price:0},
+  {id:'weapon03', name:'Ravager', price:0},
+  {id:'weapon04', name:'Sledgehammer', price:0},
+  {id:'weapon05', name:'Arc Lance', price:0},
+  {id:'weapon06', name:'Tempest', price:0},
+  {id:'weapon07', name:'Falcon', price:0},
+  {id:'weapon08', name:'Annihilator', price:0},
 ];
 const WEAPONS={
   rifle:   {name:'Bullets', auto:true,  cooldown:6,  type:'bullet', pellets:1, spread:0.05, speed:14, range:640, dmg:18, knock:6 },
@@ -524,14 +620,14 @@ const WEAPONS={
   // Shooter enemies (the UFO) now fire the BIG BLASTER bolt instead (bigblaster.png),
   // which also remains a buyable weapon below.
   // 8 NAMELESS neon weapons (rename freely — the key/sprite stay the same).
-  weapon01: {name:'Weapon 1', auto:false, cooldown:12, type:'bullet', pellets:1, spread:0.03, speed:14, range:660, dmg:30, knock:8,  sprite:'weapon01', spriteH:26, shake:false},
-  weapon02: {name:'Weapon 2', auto:true,  cooldown:10, type:'bullet', pellets:1, spread:0.04, speed:13, range:640, dmg:26, knock:7,  sprite:'weapon02', spriteH:26, shake:false},
-  weapon03: {name:'Weapon 3', auto:false, cooldown:16, type:'bullet', pellets:1, spread:0.02, speed:12, range:660, dmg:44, knock:11, sprite:'weapon03', spriteH:28, shake:false},
-  weapon04: {name:'Weapon 4', auto:false, cooldown:22, type:'bullet', pellets:1, spread:0.00, speed:11, range:680, dmg:55, knock:18, sprite:'weapon04', spriteH:30, shake:true },
-  weapon05: {name:'Weapon 5', auto:false, cooldown:14, type:'bullet', pellets:1, spread:0.03, speed:13, range:650, dmg:38, knock:10, sprite:'weapon05', spriteH:26, shake:false, hitfx:'electric'},
-  weapon06: {name:'Weapon 6', auto:true,  cooldown:10, type:'bullet', pellets:1, spread:0.03, speed:16, range:700, dmg:48, knock:9,  sprite:'weapon06', spriteH:22, shake:false},
-  weapon07: {name:'Weapon 7', auto:false, cooldown:12, type:'bullet', pellets:1, spread:0.03, speed:14, range:650, dmg:34, knock:9,  sprite:'weapon07', spriteH:24, shake:false},
-  weapon08: {name:'Weapon 8', auto:false, cooldown:26, type:'bullet', pellets:1, spread:0.00, speed:12, range:700, dmg:70, knock:20, sprite:'weapon08', spriteH:30, shake:true },
+  weapon01: {name:'Viper', auto:false, cooldown:12, type:'bullet', pellets:1, spread:0.03, speed:14, range:660, dmg:30, knock:8,  sprite:'weapon01', spriteH:26, shake:false},
+  weapon02: {name:'Hornet', auto:true,  cooldown:10, type:'bullet', pellets:1, spread:0.04, speed:13, range:640, dmg:26, knock:7,  sprite:'weapon02', spriteH:26, shake:false},
+  weapon03: {name:'Ravager', auto:false, cooldown:16, type:'bullet', pellets:1, spread:0.02, speed:12, range:660, dmg:44, knock:11, sprite:'weapon03', spriteH:28, shake:false},
+  weapon04: {name:'Sledgehammer', auto:false, cooldown:22, type:'bullet', pellets:1, spread:0.00, speed:11, range:680, dmg:55, knock:18, sprite:'weapon04', spriteH:30, shake:true },
+  weapon05: {name:'Arc Lance', auto:false, cooldown:14, type:'bullet', pellets:1, spread:0.03, speed:13, range:650, dmg:38, knock:10, sprite:'weapon05', spriteH:26, shake:false, hitfx:'electric'},
+  weapon06: {name:'Tempest', auto:true,  cooldown:10, type:'bullet', pellets:1, spread:0.03, speed:16, range:700, dmg:48, knock:9,  sprite:'weapon06', spriteH:22, shake:false},
+  weapon07: {name:'Falcon', auto:false, cooldown:12, type:'bullet', pellets:1, spread:0.03, speed:14, range:650, dmg:34, knock:9,  sprite:'weapon07', spriteH:24, shake:false},
+  weapon08: {name:'Annihilator', auto:false, cooldown:26, type:'bullet', pellets:1, spread:0.00, speed:12, range:700, dmg:70, knock:20, sprite:'weapon08', spriteH:30, shake:true },
 };
 /* ── HUB WANDERERS (ambient NPCs on the high street, can't hit / be hit) ──
    One of each, they just stroll back and forth on the hub. Add more by
