@@ -195,6 +195,24 @@ const ENEMY_KINDS=[
   //      Crackadilly Gardens alongside the crackmen. Melee/contact only. Nudge scale to taste.
   {img:'stabber', fw:222, fh:208, scale:1.5, color:'#23232a', hair:'#0e0e10', mp3:'Stabber.mp3',
    clips:{walk:{start:0,count:6,fps:9,loop:true}, die:{start:8,count:3,fps:9,loop:false}}},
+  // 15 = BLADEBOT (bladebot.png). T-1000-style android with arm-blades. 6-frame walk cycle
+  //      (the face peels back to bare endoskeleton across the cycle). Melee/contact; no death
+  //      art so the last walk frame fades out. Judgement Day arena. Nudge scale to taste.
+  {img:'bladebot', fw:228, fh:397, scale:1.3, color:'#2a2d33', hair:'#6a4a3a', mp3:'Bladebot.mp3',
+   clips:{walk:{start:0,count:6,fps:10,loop:true}, die:{start:5,count:1,fps:6,loop:false}}},
+  // 16 = GUNBOT (gunbot.png). Endoskeleton hauling a minigun. 10-frame walk. A SHOOTER that
+  //      sprays NORMAL machine-gun rounds (bullet:'mg' -> small fast yellow tracers, NOT the
+  //      UFO's Big-Blaster bolt). Fires while walking (no stop-pose). Judgement Day arena.
+  {img:'gunbot', fw:265, fh:421, scale:1.35, shooter:true, bullet:'mg', shotDmg:5, color:'#3a3d42', hair:'#1c1c1c', mp3:'Gunbot.mp3',
+   clips:{walk:{start:0,count:10,fps:11,loop:true}, die:{start:9,count:1,fps:6,loop:false}}},
+  // 17 = BOSTONBOT (bostonbot.png). Blue-headed humanoid combat bot. 6-frame walk cycle.
+  //      Melee/contact; last walk frame fades as death. Judgement Day arena.
+  {img:'bostonbot', fw:118, fh:258, scale:1.2, color:'#9aa2ab', hair:'#1f7bff', mp3:'Bostonbot.mp3',
+   clips:{walk:{start:0,count:6,fps:10,loop:true}, die:{start:5,count:1,fps:6,loop:false}}},
+  // 18 = TESLABOT (teslabot.png). Black-and-white Atlas-style combat bot. 8-frame walk cycle.
+  //      Melee/contact; last walk frame fades as death. Judgement Day arena.
+  {img:'teslabot', fw:148, fh:265, scale:1.2, color:'#d8dde2', hair:'#101010', mp3:'Teslabot.mp3',
+   clips:{walk:{start:0,count:8,fps:10,loop:true}, die:{start:7,count:1,fps:6,loop:false}}},
 ];
 const EH=78;
 let enemies=[];
@@ -260,7 +278,7 @@ function updateEnemies(){
     if(K.shooter && !player.dead && !busy){
       if(e.fireCd>0) e.fireCd--;
       if(e.fireCd<=0 && Math.abs(dx)<900){
-        enemyFire(e); e.fireCd=70+Math.floor(Math.random()*50);
+        enemyFire(e); e.fireCd = (K.bullet==='mg') ? (14+Math.floor(Math.random()*12)) : (70+Math.floor(Math.random()*50));
         if(K.clips.shoot){ e.anim='shoot'; e.ct=0; e.animT=Math.ceil(K.clips.shoot.count*60/K.clips.shoot.fps); }
       }
     }
@@ -404,10 +422,15 @@ function drawItems(){
 /* ── ENEMY PROJECTILES: Big-Blaster bolts thrown by shooter enemies (the UFO) ── */
 let enemyBullets=[];
 function enemyFire(e){
+  const K=ENEMY_KINDS[e.kind];
   const px=player.x+PW/2, py=player.y+PH*0.45;
   const ex=e.x+e.w*0.5, ey=e.y+e.h*0.42;
-  let dx=px-ex, dy=py-ey; const d=Math.hypot(dx,dy)||1, sp=4.6;
-  enemyBullets.push({x:ex, y:ey, vx:dx/d*sp, vy:dy/d*sp, dmg:(ENEMY_KINDS[e.kind].shotDmg||14), t:0, life:150});
+  let dx=px-ex, dy=py-ey; const d=Math.hypot(dx,dy)||1;
+  const mg=(K.bullet==='mg');
+  const sp = mg?9.6:4.6;
+  let vx=dx/d*sp, vy=dy/d*sp;
+  if(mg){ const j=(Math.random()-0.5)*0.09, c=Math.cos(j), s=Math.sin(j); const nx=vx*c-vy*s, ny=vx*s+vy*c; vx=nx; vy=ny; } // slight spray
+  enemyBullets.push({x:ex, y:ey, vx, vy, dmg:(K.shotDmg||14), t:0, life:mg?80:150, mg});
   if(typeof sfxShot==='function') sfxShot();
 }
 function updateEnemyBullets(){
@@ -426,6 +449,14 @@ function drawEnemyBullets(){
   for(const b of enemyBullets){
     const sx=(b.x-camX)*ZOOM, sy=(b.y-SRCY)*ZOOM;
     if(sx<-30||sx>VW+30) continue;
+    if(b.mg){                                            // normal machine-gun round: small fast tracer
+      const ang=Math.atan2(b.vy,b.vx);
+      ctx.save(); ctx.translate(sx,sy); ctx.rotate(ang);
+      ctx.shadowColor='#ff9a1a'; ctx.shadowBlur=6;
+      ctx.fillStyle='#ffe07a'; ctx.fillRect(-8*ZOOM,-1.4*ZOOM, 16*ZOOM, 2.8*ZOOM);
+      ctx.fillStyle='#fff7d0'; ctx.fillRect(2*ZOOM,-1*ZOOM, 5*ZOOM, 2*ZOOM);
+      ctx.restore(); continue;
+    }
     if(imgOk(loaded.bigblaster)){
       const bi=loaded.bigblaster, bh=30*ZOOM, bw=bh*bi.naturalWidth/bi.naturalHeight;
       ctx.save(); ctx.translate(sx,sy);
