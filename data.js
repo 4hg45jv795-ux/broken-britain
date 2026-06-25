@@ -454,32 +454,16 @@ const GLOWS={
   in_winchester: [
     {x:122,  y:70,  r:34, mode:'warm', alpha:0.22},                 // left wall sconce
     {x:355,  y:55,  r:42, mode:'warm', alpha:0.22},                 // pool-table pendant
-    {x:575,  y:115, r:28, mode:'warm', alpha:0.18},                 // mid wall sconce
+    {x:605,  y:130, r:28, mode:'warm', alpha:0.18},                 // mid wall sconce (right of England flag)
     {x:815,  y:120, r:28, mode:'warm', alpha:0.18},                 // sconce by the dartboard
     {x:878,  y:68,  r:22, hue:130, sat:85, light:55, alpha:0.16},   // green 'Toilets' sign
     {x:1198, y:95,  r:44, mode:'warm', alpha:0.26},                 // bar dome lamp (left)
     {x:1480, y:95,  r:44, mode:'warm', alpha:0.26},                 // bar dome lamp (right)
     {x:1840, y:140, r:24, mode:'warm', alpha:0.32},                 // lit candle on the cabinet
   ],
-  /* THE CHURCH (room_church.jpeg 591x323) — wall sconces, the altar candle, floor candle
-     stands in the front corners, a soft cool wash from the big window. */
-  in_church: [
-    {x:296, y:145, r:24, mode:'warm', alpha:0.32},                  // altar candle
-    {x:80,  y:110, r:30, mode:'warm', alpha:0.26},                  // left wall sconce
-    {x:508, y:110, r:30, mode:'warm', alpha:0.26},                  // right wall sconce
-    {x:35,  y:262, r:28, mode:'warm', alpha:0.28},                  // floor candle (front-left)
-    {x:556, y:262, r:28, mode:'warm', alpha:0.28},                  // floor candle (front-right)
-    {x:296, y:74,  r:58, hue:210, sat:30, light:78, alpha:0.08},    // cool wash from the window
-  ],
-  /* THE GUN STORE (room_gunstore.jpeg 591x323) — the red FAFO neon, two counter lamps,
-     the green EXIT sign, faint cool wash off the wall display cases. */
+  /* THE GUN STORE (room_gunstore.jpeg 591x323) — neon kept by request; other lights removed. */
   in_gunstore: [
-    {x:296, y:74,  r:78, hue:345, sat:95, light:58, alpha:0.26},    // FAFO neon (red/pink)
-    {x:139, y:178, r:28, mode:'warm', alpha:0.24},                  // green banker's lamp (left counter)
-    {x:561, y:181, r:24, mode:'warm', alpha:0.22},                  // lamp (right counter)
-    {x:405, y:97,  r:18, hue:130, sat:85, light:55, alpha:0.16},    // green EXIT sign
-    {x:45,  y:135, r:46, hue:200, sat:25, light:75, alpha:0.10},    // left wall display cases
-    {x:548, y:135, r:46, hue:200, sat:25, light:75, alpha:0.10},    // right wall display cases
+    {x:296, y:74,  r:78, hue:345, sat:95, light:58, alpha:0.26},    // FAFO neon (red/pink) — kept; other lights removed
   ],
   /* THE LIBRARY (room_library.jpeg 2172x375) — the central AI hologram glows cyan (body
      + floor ring), warm wall lanterns, blue digital-archive kiosks. */
@@ -493,13 +477,6 @@ const GLOWS={
     {x:977,  y:225, r:24, hue:205, sat:80, light:60, alpha:0.16},
     {x:1346, y:225, r:24, hue:205, sat:80, light:60, alpha:0.16},
     {x:1694, y:240, r:26, hue:205, sat:80, light:60, alpha:0.16},
-  ],
-  /* MY HOUSE (room_house.jpeg 591x323) — dim front room: the telly throws cool light,
-     two warm table lamps flank the sofa. */
-  in_house: [
-    {x:296, y:116, r:66, hue:208, sat:45, light:70, alpha:0.16},    // TV screen wash
-    {x:106, y:136, r:30, mode:'warm', alpha:0.26},                  // left table lamp
-    {x:485, y:136, r:30, mode:'warm', alpha:0.26},                  // right table lamp
   ],
   /* COTTAGERS COVE (room_cottagers.jpeg 2172x724) — only the two harsh strip-lights on
      the right of the underpass. */
