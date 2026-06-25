@@ -106,6 +106,7 @@ const ASSETS = [
   {key:'hippie',   type:'img', src:'hippie.png', optional:true},    // Park/street enemy (kind 12)
   {key:'crackman', type:'img', src:'crackman.png', optional:true},  // Crackadilly Gardens enemy (kind 13)
   {key:'stabber',  type:'img', src:'stabber.png', optional:true},   // Crackadilly Gardens hooded knife enemy (kind 14)
+  {key:'rider',    type:'img', src:'rider.png', optional:true},     // Crackadilly Gardens orange delivery cyclist (kind 15)
   {key:'hologram', type:'img', src:'hologram.png', optional:true},  // Library blue AI hologram NPC (centre)
   {key:'dancer',   type:'img', src:'dancer.png', optional:true},    // dancing NPC (now in the Hip-Hop room)
   {key:'couple',   type:'img', src:'couple.png', optional:true},    // Void dancing-couple NPCs
@@ -207,7 +208,8 @@ const SECTIONS=[
      edge gives the "THE END" exit and the left edge returns to the hub.
      Ambient MK characters (NPCs) are wired separately in MK_NPCS below. */
   {id:'mk', name:'The Portal &mdash; Mortal Kombat', bgKey:'mk', BGW:1432, srcY:0, flatGround:206, chain:true, next:null, prev:null,
-   enemies:[ {at:360,kind:4},{at:620,kind:0},{at:880,kind:1},{at:1000,kind:10,hp:80},{at:1120,kind:4},{at:1340,kind:0} ]},
+   arena:true, arenaPool:[0,1,4,9,14], arenaSpecial:10, arenaSpecialName:'GUNMAN SQUAD', arenaSpecialHp:120,
+   arenaBaseCount:6, arenaMaxCount:14, arenaGrowth:1.5, enemies:[]},
 
   /* ── BLACK LEVEL (entered from the hub Portal -> travel menu) ──────────
      A long, currently-black stage that hosts the MP4 scenery system below
@@ -245,8 +247,9 @@ const SECTIONS=[
      below if you ever want a flip-screen camera instead (snaps panel-to-panel,
      no scroll). black underneath, the video is silent, Holodeck.mp3 is the
      sound. Want it longer? Add screens: set BGW to (number-of-screens x 534). */
-  {id:'holodeck', name:'The Holodeck', bgKey:'__black__', black:true, BGW:1068, srcY:0, flatGround:180, chain:true, next:null, prev:null,
-   enemies:[ {at:760, kind:8, hp:120}, {at:380, kind:10, hp:80} ]},   // TEST: UFO (kind 8) + gunman (kind 10). Move/remove once seen.
+  {id:'holodeck', name:'The Holodeck', bgKey:'__black__', black:true, BGW:2136, srcY:0, flatGround:180, chain:true, next:null, prev:null,
+   arena:true, arenaPool:[2,3,7,12,14], arenaSpecial:8, arenaSpecialName:'UFO ASSAULT', arenaSpecialHp:200,
+   arenaBaseCount:8, arenaMaxCount:18, arenaGrowth:2, enemies:[]},   // 4 screens wide (4 x tileW 534); holodeck.mp4 tiles across all of them
 
   /* ── INTERIOR ROOMS (entered from the hub; EXIT door returns to the street) ── */
   {id:'in_house', name:'Inside &mdash; My House', bgKey:'room_house', BGW:591, srcY:46, flatGround:277, charScale:1.3, interior:true, enemies:[],
@@ -341,7 +344,7 @@ const SECTIONS=[
      between them. Stabbers walk you down and knife you on contact — die anim is the
      hit -> kneel -> lying-dead-with-blood sequence. Nudge at/hp to taste. */
   {id:'in_crackadilly', name:'Crackadilly Gardens', bgKey:'room_crackadilly', BGW:5946, srcY:140, flatGround:350, charScale:1.2, interior:true, exitLeft:'home',
-   enemies:[ {at:800,kind:13},{at:1200,kind:14,hp:50},{at:1600,kind:13},{at:2000,kind:14,hp:50},{at:2400,kind:13},{at:3200,kind:13},{at:3600,kind:14,hp:50},{at:4000,kind:13},{at:4800,kind:13},{at:5200,kind:14,hp:50} ],
+   enemies:[ {at:800,kind:13},{at:1000,kind:15,hp:45},{at:1200,kind:14,hp:50},{at:1600,kind:13},{at:2000,kind:14,hp:50},{at:2400,kind:13},{at:2800,kind:15,hp:45},{at:3200,kind:13},{at:3600,kind:14,hp:50},{at:4000,kind:13},{at:4400,kind:15,hp:45},{at:4800,kind:13},{at:5200,kind:14,hp:50} ],
    groundStep:100,
    groundPts:[350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,352,360,364,366,366,366,362,354,350,350,350,350,350,350,350,350,350],
    doors:[ {x:5500, w:150, label:'Cottagers Cove &mdash; underpass', target:'in_cottagers'} ]},
@@ -466,17 +469,17 @@ const SCENE_VIDEOS = {
     {from:4267, wall:'wall3.mp4', floor:'floor3.mp4'},
     {from:6400, wall:'wall4.mp4', floor:'floor4.mp4'},
   ]},
-  holodeck:   { wall:'holodeck.mp4', floor:null, wallFrac:1.0, tileW:534 },   // full-screen clip, doubled side-by-side
+  holodeck:   { wall:'holodeck.mp4', floor:null, wallFrac:1.0, tileW:534 },   // full-screen clip, tiled across 4 panels (BGW 2136)
 };
 /* ── TRAVEL MENUS (the portal + departure boards) ─────────────────────────
    Each menu = a title and a list of destinations. `target` is the section id
    to travel to; if that section doesn't exist yet you land on the 'empty'
    placeholder. Add/replace destinations here as new levels are built.       */
 const TRAVEL_MENUS={
-  portal: { title:'The Portal', dests:[
-    {label:'Mortal Kombat', target:'mk'},            // the UMK3 "Blue Portal" bridge arena
-    {label:'Survive Waves in the Void', target:'blacklevel'},         // black level: tiled MP4 wall + floor scenery
-    {label:'The Holodeck', target:'holodeck'},       // full-screen MP4 backdrop, doubled side-by-side
+  portal: { title:'The Portal \u2014 Wave Survival Maps', dests:[
+    {label:'Mortal Kombat \u2014 Wave Survival', target:'mk'},            // arena: melee mix, GUNMAN SQUAD every 5th wave
+    {label:'The Void \u2014 Wave Survival', target:'blacklevel'},         // arena: full mix, UFO ASSAULT every 5th wave
+    {label:'The Holodeck \u2014 Wave Survival', target:'holodeck'},       // arena: sci-fi mix, UFO ASSAULT every 5th wave
   ]},
   easyjet: { title:'easyJet Holidays', dests:[
     {label:'America',   target:'lvl_america'},
@@ -549,8 +552,8 @@ const HUB_NPCS=[
      height  = his drawn height before the room's charScale is applied      */
 const PRIEST_DEF={ key:'priest', fw:117, fh:161, frames:12 };
 const PRIEST={ centre:296, halfRun:58, lift:46, height:66 };
-/* ── LIBRARY NPC: "Burger King guy" ──────────────────────────
-   Lives only inside the in_library room. He does NOT walk: he
+/* ── "Burger King guy" NPC (now in the SPECIAL GUEST room, moved from the Library) ──
+   Lives only inside the in_special room. He does NOT walk: he
    stands in place and loops his baton-strike, turning to face the
    other way every few seconds so he strikes in BOTH directions.
    He is purely decorative — his swings never touch the player and
@@ -592,7 +595,7 @@ const MK_NPCS=[
    range = how close, in room pixels, before it begins.              */
 const PROX_AUDIO=[
   {section:'in_church',  src:'Priest.mp3',     range:180, getX:()=>priestNpc?priestNpc.x:null},
-  {section:'in_library', src:'Burgerking.mp3', range:180, getX:()=>bkNpc?bkNpc.x:null},
+  {section:'in_special', src:'Burgerking.mp3', range:180, getX:()=>bkNpc?bkNpc.x:null},
   {section:'home',       src:'Captain.mp3',    range:180,
      getX:()=>{ const c=hubNpcs.find(n=>n.def&&n.def.key==='captain'); return c?c.x:null; }},
   /* ── POLICE STATION proximity sounds (FIXED spots, measured in room pixels) ──
