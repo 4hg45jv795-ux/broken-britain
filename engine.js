@@ -607,7 +607,7 @@ function buildHelperThumbs(){
 function updateHelperBarVisibility(){
   const s=SECTIONS[sectionIndex];
   const bar=document.querySelector('.helperbar');
-  if(bar) bar.style.display = (s.chain || s.arena) ? '' : 'none';   // chain levels + the arena get helpers
+  if(bar) bar.style.display = (s.chain || s.arena || s.helpers) ? '' : 'none';   // chain levels + arenas + any `helpers:true` room get helpers
 }
 function refreshHelperBtns(){
   document.querySelectorAll('.helperbtn').forEach(btn=>{
@@ -826,8 +826,18 @@ document.addEventListener('visibilitychange',()=>{
   // Re-acquire the screen wake lock whenever we come back to the foreground during play.
   // The browser auto-releases the lock when the tab is hidden (e.g. the phone sleeps), so
   // this keeps the screen awake for the WHOLE game session, not just while a video rolls.
-  if(document.visibilityState==='visible' && cur && !paused) requestWakeLock();
+  if(document.visibilityState==='visible'){
+    try{ if(AC && AC.state!=='running') AC.resume(); }catch(_){}   // wake the SFX context too
+    if(cur && !paused) requestWakeLock();
+  }
 });
+/* iOS can SUSPEND / "interrupt" the WebAudio context after a while (lock screen, a call,
+   backgrounding, an audio-session change) and a resume() from the game loop won't revive it —
+   only a real user gesture will. The player taps constantly, so revive it on every tap/key.
+   This is what was killing the jump/shoot SFX after a period of play. */
+['pointerdown','touchstart','keydown'].forEach(ev=>document.addEventListener(ev, ()=>{
+  try{ if(AC && AC.state!=='running') AC.resume(); }catch(_){}
+}, {passive:true, capture:true}));
 function curScreen(){ return SCREENS[SECTIONS[sectionIndex].id] || null; }
 const _tvVidPool={};                 // src -> <video>, kept buffered so channels don't reload on switch
 function tvVidFor(src){
@@ -844,8 +854,7 @@ function tvVidFor(src){
     if(playlist){                            // when one part finishes (or 404s), roll to the next
       v.addEventListener('ended', ()=>{ if(tvVideo===v) tvAdvancePart(); });
       v.addEventListener('error', ()=>{ if(tvVideo===v) tvAdvancePart(); });
-      v.addEventListener('playing', ()=>{ _plSkips=0;     // a part is actually rolling
-        const s=curScreen(); if(s&&s.playlist){ const n=(s.idx+1)%s.files.length; if(s.files[n]!==src) tvVidFor(s.files[n]); } });
+      v.addEventListener('playing', ()=>{ _plSkips=0; });   // a part is actually rolling (don't preload the next — it starves this one)
     }
     v.src=src; try{ v.load(); }catch(_){}    // begin buffering immediately
     _tvVidPool[src]=v;
@@ -859,10 +868,10 @@ function tvAdvancePart(){                     // cinema: roll to the next part, 
   sc.idx=(sc.idx+1)%sc.files.length; _plSkips++;
   screenLoad(true);
 }
-function tvPreloadOthers(){           // warm the OTHER channels (after the current one is playing) so switching is instant
-  const sc=curScreen(); if(!sc||!sc.files) return;
-  if(sc.playlist){ const n=(sc.idx+1)%sc.files.length; if(n!==sc.idx) tvVidFor(sc.files[n]); return; }  // film: only the next part
-  for(let i=0;i<sc.files.length;i++){ if(i!==sc.idx) tvVidFor(sc.files[i]); }
+function tvPreloadOthers(){
+  /* Preloading the OTHER channels/parts was starving the CURRENT video's bandwidth on phones —
+     the screen would flash on then vanish until you skipped. Each channel/part now loads on
+     demand: a brief buffer the first time you view it, then it stays pooled and is instant after. */
 }
 function screenLoad(playNow){
   const sc=curScreen(); if(!sc){ tvPause(); return; }
@@ -918,8 +927,8 @@ function drawTVMarker(){
   const sc=curScreen(); const r=sc.rect;
   const cx=(screenCenterX(sc)-camX)*ZOOM;
   const cy=Math.max(8,(r.y-SRCY)*ZOOM-50) + Math.sin(performance.now()/260)*4;
-  if(sc.playlist) drawMarker(cx, cy, 'CINEMA \u00B7 PART '+(sc.idx+1), 'STRIKE: skip \u00B7 2-tap screen: fullscreen');
-  else            drawMarker(cx, cy, 'TV \u00B7 CH '+(sc.idx+1), 'STRIKE to change channel');
+  if(sc.playlist) drawMarker(cx, cy, 'CINEMA \u00B7 PART '+(sc.idx+1), 'STRIKE: next part \u00B7 2-tap: fullscreen');
+  else            drawMarker(cx, cy, 'TV \u00B7 CH '+(sc.idx+1),      'STRIKE: next channel \u00B7 2-tap: fullscreen');
 }
 
 /* ── THE WINCHESTER JUKEBOX (works like the TV, but switches MUSIC) ──────────
@@ -1915,11 +1924,11 @@ let _libNarr=false;
 function updateLibraryNarration(){
   if(SECTIONS[sectionIndex].id!=='in_library'){ _libNarr=false; return; }
   if(_libNarr || musicMuted || paused || !cur || player.dead) return;
-  if((player.x+PW/2) > 600){                       // they've started walking toward the centre/exit
+  // Start the instructions as the player approaches/passes the hologram (centre, x~1086).
+  if(Math.abs((player.x+PW/2)-1086) < 720){
     const a=_proxEl('Hologram.mp3'); a.loop=false; a.muted=musicMuted; a.volume=0.9;
-    try{ a.currentTime=0; }catch(_){}
-    a.play().catch(()=>{});
-    _libNarr=true;                                  // only once per visit
+    if(a.paused){ if(a.ended||a.currentTime>0.1){ try{ a.currentTime=0; }catch(_){} } a.play().catch(()=>{}); } // KEEP retrying each frame
+    if(!a.paused && a.currentTime>0.05) _libNarr=true;   // latch ONLY once it's truly rolling, so a blocked first attempt can't kill it
   }
 }
 function updateProxAudio(){
@@ -2231,6 +2240,10 @@ function arenaNextWave(){
   const w=arenaWave;
   const s=SECTIONS[sectionIndex];
   const bossWave = (w%5===0);                              // every 5th wave is this map's "boss" round
+  if(bossWave){                                            // ...and every 5th wave tops your health back up to full
+    player.hp=player.max; document.getElementById('hpbar').style.width='100%';
+    addFloater(player.x+PW/2, player.y, 'FULL HEALTH');
+  }
   const spd=ESPEED*(1+(w-1)*0.05);                         // a touch faster each wave
   const dmg=EDMG+(w-1)*2;                                  // hits harder each wave
   let kinds, count, hp;
