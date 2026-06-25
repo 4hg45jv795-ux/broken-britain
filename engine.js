@@ -170,7 +170,7 @@ const ENEMY_KINDS=[
   // 9 = BRUISER: heavyset bare-knuckle thug (bruiser.png). 18 frames -> 0-5 running,
   //     6-11 punching (unused by the simple enemy AI), 12-17 dying. Melee only; lives in
   //     Cottagers Cove. `scale` sizes him against the big-room player — nudge to taste.
-  {img:'bruiser', fw:196, fh:237, scale:2.0, color:'#cdb89a', hair:'#3a2a1e', mp3:'Bruiser.mp3',
+  {img:'bruiser', fw:196, fh:237, scale:2.2, color:'#cdb89a', hair:'#3a2a1e', mp3:'Bruiser.mp3',
    clips:{walk:{start:0,count:6,fps:11,loop:true}, die:{start:12,count:6,fps:10,loop:false}}},
   // 10 = GUNMAN: hooded shooter (shooter.png). 12 frames -> 0-3 walk, 4-7 aim/fire, 8-11 die.
   //      Fires the Big-Blaster bolt and plays its SHOOT pose while firing. In the Holodeck.
@@ -178,7 +178,7 @@ const ENEMY_KINDS=[
    clips:{walk:{start:0,count:4,fps:9,loop:true}, shoot:{start:4,count:4,fps:11,loop:false}, die:{start:8,count:4,fps:9,loop:false}}},
   // 11 = TRACKSUIT (tracksuit.png). 12 dance-pose frames -> 0-9 a strut/dance loop used as the
   //      "walk", 10-11 used as the death flourish. Melee only; lives in Cottagers Cove.
-  {img:'tracksuit', fw:239, fh:426, scale:3.84, color:'#1fb6c9', hair:'#e8e4d8', mp3:'Tracksuit.mp3',
+  {img:'tracksuit', fw:239, fh:426, scale:3.5, color:'#1fb6c9', hair:'#e8e4d8', mp3:'Tracksuit.mp3',
    clips:{walk:{start:0,count:10,fps:8,loop:true}, die:{start:10,count:2,fps:6,loop:false}}},
   // 12 = HIPPIE (hippie.png). 8-frame walk cycle (tie-dye top, blue hair, keffiyeh scarf).
   //      No bespoke death art, so the last walk frame is reused as the fading death frame.
@@ -195,6 +195,12 @@ const ENEMY_KINDS=[
   //      Crackadilly Gardens alongside the crackmen. Melee/contact only. Nudge scale to taste.
   {img:'stabber', fw:222, fh:208, scale:1.5, color:'#23232a', hair:'#0e0e10', mp3:'Stabber.mp3',
    clips:{walk:{start:0,count:6,fps:9,loop:true}, die:{start:8,count:3,fps:9,loop:false}}},
+  // 15 = RIDER (rider.png). Orange delivery cyclist on a bike. 36 frames -> 0-27 a long
+  //      seated pedalling loop (28 frames), 28-29 a stand-up transition (UNUSED), 30-35 the
+  //      wipeout (lean back -> fall -> tumble -> lying flat -> bike down). Lives in
+  //      Crackadilly Gardens. Melee/contact only. Nudge scale to taste.
+  {img:'rider', fw:183, fh:177, scale:1.5, color:'#e8731f', hair:'#2a1c14', mp3:'Rider.mp3',
+   clips:{walk:{start:0,count:28,fps:12,loop:true}, die:{start:30,count:6,fps:10,loop:false}}},
 ];
 const EH=78;
 let enemies=[];
@@ -693,6 +699,7 @@ function enterSection(opts){
 
 /* ── WORLD / DOORWAYS (hub <-> rooms) ────────────────────── */
 let activeDoor=null, hubReturnX=120, photographerMet=false;
+const roomReturn={};   // roomId -> {from, x, face}: where to drop the player when they pop back OUT of that room
 function gotoId(id, opts){
   const idx=SECTIONS.findIndex(s=>s.id===id);
   if(idx<0) return;
@@ -725,8 +732,15 @@ function useDoor(d){
   } else {                                            // entering a room (or a future linked level)
     if(sec.hub) hubReturnX=d.x;                        // remember which building to pop back to
     const dest=SECTIONS.find(s=>s.id===d.target);
+    // If THIS door leads back to where we entered from, drop the player at the door they came
+    // in through (so sub-rooms — club rooms, the toilet — return you outside the right door).
+    // Otherwise we're heading deeper: remember the door we just used so the trip back lands here.
+    let ex=90, face=1;
+    const ret=roomReturn[sec.id];
+    if(ret && ret.from===d.target){ ex=ret.x; face=ret.face||1; }
+    else { roomReturn[d.target]={from:sec.id, x:d.x, face:1}; }
     transitioning=true;
-    doFade(dest?dest.name:'', ()=>{ gotoId(d.target,{x:90,face:1}); transitioning=false; });
+    doFade(dest?dest.name:'', ()=>{ gotoId(d.target,{x:ex,face:face}); transitioning=false; });
   }
 }
 function drawDoors(){
@@ -875,6 +889,30 @@ function drawJukeMarker(){
   const cx=(jb.x-camX)*ZOOM;
   const cy=30 + Math.sin(performance.now()/260)*4;
   drawMarker(cx, cy, 'JUKEBOX \u00B7 '+(jb.idx+1), 'STRIKE to change track');
+}
+/* ── JUKEBOX AMBIENT GLOW ───────────────────────────────────────────────────
+   A soft pulsing multi-colour halo around the jukebox spot (the Wurlitzer in the
+   Winchester), drawn on the wall behind the characters so the corner feels lit.
+   Position is the JUKEBOX `x`; tune the height with an optional `glowY` (0..1 of
+   screen height, default ~0.5) and size with optional `glowR` on the JUKEBOX entry. */
+function drawJukeGlow(){
+  const jb=curJukebox(); if(!jb) return;
+  const cx=(jb.x-camX)*ZOOM;
+  const baseR=(jb.glowR||90)*ZOOM*0.7;
+  if(cx<-baseR*2||cx>VW+baseR*2) return;
+  const cy=VH*(jb.glowY!=null?jb.glowY:0.5);
+  const t=performance.now()/1000;
+  ctx.save(); ctx.globalCompositeOperation='lighter';
+  for(let i=0;i<3;i++){
+    const r=baseR*(0.7+0.3*Math.sin(t*1.4+i*2.1));
+    const hue=(t*45+i*120)%360;
+    const g=ctx.createRadialGradient(cx,cy,0,cx,cy,Math.max(1,r));
+    g.addColorStop(0,'hsla('+hue+',90%,60%,0.22)');
+    g.addColorStop(0.6,'hsla('+hue+',90%,55%,0.08)');
+    g.addColorStop(1,'hsla('+hue+',90%,55%,0)');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,Math.max(1,r),0,7); ctx.fill();
+  }
+  ctx.restore();
 }
 
 let sceneWallVid=null, sceneFloorVid=null;     // the CURRENT zone's pooled <video> elements
@@ -1274,25 +1312,28 @@ function drawVfx(){
 
 /* ── RAVE FX (Drum & Bass room): drifting coloured haze, a sweeping laser fan and the
    odd strobe flash, all time-driven so the room feels alive. Screen-space overlay. ── */
-function raveActive(){ return SECTIONS[sectionIndex].id==='in_dnb'; }
+function raveRoom(){ const id=SECTIONS[sectionIndex].id; return (id==='in_dnb')?'dnb':(id==='in_hiphop')?'hiphop':null; }
+function raveActive(){ return raveRoom()!==null; }
 function drawRaveSmoke(){
-  if(!raveActive()) return;
+  const rm=raveRoom(); if(!rm) return;
+  const red = (rm==='hiphop');
   const t=performance.now()/1000;
   ctx.save(); ctx.globalCompositeOperation='lighter';
   for(let i=0;i<5;i++){
     const px=(Math.sin(t*0.15+i*1.7)*0.5+0.5)*VW;
     const py=VH*(0.42+0.18*Math.sin(t*0.2+i));
     const r=110+60*Math.sin(t*0.3+i*2);
-    const hue=(t*30+i*60)%360;
+    const hue=red ? (350+i*4+6*Math.sin(t*0.3+i))%360 : (t*30+i*60)%360;   // hip-hop = reds, DnB = full spectrum
     const g=ctx.createRadialGradient(px,py,0,px,py,Math.max(1,r));
-    g.addColorStop(0,'hsla('+hue+',80%,60%,0.06)');
-    g.addColorStop(1,'hsla('+hue+',80%,60%,0)');
+    g.addColorStop(0,'hsla('+hue+',85%,'+(red?52:60)+'%,0.06)');
+    g.addColorStop(1,'hsla('+hue+',85%,55%,0)');
     ctx.fillStyle=g; ctx.beginPath(); ctx.arc(px,py,Math.max(1,r),0,7); ctx.fill();
   }
   ctx.restore();
 }
 function drawRaveLights(){
-  if(!raveActive()) return;
+  const rm=raveRoom(); if(!rm) return;
+  const red = (rm==='hiphop');
   const t=performance.now()/1000;
   ctx.save(); ctx.globalCompositeOperation='lighter';
   const emitters=[{x:VW*0.25,y:-8},{x:VW*0.75,y:-8}];
@@ -1301,16 +1342,16 @@ function drawRaveLights(){
     for(let b=0;b<5;b++){
       const ang=Math.PI/2 + Math.sin(t*0.8+b*0.6+e*1.3)*0.7;   // sweep around straight-down
       const len=VH*1.25, x2=em.x+Math.cos(ang)*len, y2=em.y+Math.sin(ang)*len;
-      const hue=(t*60+b*40+e*120)%360;
+      const hue=red ? (352+b*4+e*5)%360 : (t*60+b*40+e*120)%360;   // hip-hop = red beams
       const g=ctx.createLinearGradient(em.x,em.y,x2,y2);
       g.addColorStop(0,'hsla('+hue+',100%,65%,0)');
-      g.addColorStop(0.15,'hsla('+hue+',100%,65%,0.32)');
+      g.addColorStop(0.15,'hsla('+hue+',100%,'+(red?58:65)+'%,0.32)');
       g.addColorStop(1,'hsla('+hue+',100%,60%,0)');
       ctx.strokeStyle=g; ctx.lineWidth=3+2*Math.sin(t*2+b);
       ctx.beginPath(); ctx.moveTo(em.x,em.y); ctx.lineTo(x2,y2); ctx.stroke();
     }
   }
-  if(Math.sin(t*9)>0.93){ ctx.globalCompositeOperation='source-over'; ctx.fillStyle='rgba(255,255,255,0.12)'; ctx.fillRect(0,0,VW,VH); }
+  if(Math.sin(t*9)>0.93){ ctx.globalCompositeOperation='source-over'; ctx.fillStyle=red?'rgba(255,60,60,0.13)':'rgba(255,255,255,0.12)'; ctx.fillRect(0,0,VW,VH); }
   ctx.restore();
 }
 
@@ -1466,6 +1507,7 @@ function start(m){
   hubReturnX=200;
   helper.active=false; helperCool=[0,0]; buildHelperThumbs(); refreshHelperBtns();
   killedEnemies.clear(); pickup.active=false; inventory.clear();
+  for(const k in roomReturn) delete roomReturn[k];   // forget remembered door-return spots
   setPaused(false);
   gotoId('in_house', {x:90, face:1});
   if(!raf)loop();
@@ -1622,7 +1664,7 @@ function drawChurchNpc(){
 let bkNpc=null;
 function initLibraryNpc(){
   bkNpc=null;
-  if(SECTIONS[sectionIndex].id!=='in_library') return;
+  if(SECTIONS[sectionIndex].id!=='in_special') return;   // moved from the Library to the Special Guest room
   bkNpc={ x:BK.x, face:1, anim:Math.random()*BK_DEF.frames, flipT:BK.flipEvery };
 }
 function updateLibraryNpc(){
@@ -1932,7 +1974,8 @@ function draw(){
     ctx.save(); ctx.translate(Math.round((Math.random()*2-1)*m), Math.round((Math.random()*2-1)*m)); _shaking=true; shakeT--; }
   drawBg();
   drawScenery();   // decorative background NPCs (dancers/couples) — drawn behind everything
-  drawRaveSmoke(); // DnB room: coloured haze behind the action
+  drawRaveSmoke(); // DnB / Hip-Hop room: coloured haze behind the action
+  drawJukeGlow();  // Winchester: soft pulsing halo around the jukebox
 
   drawTV();
 
@@ -2031,9 +2074,11 @@ function loop(){ if(!paused) update(); draw(); raf=requestAnimationFrame(loop); 
 let arenaActive=false, arenaWave=0, arenaScore=0, arenaGrace=0, arenaScored=false;
 function isArena(){ return !!SECTIONS[sectionIndex].arena; }
 function arenaPool(){
-  // every NORMAL wave is a roughly-even mix of EVERY enemy in the game.
-  // (kind 8 = UFO gunship is reserved for the every-5th "UFO assault" rounds.)
-  return [0,1,2,3,4,5,7,9,12]; // police,clown,alien,geezer,knifeman,deliveroo,ufo,bruiser,hippie  (bikeboy/6 stays in Glasgow)
+  // Each arena section can define its OWN wave mix via `arenaPool` in data.js; otherwise
+  // it falls back to the Void's roughly-even mix of every melee/ground enemy.
+  // (the every-5th "boss" wave uses arenaSpecial instead — see arenaNextWave.)
+  const s=SECTIONS[sectionIndex];
+  return s.arenaPool || [0,1,2,3,4,5,7,9,12];
 }
 function arenaEnter(){
   arenaActive=true; arenaWave=0; arenaScore=0; arenaGrace=0; arenaScored=false;
@@ -2043,17 +2088,19 @@ function arenaEnter(){
 function arenaNextWave(){
   arenaWave++;
   const w=arenaWave;
-  const ufoWave = (w%5===0);                               // waves 5,10,15… = UFO ASSAULT
+  const s=SECTIONS[sectionIndex];
+  const bossWave = (w%5===0);                              // every 5th wave is this map's "boss" round
   const spd=ESPEED*(1+(w-1)*0.05);                         // a touch faster each wave
   const dmg=EDMG+(w-1)*2;                                  // hits harder each wave
   let kinds, count, hp;
-  if(ufoWave){
-    kinds=[8];                                             // ONLY UFO gunships (fire the Big Blaster)
-    count=Math.min(16, Math.round(4 + (w/5 - 1)*1.5));     // 4 @w5, 6 @w10, 7 @w15, rising each UFO round
-    hp=Math.round(220*(1+(w/5-1)*0.6));                    // very tanky — hard to kill, tougher each UFO round
+  if(bossWave){
+    const special = (s.arenaSpecial!=null) ? s.arenaSpecial : 8;   // default: UFO gunship (kind 8)
+    kinds=[special];                                       // ONLY this map's special enemy
+    count=Math.min(s.arenaSpecialMax||16, Math.round((s.arenaSpecialBase||4) + (w/5 - 1)*1.5));
+    hp=Math.round((s.arenaSpecialHp||220)*(1+(w/5-1)*0.6));       // very tanky, tougher each boss round
   } else {
-    kinds=arenaPool();                                     // an even mix of everything else
-    count=Math.min(50, 18+Math.floor(w*3));
+    kinds=arenaPool();                                     // this map's normal wave mix
+    count=Math.min(s.arenaMaxCount||50, (s.arenaBaseCount||18)+Math.floor(w*(s.arenaGrowth||3)));
     hp=Math.round(40*(1+(w-1)*0.40));                      // tougher each wave
   }
   // build a bag with roughly equal numbers of each kind, then shuffle it
@@ -2069,7 +2116,8 @@ function arenaNextWave(){
     const e=pushEnemy(kind, at, null, {hp});
     if(e){ e.spd=spd; e.dmg=dmg; }
   }
-  flashBanner(ufoWave ? ('WAVE '+w+' \u2014 UFO ASSAULT') : ('WAVE '+w));
+  const bossName=s.arenaSpecialName||'UFO ASSAULT';
+  flashBanner(bossWave ? ('WAVE '+w+' \u2014 '+bossName) : ('WAVE '+w));
   blip(420,640,0.12,'square',0.14);
 }
 function arenaUpdate(){
@@ -2082,7 +2130,8 @@ function arenaAddKillScore(){
   if(!arenaActive) return;
   arenaScore += 10 + arenaWave*5;
 }
-function arenaLoadScores(){ try{ return JSON.parse(localStorage.getItem('void_scores')||'[]'); }catch(_){ return []; } }
+function arenaScoreKey(){ return 'arena_'+SECTIONS[sectionIndex].id; }   // each arena keeps its own local top-runs board
+function arenaLoadScores(){ try{ return JSON.parse(localStorage.getItem(arenaScoreKey())||'[]'); }catch(_){ return []; } }
 function arenaBest(){ const s=arenaLoadScores(); return s.length?s[0].score:0; }
 function arenaBankScore(){
   if(arenaScored) return; arenaScored=true;
@@ -2090,7 +2139,7 @@ function arenaBankScore(){
   let s=arenaLoadScores();
   s.push({score:arenaScore, wave:arenaWave, t:Date.now()});
   s.sort((a,b)=>b.score-a.score); s=s.slice(0,10);
-  try{ localStorage.setItem('void_scores', JSON.stringify(s)); }catch(_){}
+  try{ localStorage.setItem(arenaScoreKey(), JSON.stringify(s)); }catch(_){}
 }
 function drawArenaHud(){
   if(!isArena()) return;
@@ -2117,7 +2166,8 @@ function drawArenaBoard(){
   ctx.globalAlpha=0.93; ctx.fillStyle='#0b0e14'; roundRect(bx,by,bw,bh,12); ctx.fill();
   ctx.globalAlpha=1; ctx.lineWidth=2; ctx.strokeStyle='#ffd34d'; roundRect(bx,by,bw,bh,12); ctx.stroke();
   ctx.textAlign='center'; ctx.fillStyle='#ffe46b'; ctx.font='900 15px sans-serif';
-  ctx.fillText('THE VOID \u2014 TOP RUNS', bx+bw/2, by+24);
+  const boardTitle=(SECTIONS[sectionIndex].name||'ARENA').replace(/&mdash;/g,'\u2014').replace(/&amp;/g,'&').toUpperCase();
+  ctx.fillText(boardTitle+' \u2014 TOP RUNS', bx+bw/2, by+24);
   ctx.font='800 13px monospace'; ctx.textAlign='left';
   if(s.length===0){ ctx.textAlign='center'; ctx.fillStyle='#cdd6e6'; ctx.fillText('No runs banked yet', bx+bw/2, by+50); }
   for(let i=0;i<s.length;i++){
