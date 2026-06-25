@@ -106,6 +106,10 @@ const ASSETS = [
   {key:'hippie',   type:'img', src:'hippie.png', optional:true},    // Park/street enemy (kind 12)
   {key:'crackman', type:'img', src:'crackman.png', optional:true},  // Crackadilly Gardens enemy (kind 13)
   {key:'stabber',  type:'img', src:'stabber.png', optional:true},   // Crackadilly Gardens hooded knife enemy (kind 14)
+  {key:'bladebot', type:'img', src:'bladebot.png', optional:true},  // Judgement Day blade android (kind 15)
+  {key:'gunbot',   type:'img', src:'gunbot.png', optional:true},    // Judgement Day minigun endoskeleton — SHOOTER (kind 16)
+  {key:'bostonbot',type:'img', src:'bostonbot.png', optional:true}, // Judgement Day blue-headed combat bot (kind 17)
+  {key:'teslabot', type:'img', src:'teslabot.png', optional:true},  // Judgement Day Atlas-style combat bot (kind 18)
   {key:'hologram', type:'img', src:'hologram.png', optional:true},  // Library blue AI hologram NPC (centre)
   {key:'dancer',   type:'img', src:'dancer.png', optional:true},    // dancing NPC (now in the Hip-Hop room)
   {key:'couple',   type:'img', src:'couple.png', optional:true},    // Void dancing-couple NPCs
@@ -248,6 +252,16 @@ const SECTIONS=[
   {id:'holodeck', name:'The Holodeck', bgKey:'__black__', black:true, BGW:2136, srcY:0, flatGround:180, chain:true, next:null, prev:null,
    arena:true, arenaPool:[2,3,7,12,14], arenaSpecial:8, arenaSpecialName:'UFO ASSAULT', arenaSpecialHp:200,
    arenaBaseCount:8, arenaMaxCount:18, arenaGrowth:2, enemies:[]},   // 4 screens wide (4 x tileW 534); holodeck.mp4 tiles across all of them
+
+  /* ── JUDGEMENT DAY (entered from the hub Portal -> travel menu) ─────────
+     Endless wave arena vs the machines: BLADEBOT (arm-blades), GUNBOT (a SHOOTER
+     that sprays normal machine-gun rounds), and two MMA combat bots (BOSTONBOT /
+     TESLABOT). Every 5th wave is a GUNBOT SQUAD (a firing line of miniguns). Black
+     backdrop for now; walk off the far LEFT to leave. Its own leaderboard saves to
+     this device (arena_judgement). Add a backdrop later via SCENE_VIDEOS if wanted. */
+  {id:'judgement', name:'Judgement Day', bgKey:'__black__', black:true, BGW:3200, srcY:0, flatGround:200, chain:true, next:null, prev:null,
+   arena:true, arenaPool:[15,16,17,18], arenaSpecial:16, arenaSpecialName:'GUNBOT SQUAD', arenaSpecialHp:150,
+   arenaSpecialBase:3, arenaSpecialMax:10, arenaBaseCount:6, arenaMaxCount:16, arenaGrowth:1.6, enemies:[]},
 
   /* ── INTERIOR ROOMS (entered from the hub; EXIT door returns to the street) ── */
   {id:'in_house', name:'Inside &mdash; My House', bgKey:'room_house', BGW:591, srcY:46, flatGround:277, charScale:1.3, interior:true, enemies:[],
@@ -557,6 +571,7 @@ const TRAVEL_MENUS={
     {label:'Mortal Kombat \u2014 Wave Survival', target:'mk'},            // arena: melee mix, GUNMAN SQUAD every 5th wave
     {label:'The Void \u2014 Wave Survival', target:'blacklevel'},         // arena: full mix, UFO ASSAULT every 5th wave
     {label:'The Holodeck \u2014 Wave Survival', target:'holodeck'},       // arena: sci-fi mix, UFO ASSAULT every 5th wave
+    {label:'Judgement Day \u2014 Wave Survival', target:'judgement'},     // arena: the machines, GUNBOT SQUAD every 5th wave
   ]},
   easyjet: { title:'easyJet Holidays', dests:[
     {label:'America',   target:'lvl_america'},
