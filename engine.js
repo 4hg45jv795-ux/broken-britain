@@ -189,6 +189,12 @@ const ENEMY_KINDS=[
   //      knockdown frames were cropped, so death reuses the last walk frame (it fades out).
   {img:'crackman', fw:181, fh:348, scale:1.3, color:'#8a5a3a', hair:'#161616', mp3:'Crackman.mp3',
    clips:{walk:{start:0,count:6,fps:9,loop:true}, die:{start:5,count:1,fps:6,loop:false}}},
+  // 14 = STABBER (stabber.png). Hooded figure in a black puffer with a knife. 11 frames ->
+  //      0-5 walk, 6-7 knife-draw/lunge (UNUSED — basic enemies have no melee-attack hook),
+  //      8-10 die (hit-with-blood -> kneel -> lying dead in a blood pool). Lives in
+  //      Crackadilly Gardens alongside the crackmen. Melee/contact only. Nudge scale to taste.
+  {img:'stabber', fw:222, fh:208, scale:1.5, color:'#23232a', hair:'#0e0e10', mp3:'Stabber.mp3',
+   clips:{walk:{start:0,count:6,fps:9,loop:true}, die:{start:8,count:3,fps:9,loop:false}}},
 ];
 const EH=78;
 let enemies=[];
