@@ -198,7 +198,7 @@ const ENEMY_KINDS=[
   // 15 = BLADEBOT (bladebot.png). T-1000-style android with arm-blades. 6-frame walk cycle
   //      (the face peels back to bare endoskeleton across the cycle). Melee/contact; no death
   //      art so the last walk frame fades out. Judgement Day arena. Nudge scale to taste.
-  {img:'bladebot', fw:228, fh:397, scale:1.3, color:'#2a2d33', hair:'#6a4a3a', mp3:'Bladebot.mp3',
+  {img:'bladebot', fw:228, fh:395, scale:1.3, color:'#2a2d33', hair:'#6a4a3a', mp3:'Bladebot.mp3',
    clips:{walk:{start:0,count:6,fps:10,loop:true}, die:{start:5,count:1,fps:6,loop:false}}},
   // 16 = GUNBOT (gunbot.png). Endoskeleton hauling a minigun. 10-frame walk. A SHOOTER that
   //      sprays NORMAL machine-gun rounds (bullet:'mg' -> small fast yellow tracers, NOT the
@@ -207,7 +207,7 @@ const ENEMY_KINDS=[
    clips:{walk:{start:0,count:10,fps:11,loop:true}, die:{start:9,count:1,fps:6,loop:false}}},
   // 17 = BOSTONBOT (bostonbot.png). Blue-headed humanoid combat bot. 6-frame walk cycle.
   //      Melee/contact; last walk frame fades as death. Judgement Day arena.
-  {img:'bostonbot', fw:118, fh:258, scale:1.2, color:'#9aa2ab', hair:'#1f7bff', mp3:'Bostonbot.mp3',
+  {img:'bostonbot', fw:118, fh:255, scale:1.2, color:'#9aa2ab', hair:'#1f7bff', mp3:'Bostonbot.mp3',
    clips:{walk:{start:0,count:6,fps:10,loop:true}, die:{start:5,count:1,fps:6,loop:false}}},
   // 18 = TESLABOT (teslabot.png). Black-and-white Atlas-style combat bot. 8-frame walk cycle.
   //      Melee/contact; last walk frame fades as death. Judgement Day arena.
@@ -341,9 +341,19 @@ let scenery=[];
 function spawnScenery(){
   scenery=[];
   const list=SECTIONS[sectionIndex].npcs||[];
-  for(const d of list) scenery.push({def:d, x:d.at, ct:(Math.random()*120)|0});
+  for(const d of list) scenery.push({def:d, x:d.at, ct:(Math.random()*120)|0, dir:(d.face||1), face:(d.face||1)});
 }
-function updateScenery(){ for(const s of scenery) s.ct++; }
+function updateScenery(){
+  for(const s of scenery){ s.ct++;
+    const d=s.def;
+    if(d.pace){                                  // walk back and forth between paceFrom..paceTo
+      const from=(d.paceFrom!=null?d.paceFrom:d.at-200), to=(d.paceTo!=null?d.paceTo:d.at+200);
+      s.x += s.dir*(d.paceSpd||0.7);
+      if(s.x>=to){ s.x=to; s.dir=-1; } else if(s.x<=from){ s.x=from; s.dir=1; }
+      s.face=s.dir;                              // face the way he's walking
+    }
+  }
+}
 function drawScenery(){
   for(const s of scenery){
     const d=s.def; const h=d.h||120, w=Math.round(h*d.fw/d.fh);
@@ -351,7 +361,7 @@ function drawScenery(){
     const sx=(s.x-camX)*ZOOM, sy=(top-SRCY)*ZOOM, dw=w*ZOOM, dh=h*ZOOM;
     if(sx<-dw*2||sx>VW+dw*2) continue;
     ctx.save();
-    if((d.face||1)<0){ ctx.translate(sx+dw,sy); ctx.scale(-1,1); } else { ctx.translate(sx,sy); }
+    if(((s.face!=null?s.face:d.face)||1)<0){ ctx.translate(sx+dw,sy); ctx.scale(-1,1); } else { ctx.translate(sx,sy); }
     const img=loaded[d.img];
     if(imgOk(img)){
       const c=d.clip; let f=Math.floor(s.ct*c.fps/60); f=(c.loop===false)?Math.min(f,c.count-1):(f%c.count);
@@ -859,11 +869,13 @@ function screenLoad(playNow){
   const v=tvVidFor(sc.files[sc.idx]);
   if(tvVideo && tvVideo!==v){ try{ tvVideo.pause(); }catch(_){} }   // pause the previous channel
   tvVideo=v; v.muted=musicMuted;
-  if(sc.playlist){ try{ v.currentTime=0; }catch(_){} }   // parts always start from the top
+  if(sc.playlist && v.readyState>=1 && (v.ended || v.currentTime>0.1)){ try{ v.currentTime=0; }catch(_){} }  // restart a FINISHED part, but never seek a still-loading element (that stalled part 1 on entry)
   if(playNow && !paused){ v.play().catch(()=>{}); requestWakeLock(); }
 }
 function tvEnter(){
-  if(!curScreen()){ tvPause(); return; }
+  const sc=curScreen();
+  if(!sc){ tvPause(); return; }
+  if(sc.playlist){ sc.idx=0; _plSkips=0; }   // the cinema always (re)starts at PART 1
   screenLoad(true);                  // load + PLAY the current channel first (gives it bandwidth priority)
   if(tvVideo){                       // then warm the other channels once the current one has data
     if(tvVideo.readyState>=2) tvPreloadOthers();
@@ -1583,7 +1595,7 @@ function cinemaFullscreen(){
   if(rq){ v.controls=true; try{ rq.call(v); }catch(_){} }
 }
 cv.addEventListener('pointerup', e=>{
-  const sc=curScreen(); if(!sc||!sc.playlist||paused||csActive) return;        // cinema only
+  const sc=curScreen(); if(!sc||!(sc.playlist||sc.switchable)||paused||csActive) return;   // the cinema OR the house TV
   const b=cv.getBoundingClientRect(); if(!b.width||!b.height) return;
   const ix=(e.clientX-b.left)/b.width*VW, iy=(e.clientY-b.top)/b.height*VH;    // tap -> internal canvas coords
   const r=sc.rect, sx=(r.x-camX)*ZOOM, sy=(r.y-SRCY)*ZOOM, sw=r.w*ZOOM, sh=r.h*ZOOM, pad=14;
@@ -1622,7 +1634,7 @@ function start(m){
   killedEnemies.clear(); pickup.active=false; inventory.clear();
   for(const k in roomReturn) delete roomReturn[k];   // forget remembered door-return spots
   setPaused(false);
-  gotoId('in_house', {x:90, face:1});
+  gotoId('in_library', {x:90, face:1});            // start in the Library (walk right toward the exit)
   if(!raf)loop();
 }
 
@@ -1896,6 +1908,20 @@ function _proxEl(src){
   return _proxEls[src];
 }
 function pauseAllProxAudio(){ for(const k in _proxEls){ try{ _proxEls[k].pause(); }catch(_){} } }
+/* LIBRARY INSTRUCTIONS: play the hologram's Hologram.mp3 reliably, ONCE, as the player
+   walks in from the left. Latched (plays right through, doesn't cut out if they wander
+   past the hologram), no loop. Resets when they leave the library so it plays again next visit. */
+let _libNarr=false;
+function updateLibraryNarration(){
+  if(SECTIONS[sectionIndex].id!=='in_library'){ _libNarr=false; return; }
+  if(_libNarr || musicMuted || paused || !cur || player.dead) return;
+  if((player.x+PW/2) > 600){                       // they've started walking toward the centre/exit
+    const a=_proxEl('Hologram.mp3'); a.loop=false; a.muted=musicMuted; a.volume=0.9;
+    try{ a.currentTime=0; }catch(_){}
+    a.play().catch(()=>{});
+    _libNarr=true;                                  // only once per visit
+  }
+}
 function updateProxAudio(){
   const secId=SECTIONS[sectionIndex].id;
   for(const p of PROX_AUDIO){
@@ -2021,6 +2047,7 @@ function update(){
   updatePickup();
   updateFloaters();
   updateProxAudio();
+  updateLibraryNarration();
   sceneUpdate();
 
   // section edges: chained levels advance to the right; running off the LEFT returns to the hub
