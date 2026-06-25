@@ -795,16 +795,32 @@ function tvVidFor(src){
   if(!v){
     v=document.createElement('video');
     v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
-    v.loop=true; v.preload='auto'; v.muted=musicMuted;
+    const sc=curScreen(); const playlist=!!(sc&&sc.playlist);
+    v.loop=!playlist;                        // channels loop; cinema parts play through then advance
+    v.preload='auto'; v.muted=musicMuted;
     v.style.cssText='position:fixed;left:-9999px;top:-9999px;width:2px;height:2px;opacity:0;pointer-events:none;';
     document.body.appendChild(v);
-    v.src=src; try{ v.load(); }catch(_){}    // begin buffering this channel immediately
+    if(playlist){                            // when one part finishes (or 404s), roll to the next
+      v.addEventListener('ended', ()=>{ if(tvVideo===v) tvAdvancePart(); });
+      v.addEventListener('error', ()=>{ if(tvVideo===v) tvAdvancePart(); });
+      v.addEventListener('playing', ()=>{ _plSkips=0;     // a part is actually rolling
+        const s=curScreen(); if(s&&s.playlist){ const n=(s.idx+1)%s.files.length; if(s.files[n]!==src) tvVidFor(s.files[n]); } });
+    }
+    v.src=src; try{ v.load(); }catch(_){}    // begin buffering immediately
     _tvVidPool[src]=v;
   }
   return v;
 }
+let _plSkips=0;
+function tvAdvancePart(){                     // cinema: roll to the next part, skipping any missing files
+  const sc=curScreen(); if(!sc||!sc.playlist||!sc.files.length) return;
+  if(_plSkips>sc.files.length){ _plSkips=0; return; }   // a whole lap with nothing playable — stop trying
+  sc.idx=(sc.idx+1)%sc.files.length; _plSkips++;
+  screenLoad(true);
+}
 function tvPreloadOthers(){           // warm the OTHER channels (after the current one is playing) so switching is instant
   const sc=curScreen(); if(!sc||!sc.files) return;
+  if(sc.playlist){ const n=(sc.idx+1)%sc.files.length; if(n!==sc.idx) tvVidFor(sc.files[n]); return; }  // film: only the next part
   for(let i=0;i<sc.files.length;i++){ if(i!==sc.idx) tvVidFor(sc.files[i]); }
 }
 function screenLoad(playNow){
@@ -812,6 +828,7 @@ function screenLoad(playNow){
   const v=tvVidFor(sc.files[sc.idx]);
   if(tvVideo && tvVideo!==v){ try{ tvVideo.pause(); }catch(_){} }   // pause the previous channel
   tvVideo=v; v.muted=musicMuted;
+  if(sc.playlist){ try{ v.currentTime=0; }catch(_){} }   // parts always start from the top
   if(playNow && !paused){ v.play().catch(()=>{}); requestWakeLock(); }
 }
 function tvEnter(){
@@ -825,9 +842,10 @@ function tvEnter(){
 function tvPause(){ try{ for(const k in _tvVidPool){ _tvVidPool[k].pause(); } }catch(_){} }
 function tvNextChannel(){
   const sc=curScreen(); if(!sc||!sc.switchable) return;
+  if(sc.playlist) _plSkips=0;
   sc.idx=(sc.idx+1)%sc.files.length; screenLoad(true);
   blip(540,820,0.05,'square',0.12); blip(300,300,0.04,'square',0.08);
-  flashBanner('Channel '+(sc.idx+1));
+  flashBanner((sc.playlist?'Part ':'Channel ')+(sc.idx+1));
 }
 function screenCenterX(sc){ return sc.rect.x + sc.rect.w/2; }
 function updateTV(){
@@ -857,7 +875,8 @@ function drawTVMarker(){
   const sc=curScreen(); const r=sc.rect;
   const cx=(screenCenterX(sc)-camX)*ZOOM;
   const cy=Math.max(8,(r.y-SRCY)*ZOOM-50) + Math.sin(performance.now()/260)*4;
-  drawMarker(cx, cy, 'TV \u00B7 CH '+(sc.idx+1), 'STRIKE to change channel');
+  if(sc.playlist) drawMarker(cx, cy, 'CINEMA \u00B7 PART '+(sc.idx+1), 'STRIKE: skip \u00B7 2-tap screen: fullscreen');
+  else            drawMarker(cx, cy, 'TV \u00B7 CH '+(sc.idx+1), 'STRIKE to change channel');
 }
 
 /* ── THE WINCHESTER JUKEBOX (works like the TV, but switches MUSIC) ──────────
@@ -1509,6 +1528,41 @@ document.querySelectorAll('.helperbtn').forEach(btn=>{
   const fire=e=>{ e.preventDefault(); actx(); cycleWeapon(); };
   wb.addEventListener('touchstart',fire,{passive:false}); wb.addEventListener('mousedown',fire);
 })();
+
+/* ── CINEMA: double-tap the movie screen for native fullscreen ──────────────
+   Active only in a `playlist` screen room (the cinema). Maps the tap to the
+   on-screen video rectangle; a double-tap hands the CURRENT part to the phone/PC
+   native fullscreen player with sound + scrub controls. Each part is its own file,
+   so at a part boundary the native player closes — double-tap again to carry on. */
+let _lastCinTap=0, _cinFsEl=null, _cinFsWired=false;
+function _cinRestore(){ if(_cinFsEl){ try{ _cinFsEl.muted=musicMuted; _cinFsEl.controls=false; }catch(_){} _cinFsEl=null; } }
+function cinemaFullscreen(){
+  const v=tvVideo; if(!v||v.readyState<1) return;
+  if(!_cinFsWired){          // when the video fullscreen ends, put mute/controls back
+    document.addEventListener('fullscreenchange', ()=>{ if(_cinFsEl && document.fullscreenElement!==_cinFsEl) _cinRestore(); });
+    document.addEventListener('webkitfullscreenchange', ()=>{ if(_cinFsEl && document.webkitFullscreenElement!==_cinFsEl) _cinRestore(); });
+    _cinFsWired=true;
+  }
+  _cinFsEl=v;
+  v.addEventListener('webkitendfullscreen', _cinRestore, {once:true});   // iOS native player closed
+  v.muted=false;                                                         // sound on for the film
+  try{ v.play().catch(()=>{}); }catch(_){}
+  if(typeof v.webkitEnterFullscreen==='function'){ try{ v.webkitEnterFullscreen(); return; }catch(_){} }  // iPhone: native player
+  const rq=v.requestFullscreen||v.webkitRequestFullscreen||v.mozRequestFullScreen||v.msRequestFullscreen; // desktop / Android
+  if(rq){ v.controls=true; try{ rq.call(v); }catch(_){} }
+}
+cv.addEventListener('pointerup', e=>{
+  const sc=curScreen(); if(!sc||!sc.playlist||paused||csActive) return;        // cinema only
+  const b=cv.getBoundingClientRect(); if(!b.width||!b.height) return;
+  const ix=(e.clientX-b.left)/b.width*VW, iy=(e.clientY-b.top)/b.height*VH;    // tap -> internal canvas coords
+  const r=sc.rect, sx=(r.x-camX)*ZOOM, sy=(r.y-SRCY)*ZOOM, sw=r.w*ZOOM, sh=r.h*ZOOM, pad=14;
+  if(ix>=sx-pad && ix<=sx+sw+pad && iy>=sy-pad && iy<=sy+sh+pad){             // tapped on the screen
+    e.preventDefault();
+    const now=performance.now();
+    if(now-_lastCinTap<450){ _lastCinTap=0; cinemaFullscreen(); }            // second tap = go fullscreen
+    else _lastCinTap=now;
+  }
+});
 
 /* ── FULLSCREEN / START ──────────────────────────────────── */
 function goFullscreen(){
