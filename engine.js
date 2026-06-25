@@ -195,12 +195,6 @@ const ENEMY_KINDS=[
   //      Crackadilly Gardens alongside the crackmen. Melee/contact only. Nudge scale to taste.
   {img:'stabber', fw:222, fh:208, scale:1.5, color:'#23232a', hair:'#0e0e10', mp3:'Stabber.mp3',
    clips:{walk:{start:0,count:6,fps:9,loop:true}, die:{start:8,count:3,fps:9,loop:false}}},
-  // 15 = RIDER (rider.png). Orange delivery cyclist on a bike. 36 frames -> 0-27 a long
-  //      seated pedalling loop (28 frames), 28-29 a stand-up transition (UNUSED), 30-35 the
-  //      wipeout (lean back -> fall -> tumble -> lying flat -> bike down). Lives in
-  //      Crackadilly Gardens. Melee/contact only. Nudge scale to taste.
-  {img:'rider', fw:183, fh:177, scale:1.5, color:'#e8731f', hair:'#2a1c14', mp3:'Rider.mp3',
-   clips:{walk:{start:0,count:28,fps:12,loop:true}, die:{start:30,count:6,fps:10,loop:false}}},
 ];
 const EH=78;
 let enemies=[];
@@ -911,6 +905,40 @@ function drawJukeGlow(){
     g.addColorStop(0.6,'hsla('+hue+',90%,55%,0.08)');
     g.addColorStop(1,'hsla('+hue+',90%,55%,0)');
     ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,Math.max(1,r),0,7); ctx.fill();
+  }
+  ctx.restore();
+}
+/* ── AMBIENT GLOWS (data-driven, per room) ──────────────────────────────────
+   Renders the GLOWS table (data.js): soft additive halos on candles / neon /
+   lamps so light sources feel alive. 'warm' flickers like a flame, 'cycle' drifts
+   through the spectrum like neon, a fixed `hue` glows steadily. Drawn as backdrop. */
+function curGlows(){ return (typeof GLOWS!=='undefined' && GLOWS[SECTIONS[sectionIndex].id]) || null; }
+function drawGlows(){
+  const list=curGlows(); if(!list) return;
+  const t=performance.now()/1000;
+  ctx.save(); ctx.globalCompositeOperation='lighter';
+  for(let i=0;i<list.length;i++){
+    const gl=list[i];
+    const sx=(gl.x-camX)*ZOOM, sy=(gl.y-SRCY)*ZOOM, baseR=(gl.r||40)*ZOOM;
+    if(sx<-baseR*2||sx>VW+baseR*2) continue;
+    const ph=i*1.7;
+    const warm=(gl.mode==='warm'), cyc=(gl.mode==='cycle');
+    // warm = candle flicker; others = a slow gentle breathe
+    const flick = warm ? (0.74+0.20*Math.sin(t*9+ph)+0.12*Math.sin(t*21+ph*1.7))
+                       : (0.82+0.18*Math.sin(t*1.6+ph));
+    const r=baseR*flick;
+    let hue;
+    if(warm) hue=30+6*Math.sin(t*6+ph);            // amber flame
+    else if(cyc) hue=(t*45+i*70)%360;              // slow rainbow neon
+    else hue=(gl.hue!=null?gl.hue:45);             // steady fixed hue
+    const sat=warm?95:(gl.sat!=null?gl.sat:90);
+    const lig=warm?56:(gl.light!=null?gl.light:58);
+    const a=(gl.alpha!=null?gl.alpha:0.22)*flick;
+    const rg=ctx.createRadialGradient(sx,sy,0,sx,sy,Math.max(1,r));
+    rg.addColorStop(0,   'hsla('+hue+','+sat+'%,'+lig+'%,'+a+')');
+    rg.addColorStop(0.55,'hsla('+hue+','+sat+'%,'+(lig-6)+'%,'+(a*0.4)+')');
+    rg.addColorStop(1,   'hsla('+hue+','+sat+'%,'+lig+'%,0)');
+    ctx.fillStyle=rg; ctx.beginPath(); ctx.arc(sx,sy,Math.max(1,r),0,7); ctx.fill();
   }
   ctx.restore();
 }
@@ -1976,6 +2004,7 @@ function draw(){
   drawScenery();   // decorative background NPCs (dancers/couples) — drawn behind everything
   drawRaveSmoke(); // DnB / Hip-Hop room: coloured haze behind the action
   drawJukeGlow();  // Winchester: soft pulsing halo around the jukebox
+  drawGlows();     // ambient candle / neon / lamp glows across rooms (GLOWS table)
 
   drawTV();
 
