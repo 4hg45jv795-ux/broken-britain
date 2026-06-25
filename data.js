@@ -58,16 +58,14 @@ const CLIPS_TEMPLAR={
 };
 /* ── FIGHTER META ────────────────────────────────────────── */
 const META=[
+  {id:'templar',  name:'Crusader',     flag:'CHRISTENDOM',   fw:240, fh:345, clips:CLIPS_TEMPLAR,
+                  noWeaponArt:true, muzzle:{fwd:0.52, yfac:0.46}},
   {id:'brit',     name:'The Patriot',  flag:'GREAT BRITAIN', fw:233, fh:220, clips:CLIPS_BRIT,
                   noWeaponArt:true, scale:1.1, muzzle:{fwd:0.34, yfac:0.40}},
   {id:'dog',      name:'K-9 Unit',     flag:'ARMED RESPONSE',fw:224, fh:240, clips:CLIPS_DOG,
                   noWeaponArt:true, muzzle:{fwd:0.62, yfac:0.34}},
-  {id:'boss',     name:'The Boss',     flag:'THE FIRM',      fw:294, fh:299, clips:CLIPS_BOSS,
+  {id:'boss',     name:'Cousin V',     flag:'AMERICA',       fw:294, fh:299, clips:CLIPS_BOSS,
                   noWeaponArt:true, muzzle:{fwd:0.62, yfac:0.46}},
-  /* ── NEW CANDIDATE (muzzle fwd/yfac are starting guesses — nudge if the
-        bullet doesn't leave the barrel cleanly) ── */
-  {id:'templar',  name:'The Templar',  flag:'TEMPLAR ORDER', fw:240, fh:345, clips:CLIPS_TEMPLAR,
-                  noWeaponArt:true, muzzle:{fwd:0.52, yfac:0.46}},
 ];
 /* ── ASSETS ──────────────────────────────────────────────── */
 const ASSETS = [
@@ -110,6 +108,7 @@ const ASSETS = [
   {key:'gunbot',   type:'img', src:'gunbot.png', optional:true},    // Judgement Day minigun endoskeleton — SHOOTER (kind 16)
   {key:'bostonbot',type:'img', src:'bostonbot.png', optional:true}, // Judgement Day blue-headed combat bot (kind 17)
   {key:'teslabot', type:'img', src:'teslabot.png', optional:true},  // Judgement Day Atlas-style combat bot (kind 18)
+  {key:'gardenman',type:'img', src:'gardenman.png', optional:true}, // Crackadilly Gardens pacing NPC (decorative, walks back and forth)
   {key:'hologram', type:'img', src:'hologram.png', optional:true},  // Library blue AI hologram NPC (centre)
   {key:'dancer',   type:'img', src:'dancer.png', optional:true},    // dancing NPC (now in the Hip-Hop room)
   {key:'couple',   type:'img', src:'couple.png', optional:true},    // Void dancing-couple NPCs
@@ -259,8 +258,8 @@ const SECTIONS=[
      TESLABOT). Every 5th wave is a GUNBOT SQUAD (a firing line of miniguns). Black
      backdrop for now; walk off the far LEFT to leave. Its own leaderboard saves to
      this device (arena_judgement). Add a backdrop later via SCENE_VIDEOS if wanted. */
-  {id:'judgement', name:'Judgement Day', bgKey:'__black__', black:true, BGW:3200, srcY:0, flatGround:200, chain:true, next:null, prev:null,
-   arena:true, arenaPool:[15,16,17,18], arenaSpecial:16, arenaSpecialName:'GUNBOT SQUAD', arenaSpecialHp:150,
+  {id:'judgement', name:'Judgement Day', bgKey:'__black__', black:true, BGW:2136, srcY:0, flatGround:200, chain:true, next:null, prev:null,
+   arena:true, arenaPool:[15,17,18], arenaSpecial:16, arenaSpecialName:'GUNBOT SQUAD', arenaSpecialHp:150,
    arenaSpecialBase:3, arenaSpecialMax:10, arenaBaseCount:6, arenaMaxCount:16, arenaGrowth:1.6, enemies:[]},
 
   /* ── INTERIOR ROOMS (entered from the hub; EXIT door returns to the street) ── */
@@ -292,7 +291,7 @@ const SECTIONS=[
       approach. Optional art: hologram.png as a single-row strip; until it exists nothing
       is drawn, but the proximity sound still works. Nudge fw/fh/h/range once art is in. */
    npcs:[ {img:'hologram', fw:240, fh:360, at:1086, h:170, face:1,
-           clip:{start:0, count:6, fps:8, loop:true}, mp3:'Hologram.mp3', range:220} ],
+           clip:{start:0, count:6, fps:8, loop:true}} ],
    doors:[]},
   /* WINCHESTER swapped to the wide pub panorama (room winchester.jpeg now 2172x387).
      zoom:1.0 shows an 800px-wide slice. Character made BIGGER (charScale 2.2) and the view
@@ -359,6 +358,11 @@ const SECTIONS=[
    enemies:[ {at:800,kind:13},{at:1200,kind:14,hp:50},{at:1600,kind:13},{at:2000,kind:14,hp:50},{at:2400,kind:13},{at:3200,kind:13},{at:3600,kind:14,hp:50},{at:4000,kind:13},{at:4800,kind:13},{at:5200,kind:14,hp:50} ],
    groundStep:100,
    groundPts:[350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,352,360,364,366,366,366,362,354,350,350,350,350,350,350,350,350,350],
+   /* Decorative NPC: a bloke pacing back and forth near the FAR END (by the Cottagers
+      underpass door). pace:true walks him between paceFrom..paceTo, flipping to face his
+      direction. No collision, can't be hit. Nudge paceFrom/paceTo/paceSpd/h. */
+   npcs:[ {img:'gardenman', fw:229, fh:427, at:5200, h:120, yOff:0, face:1,
+           clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:4950, paceTo:5380, paceSpd:0.8} ],
    doors:[ {x:5500, w:150, label:'Cottagers Cove &mdash; underpass', target:'in_cottagers'} ]},
 
   /* ── SLAMMIN' VINYL ROOMS (entered from the club lobby; EXIT door -> lobby) ──
@@ -561,6 +565,7 @@ const SCENE_VIDEOS = {
     {from:6400, wall:'wall4.mp4', floor:'floor4.mp4'},
   ]},
   holodeck:   { wall:'holodeck.mp4', floor:null, wallFrac:1.0, tileW:534 },   // full-screen clip, tiled across 4 panels (BGW 2136)
+  judgement:  { wall:'judgement.mp4', floor:null, wallFrac:1.0, tileW:534 },  // same as holodeck: one clip tiled across 4 panels (BGW 2136). Drop judgement.mp4 in; black until then.
 };
 /* ── TRAVEL MENUS (the portal + departure boards) ─────────────────────────
    Each menu = a title and a list of destinations. `target` is the section id
@@ -657,7 +662,7 @@ const PRIEST={ centre:296, halfRun:58, lift:46, height:66 };
      animSpd   = strike playback speed (higher = faster swings)
      flipEvery = ticks between turning to face the other direction   */
 const BK_DEF={ key:'burgerking', fw:170, fh:170, frames:6 };
-const BK={ x:280, lift:0, height:84, animSpd:0.16, flipEvery:80 };
+const BK={ x:280, lift:78, height:60, animSpd:0.16, flipEvery:80 };  // raised up onto the stage + a touch smaller (background)
 /* ── MORTAL KOMBAT NPCS (ambient characters in the Portal / MK arena) ──────
    These live ONLY in the 'mk' section. They pace back and forth like the hub
    wanderers and are purely decorative — they can't hit the player and take no
