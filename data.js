@@ -105,11 +105,13 @@ const ASSETS = [
   {key:'tracksuit',type:'img', src:'tracksuit.png', optional:true}, // Cottagers Cove tracksuit enemy (kind 11)
   {key:'hippie',   type:'img', src:'hippie.png', optional:true},    // Park/street enemy (kind 12)
   {key:'crackman', type:'img', src:'crackman.png', optional:true},  // Crackadilly Gardens enemy (kind 13)
+  {key:'stabber',  type:'img', src:'stabber.png', optional:true},   // Crackadilly Gardens hooded knife enemy (kind 14)
   {key:'hologram', type:'img', src:'hologram.png', optional:true},  // Library blue AI hologram NPC (centre)
   {key:'dancer',   type:'img', src:'dancer.png', optional:true},    // dancing NPC (now in the Hip-Hop room)
   {key:'couple',   type:'img', src:'couple.png', optional:true},    // Void dancing-couple NPCs
   {key:'dgreen',   type:'img', src:'dancer_green.png',  optional:true},  // Hip-Hop room dancer (green)
   {key:'dpurple',  type:'img', src:'dancer_purple.png', optional:true},  // Hip-Hop room dancer (purple)
+  {key:'tvguy',    type:'img', src:'tvguy.png', optional:true},     // Hip-Hop room safe-carrying dancing NPC (18 frames)
   /* ── NEW: Drum & Bass room dancing couples ── */
   {key:'dnbcouple1', type:'img', src:'dnbcouple1.png', optional:true},   // Freddy + Queen couple (15 frames)
   {key:'dnbcouple2', type:'img', src:'dnbcouple2.png', optional:true},   // green alien + raver couple (15 frames)
@@ -334,8 +336,12 @@ const SECTIONS=[
      him further into the basin, raise those dip numbers toward 378 (378 is ~the
      very bottom of the view); flatGround:350 stays as a fallback if the image ever
      fails to load. Nudge the underpass door x (5300) to sit over the tunnel mouth.
-     Music: Crackadilly.mp3 (already in TRACKS). */
-  {id:'in_crackadilly', name:'Crackadilly Gardens', bgKey:'room_crackadilly', BGW:5946, srcY:140, flatGround:350, charScale:1.2, interior:true, exitLeft:'home', enemies:[ {at:800,kind:13},{at:1600,kind:13},{at:2400,kind:13},{at:3200,kind:13},{at:4000,kind:13},{at:4800,kind:13} ],
+     Music: Crackadilly.mp3 (already in TRACKS).
+     ENEMIES: six crackmen (kind 13) plus four hooded STABBERS (kind 14) interspersed
+     between them. Stabbers walk you down and knife you on contact — die anim is the
+     hit -> kneel -> lying-dead-with-blood sequence. Nudge at/hp to taste. */
+  {id:'in_crackadilly', name:'Crackadilly Gardens', bgKey:'room_crackadilly', BGW:5946, srcY:140, flatGround:350, charScale:1.2, interior:true, exitLeft:'home',
+   enemies:[ {at:800,kind:13},{at:1200,kind:14,hp:50},{at:1600,kind:13},{at:2000,kind:14,hp:50},{at:2400,kind:13},{at:3200,kind:13},{at:3600,kind:14,hp:50},{at:4000,kind:13},{at:4800,kind:13},{at:5200,kind:14,hp:50} ],
    groundStep:100,
    groundPts:[350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,352,360,364,366,366,366,362,354,350,350,350,350,350,350,350,350,350],
    doors:[ {x:5500, w:150, label:'Cottagers Cove &mdash; underpass', target:'in_cottagers'} ]},
@@ -349,11 +355,15 @@ const SECTIONS=[
    npcs:[ {img:'dnbcouple1', fw:328, fh:310, at:175, h:130, yOff:0, face:1,  clip:{start:0,count:15,fps:6,loop:true}},
           {img:'dnbcouple2', fw:260, fh:272, at:410, h:130, yOff:0, face:-1, clip:{start:0,count:15,fps:8,loop:true}} ],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
+  /* HIP-HOP room: three original dancers PLUS the new "TV guy" — the orange-shirt
+     bloke hugging a safe — boogieing on the spot in 18 looping poses (tvguy.png).
+     Decorative NPC: no collision, can't be hit. Nudge at/h/face to taste. */
   {id:'in_hiphop', name:'Room 2 &mdash; Hip-Hop', bgKey:'room_hiphop', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
-   /* three background dancers (NOT enemies) just looping a dance on the floor */
+   /* background dancers (NOT enemies) just looping a dance on the floor */
    npcs:[ {img:'dgreen',  fw:156, fh:231, at:185, h:104, yOff:0, face:1,  clip:{start:0,count:6,fps:9,loop:true}},
           {img:'dpurple', fw:157, fh:240, at:400, h:110, yOff:0, face:-1, clip:{start:0,count:6,fps:8,loop:true}},
-          {img:'dancer',  fw:163, fh:310, at:300, h:135, yOff:0, face:1,  clip:{start:8,count:6,fps:9,loop:true}, mp3:'Dancer.mp3', range:180} ],
+          {img:'dancer',  fw:163, fh:310, at:300, h:135, yOff:0, face:1,  clip:{start:8,count:6,fps:9,loop:true}, mp3:'Dancer.mp3', range:180},
+          {img:'tvguy',   fw:231, fh:369, at:480, h:128, yOff:0, face:-1, clip:{start:0,count:18,fps:7,loop:true}} ],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
   {id:'in_special', name:'Room 3 &mdash; Special Guest', bgKey:'room_special', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
