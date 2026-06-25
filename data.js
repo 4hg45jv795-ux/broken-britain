@@ -284,7 +284,7 @@ const SECTIONS=[
   /* LIBRARY swapped to the wide Alexandria panorama (room library.jpeg now 2172x375).
      zoom:1.0 shows an 800px-wide slice; walk RIGHT to explore, walk off the far LEFT to
      leave (exitLeft:'home'). Nudge flatGround/srcY/charScale to taste. */
-  {id:'in_library', name:'Inside &mdash; The Library', bgKey:'room_library', BGW:2172, zoom:1.0, srcY:8, flatGround:332, charScale:1.7, interior:true, walkMul:1.7, exitLeft:'home', exitRight:'home',
+  {id:'in_library', name:'Inside &mdash; The Library', bgKey:'room_library', BGW:2172, zoom:1.0, srcY:8, flatGround:332, charScale:1.7, interior:true, walkMul:1.7, exitLeft:{target:'home',x:1740,face:1}, exitRight:{target:'home',x:1740,face:1},
    enemies:[],
    /* A blue AI HOLOGRAM hums in the CENTRE of the library (x:1086, room is 2172 wide).
       Harmless background NPC with a proximity-audio slot — Hologram.mp3 fades in as you
@@ -354,7 +354,7 @@ const SECTIONS=[
      ENEMIES: six crackmen (kind 13) plus four hooded STABBERS (kind 14) interspersed
      between them. Stabbers walk you down and knife you on contact — die anim is the
      hit -> kneel -> lying-dead-with-blood sequence. Nudge at/hp to taste. */
-  {id:'in_crackadilly', name:'Crackadilly Gardens', bgKey:'room_crackadilly', BGW:5946, srcY:140, flatGround:350, charScale:1.2, interior:true, exitLeft:'home',
+  {id:'in_crackadilly', name:'Crackadilly Gardens', bgKey:'room_crackadilly', BGW:5946, srcY:140, flatGround:350, charScale:1.2, interior:true, helpers:true, exitLeft:'home',
    enemies:[ {at:800,kind:13},{at:1200,kind:14,hp:50},{at:1600,kind:13},{at:2000,kind:14,hp:50},{at:2400,kind:13},{at:3200,kind:13},{at:3600,kind:14,hp:50},{at:4000,kind:13},{at:4800,kind:13},{at:5200,kind:14,hp:50} ],
    groundStep:100,
    groundPts:[350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,352,360,364,366,366,366,362,354,350,350,350,350,350,350,350,350,350],
@@ -362,7 +362,8 @@ const SECTIONS=[
       underpass door). pace:true walks him between paceFrom..paceTo, flipping to face his
       direction. No collision, can't be hit. Nudge paceFrom/paceTo/paceSpd/h. */
    npcs:[ {img:'gardenman', fw:229, fh:427, at:5200, h:120, yOff:0, face:1,
-           clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:4950, paceTo:5380, paceSpd:0.8} ],
+           clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:4950, paceTo:5380, paceSpd:0.8,
+           mp3:'Gardenman.mp3', range:200} ],
    doors:[ {x:5500, w:150, label:'Cottagers Cove &mdash; underpass', target:'in_cottagers'} ]},
 
   /* ── SLAMMIN' VINYL ROOMS (entered from the club lobby; EXIT door -> lobby) ──
@@ -662,7 +663,7 @@ const PRIEST={ centre:296, halfRun:58, lift:46, height:66 };
      animSpd   = strike playback speed (higher = faster swings)
      flipEvery = ticks between turning to face the other direction   */
 const BK_DEF={ key:'burgerking', fw:170, fh:170, frames:6 };
-const BK={ x:280, lift:78, height:60, animSpd:0.16, flipEvery:80 };  // raised up onto the stage + a touch smaller (background)
+const BK={ x:280, lift:110, height:60, animSpd:0.16, flipEvery:80 };  // raised higher onto the stage + a touch smaller (background)
 /* ── MORTAL KOMBAT NPCS (ambient characters in the Portal / MK arena) ──────
    These live ONLY in the 'mk' section. They pace back and forth like the hub
    wanderers and are purely decorative — they can't hit the player and take no
