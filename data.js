@@ -360,7 +360,7 @@ const SECTIONS=[
      hit -> kneel -> lying-dead-with-blood sequence. Nudge at/hp to taste. */
   {id:'in_crackadilly', name:'Crackadilly Gardens', bgKey:'room_crackadilly', BGW:5946, srcY:140, flatGround:350, charScale:1.2, interior:true, helpers:true, exitLeft:'home',
    enemies:[ {at:800,kind:13},{at:1200,kind:14,hp:50},{at:1600,kind:13},{at:2000,kind:14,hp:50},{at:2400,kind:13},{at:3200,kind:13},{at:3600,kind:14,hp:50},{at:4000,kind:13},{at:4800,kind:13},{at:5200,kind:14,hp:50},{at:2800,kind:20,hp:60},{at:4400,kind:20,hp:60},
-             {at:200,kind:6,hp:30,cross:true,face:1,spd:2.4},{at:2000,kind:6,hp:30,cross:true,face:1,spd:2.7},{at:5700,kind:6,hp:30,cross:true,face:-1,spd:2.4},{at:3900,kind:6,hp:30,cross:true,face:-1,spd:2.7} ],
+             {at:1400,kind:5,spd:1.6},{at:2600,kind:5,spd:1.6},{at:3800,kind:5,spd:1.6},{at:5000,kind:5,spd:1.6} ],
    groundStep:100,
    groundPts:[350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,352,360,364,366,366,366,362,354,350,350,350,350,350,350,350,350,350],
    doors:[ {x:5500, w:150, label:'Cottagers Cove &mdash; underpass', target:'in_cottagers'} ]},
