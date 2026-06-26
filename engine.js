@@ -148,7 +148,7 @@ let bannerShown=false;
 const ENEMY_KINDS=[
   {img:'police', fw:167, fh:130, color:'#d8e23a', hair:'#1a2233', mp3:'Policeenemy.mp3',
    clips:{walk:{start:0,count:6,fps:9,loop:true}, die:{start:6,count:1,fps:6,loop:false}}},
-  {img:'clown', fw:109, fh:130, color:'#e8c43a', hair:'#2f8a3a', mp3:'Clown.mp3',
+  {img:'clown', fw:109, fh:130, scale:1.7, color:'#e8c43a', hair:'#2f8a3a', mp3:'Clown.mp3',
    clips:{walk:{start:0,count:5,fps:9,loop:true}, die:{start:5,count:1,fps:6,loop:false}}},
   {img:'alien', fw:71, fh:142, color:'#83a86a', hair:'#41603a', mp3:'Alien.mp3',
    clips:{walk:{start:0,count:8,fps:10,loop:true}, die:{start:8,count:6,fps:11,loop:false}}},
@@ -213,12 +213,16 @@ const ENEMY_KINDS=[
   //      Melee/contact; last walk frame fades as death. Judgement Day arena.
   {img:'teslabot', fw:148, fh:265, scale:1.2, color:'#d8dde2', hair:'#101010', mp3:'Teslabot.mp3',
    clips:{walk:{start:0,count:8,fps:10,loop:true}, die:{start:7,count:1,fps:6,loop:false}}},
+  // 19 = PROFESSOR (hawking.png). Seated figure in a powered wheelchair; 15 near-idle frames
+  //      used as a slow rolling "walk". Melee/contact; last frame fades as death. Judgement Day.
+  {img:'hawking', fw:281, fh:307, scale:1.45, color:'#20232a', hair:'#cfcfcf', mp3:'Hawking.mp3',
+   clips:{walk:{start:0,count:15,fps:8,loop:true}, die:{start:14,count:1,fps:6,loop:false}}},
 ];
 const EH=78;
 let enemies=[];
 const killedEnemies=new Set();          // ids of enemies killed this playthrough (don't respawn)
 function pushEnemy(kind,at,id,opts){
-  const k=ENEMY_KINDS[kind]; const sc=k.scale||1; const h=Math.round(EH*sc); const w=Math.round(h*k.fw/k.fh);
+  const k=ENEMY_KINDS[kind]; const sc=(k.scale||1)*((opts&&opts.scaleMul)||1); const h=Math.round(EH*sc); const w=Math.round(h*k.fw/k.fh);
   const hp=(opts&&opts.hp)||40;
   const e={kind, x:at, w, h, y:0, vx:0, face:-1, id:id||null, static:!!(opts&&opts.static),
     hp, max:hp, state:'walk', ct:0, hitId:-1, dmgCool:0, fade:1, fireCd:80+Math.floor(Math.random()*60)};
@@ -1974,6 +1978,9 @@ function updateProxAudio(){
     if(vol>0){ a.muted=musicMuted; a.volume=Math.max(0,Math.min(0.8,vol)); if(a.paused) a.play().catch(()=>{}); }
     else if(!a.paused){ a.pause(); }
   }
+  // DUCK the room music while a scenery NPC (e.g. gardenman) is talking, so their voice is clear.
+  let _duck=0; for(const src in _npcVol){ if(_npcVol[src]>_duck) _duck=_npcVol[src]; }
+  if(typeof bgm!=='undefined' && bgm){ const norm=Math.min(1,_duck/0.8); bgm.volume = 0.35*(1-0.92*norm); }
 }
 
 /* ── UPDATE / DRAW / LOOP ────────────────────────────────── */
