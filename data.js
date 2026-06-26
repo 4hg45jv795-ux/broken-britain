@@ -109,6 +109,7 @@ const ASSETS = [
   {key:'bostonbot',type:'img', src:'bostonbot.png', optional:true}, // Judgement Day blue-headed combat bot (kind 17)
   {key:'teslabot', type:'img', src:'teslabot.png', optional:true},  // Judgement Day Atlas-style combat bot (kind 18)
   {key:'gardenman',type:'img', src:'gardenman.png', optional:true}, // Crackadilly Gardens pacing NPC (decorative, walks back and forth)
+  {key:'hawking',  type:'img', src:'hawking.png', optional:true},   // Judgement Day wheelchair enemy (kind 19)
   {key:'hologram', type:'img', src:'hologram.png', optional:true},  // Library blue AI hologram NPC (centre)
   {key:'dancer',   type:'img', src:'dancer.png', optional:true},    // dancing NPC (now in the Hip-Hop room)
   {key:'couple',   type:'img', src:'couple.png', optional:true},    // Void dancing-couple NPCs
@@ -259,7 +260,7 @@ const SECTIONS=[
      backdrop for now; walk off the far LEFT to leave. Its own leaderboard saves to
      this device (arena_judgement). Add a backdrop later via SCENE_VIDEOS if wanted. */
   {id:'judgement', name:'Judgement Day', bgKey:'__black__', black:true, BGW:2136, srcY:0, flatGround:200, chain:true, next:null, prev:null,
-   arena:true, arenaPool:[15,17,18], arenaSpecial:16, arenaSpecialName:'GUNBOT SQUAD', arenaSpecialHp:150,
+   arena:true, arenaPool:[15,17,18,19], arenaSpecial:16, arenaSpecialName:'GUNBOT SQUAD', arenaSpecialHp:150,
    arenaSpecialBase:3, arenaSpecialMax:10, arenaBaseCount:6, arenaMaxCount:16, arenaGrowth:1.6, enemies:[]},
 
   /* ── INTERIOR ROOMS (entered from the hub; EXIT door returns to the street) ── */
@@ -398,8 +399,8 @@ const SECTIONS=[
   {id:'in_cottagers', name:'Cottagers Cove', bgKey:'room_cottagers', BGW:2172, zoom:0.72, srcY:160, flatGround:620, charScale:2.5, interior:true, walkMul:2.2,
    exitLeft:{target:'in_crackadilly', x:5500, face:-1},   // far LEFT -> back to the Crackadilly underpass entrance
    exitRight:'home',                                       // far RIGHT -> out to the main hub
-   enemies:[ {at:650,kind:9,hp:60}, {at:1250,kind:9,hp:60}, {at:1850,kind:9,hp:60},
-             {at:950,kind:11,hp:50}, {at:1550,kind:11,hp:50} ],   // bruisers + tracksuit dancers
+   enemies:[ {at:650,kind:9,hp:60,scaleMul:1.6}, {at:1250,kind:9,hp:60,scaleMul:1.6}, {at:1850,kind:9,hp:60,scaleMul:1.6},
+             {at:950,kind:11,hp:50,scaleMul:0.72}, {at:1550,kind:11,hp:50,scaleMul:0.72} ],   // bigger bruisers + smaller tracksuit dancers
    doors:[]},
 
   /* Placeholder for travel destinations that aren't built yet (easyJet / train
@@ -580,9 +581,6 @@ const TRAVEL_MENUS={
     {label:'Judgement Day \u2014 Wave Survival', target:'judgement'},     // arena: the machines, GUNBOT SQUAD every 5th wave
   ]},
   easyjet: { title:'easyJet Holidays', dests:[
-    {label:'America',   target:'lvl_america'},
-    {label:'Australia', target:'lvl_australia'},
-    {label:'Japan',     target:'lvl_japan'},
     {label:'Europe',    target:'lvl_europe'},
   ]},
   /* ── DigiTown Station: every portal level broken out as its own stop ──
