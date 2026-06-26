@@ -189,12 +189,12 @@ const SECTIONS=[
      the LAST stop before the chain loops back to the hub. The photographer's first
      appearance + cutscene now triggers at the start of Southampton (see engine.js). */
   {id:'southampton', name:'Southampton &mdash; Above Bar Street', bgKey:'southampton', BGW:1879, srcY:90, flatGround:296, chain:true, next:'park', prev:null,
-   enemies:[ {at:430,kind:0},{at:640,kind:0},{at:850,kind:0},{at:1050,kind:0},{at:1250,kind:0},{at:1450,kind:0},{at:1650,kind:0},{at:1800,kind:0} ]},
+   enemies:[ {at:430,kind:0},{at:640,kind:0},{at:850,kind:0},{at:1050,kind:0},{at:1250,kind:0},{at:1450,kind:0},{at:1650,kind:0},{at:1800,kind:0},{at:540,kind:0},{at:1150,kind:0},{at:1370,kind:0},{at:1730,kind:0} ]},
   {id:'park', name:'Standard UK Park', bgKey:'park', BGW:1763, srcY:0, flatGround:196, chain:true, next:'belfast', prev:'southampton',
-   enemies:[ {at:520,kind:3},{at:880,kind:3},{at:1240,kind:3},{at:680,kind:12},{at:1040,kind:12},{at:1400,kind:12} ],
+   enemies:[ {at:520,kind:3},{at:880,kind:3},{at:1240,kind:3},{at:680,kind:12},{at:1040,kind:12},{at:1400,kind:12},{at:600,kind:6},{at:1100,kind:6},{at:1500,kind:6} ],
    aliens:[ {at:700,kind:2},{at:1020,kind:2},{at:1360,kind:2},{at:1560,kind:2} ]},
   {id:'belfast', name:'Ballymacarrett &mdash; the loyal mile', bgKey:'bg3', BGW:2172, srcY:380, flatGround:560, chain:true, next:'pub', prev:'park',
-   enemies:[ {at:760,kind:4},{at:1120,kind:4},{at:1480,kind:4},{at:1800,kind:4},{at:2020,kind:4} ]},
+   enemies:[ {at:760,kind:4},{at:1120,kind:4},{at:1480,kind:4},{at:1800,kind:4},{at:2020,kind:4},{at:600,kind:4},{at:1300,kind:4},{at:1650,kind:4},{at:1950,kind:4} ]},
   {id:'pub',     name:'The Red Hand &mdash; loyalist till I die', bgKey:'pub', BGW:533, srcY:8, flatGround:212, charScale:1.4, chain:true, next:'dundee', prev:'belfast',
    enemies:[ ]},
   {id:'dundee',  name:'Welcome to Dundee', bgKey:'dundee', BGW:560, srcY:65, flatGround:270, chain:true, next:'glasgow', prev:'pub',
@@ -204,7 +204,7 @@ const SECTIONS=[
   {id:'glasgow', name:'Glasgow &mdash; the Trongate', bgKey:'glasgow', BGW:2672, srcY:90, flatGround:296, chain:true, next:'street', prev:'dundee',
    enemies:[ {at:230,kind:6,hp:1,static:true},{at:760,kind:5},{at:1080,kind:0},{at:1380,kind:5},{at:1700,kind:1},{at:2000,kind:5},{at:2480,kind:5} ]},
   {id:'street', name:'Southside &mdash; the street', bgKey:'bg',  BGW:4047, srcY:120, flatGround:null, chain:true, next:null, prev:'glasgow',
-   enemies:[ {at:1200,kind:0},{at:1700,kind:1},{at:2300,kind:0},{at:3300,kind:1},{at:3700,kind:0},{at:2000,kind:12},{at:2800,kind:12} ]},
+   enemies:[ {at:1200,kind:0},{at:1700,kind:1},{at:2300,kind:0},{at:3300,kind:1},{at:3700,kind:0},{at:2000,kind:12},{at:2800,kind:12},{at:600,kind:0},{at:3900,kind:0},{at:900,kind:6},{at:2200,kind:6},{at:3500,kind:6},{at:1500,kind:20,hp:60},{at:3000,kind:20,hp:60},{at:1900,kind:14,hp:50},{at:3100,kind:14,hp:50},{at:2600,kind:10,hp:60} ]},
 
   /* ── MORTAL KOMBAT (entered from the hub Portal -> travel menu) ──
      Standalone fight arena: the UMK3 "Blue Portal" bridge. Background
@@ -360,7 +360,7 @@ const SECTIONS=[
      hit -> kneel -> lying-dead-with-blood sequence. Nudge at/hp to taste. */
   {id:'in_crackadilly', name:'Crackadilly Gardens', bgKey:'room_crackadilly', BGW:5946, srcY:140, flatGround:350, charScale:1.2, interior:true, helpers:true, exitLeft:'home',
    enemies:[ {at:800,kind:13},{at:1200,kind:14,hp:50},{at:1600,kind:13},{at:2000,kind:14,hp:50},{at:2400,kind:13},{at:3200,kind:13},{at:3600,kind:14,hp:50},{at:4000,kind:13},{at:4800,kind:13},{at:5200,kind:14,hp:50},{at:2800,kind:20,hp:60},{at:4400,kind:20,hp:60},
-             {at:1400,kind:5,spd:1.6},{at:2600,kind:5,spd:1.6},{at:3800,kind:5,spd:1.6},{at:5000,kind:5,spd:1.6} ],
+             {at:1400,kind:5,spd:1.6,scaleMul:1.08},{at:2600,kind:5,spd:1.6,scaleMul:1.08},{at:3800,kind:5,spd:1.6,scaleMul:1.08},{at:5000,kind:5,spd:1.6,scaleMul:1.08} ],
    groundStep:100,
    groundPts:[350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,352,360,364,366,366,366,362,354,350,350,350,350,350,350,350,350,350],
    doors:[ {x:5500, w:150, label:'Cottagers Cove &mdash; underpass', target:'in_cottagers'} ]},
