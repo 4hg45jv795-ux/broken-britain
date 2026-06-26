@@ -845,6 +845,8 @@ document.addEventListener('visibilitychange',()=>{
    This is what was killing the jump/shoot SFX after a period of play. */
 ['pointerdown','touchstart','keydown'].forEach(ev=>document.addEventListener(ev, ()=>{
   try{ if(AC && AC.state!=='running') AC.resume(); }catch(_){}
+  // an UNMUTED screen (house TV / Restore) needs a gesture to start on iOS — kick it on any tap
+  try{ const sc=curScreen(); if(sc && tvVideo && !paused && tvVideo.paused && !tvVideo.ended) tvVideo.play().catch(()=>{}); }catch(_){}
 }, {passive:true, capture:true}));
 function curScreen(){ return SCREENS[SECTIONS[sectionIndex].id] || null; }
 const _tvVidPool={};                 // src -> <video>, kept buffered so channels don't reload on switch
@@ -885,7 +887,7 @@ function screenLoad(playNow){
   const sc=curScreen(); if(!sc){ tvPause(); return; }
   const v=tvVidFor(sc.files[sc.idx]);
   if(tvVideo && tvVideo!==v){ try{ tvVideo.pause(); }catch(_){} }   // pause the previous channel
-  tvVideo=v; v.muted=true;                                          // muted in-world (see tvVidFor) — unmuted only in fullscreen
+  tvVideo=v; v.muted=(sc.sound?musicMuted:true);                   // sound screens (house TV / Restore) play in-world; cinema stays muted in-world (sound in fullscreen)
   if(sc.playlist && v.readyState>=1 && (v.ended || v.currentTime>0.1)){ try{ v.currentTime=0; }catch(_){} }  // restart a FINISHED part, but never seek a still-loading element (that stalled part 1 on entry)
   if(playNow && !paused){ v.play().catch(()=>{}); requestWakeLock(); }
 }
@@ -899,7 +901,7 @@ function tvEnter(){
     else tvVideo.addEventListener('loadeddata', tvPreloadOthers, {once:true});
   }
 }
-function tvPause(){ try{ for(const k in _tvVidPool){ _tvVidPool[k].pause(); } }catch(_){} }
+function tvPause(){ try{ for(const k in _tvVidPool){ _tvVidPool[k].pause(); } }catch(_){} try{ if(AC&&AC.state!=='running') AC.resume(); }catch(_){} }   // leaving a screen frees the audio session -> wake the SFX context
 function tvNextChannel(){
   const sc=curScreen(); if(!sc||!sc.switchable) return;
   if(sc.playlist) _plSkips=0;
@@ -1601,7 +1603,7 @@ document.querySelectorAll('.helperbtn').forEach(btn=>{
    native fullscreen player with sound + scrub controls. Each part is its own file,
    so at a part boundary the native player closes — double-tap again to carry on. */
 let _lastCinTap=0, _cinFsEl=null, _cinFsWired=false;
-function _cinRestore(){ if(_cinFsEl){ try{ _cinFsEl.muted=true; _cinFsEl.controls=false; }catch(_){} _cinFsEl=null; } }  // back to muted in-world
+function _cinRestore(){ if(_cinFsEl){ try{ const s=curScreen(); _cinFsEl.muted=(s&&s.sound)?musicMuted:true; _cinFsEl.controls=false; }catch(_){} _cinFsEl=null; } }  // back to in-world state
 function cinemaFullscreen(){
   const v=tvVideo; if(!v||v.readyState<1) return;
   if(!_cinFsWired){          // when the video fullscreen ends, put mute/controls back
@@ -1686,7 +1688,8 @@ document.getElementById('mute').onclick=(e)=>{
   e.stopPropagation(); musicMuted=!musicMuted;
   const bgm=document.getElementById('bgm'); bgm.muted=musicMuted;
   if(musicMuted) pauseAllProxAudio();
-  for(const k in _tvVidPool){ _tvVidPool[k].muted=musicMuted; }
+  for(const k in _tvVidPool){ _tvVidPool[k].muted=true; }
+  { const _sc=curScreen(); if(tvVideo) tvVideo.muted=(_sc&&_sc.sound)?musicMuted:true; }   // sound screens follow the music toggle; cinema stays muted in-world
   if(!musicMuted && cur && !paused && sectionMusic()) bgm.play().catch(()=>{});
   document.getElementById('mute').innerHTML = musicMuted ? '&#128263;' : '&#128266;';
 };
