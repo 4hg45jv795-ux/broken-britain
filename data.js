@@ -84,6 +84,8 @@ const ASSETS = [
   {key:'room_nightclub',    type:'img', src:'room nightclub.jpeg', optional:true},
   {key:'room_crackadilly',  type:'img', src:'room crackadilly.jpeg', optional:true},
   {key:'room_europe',       type:'img', src:'room europe.jpeg', optional:true},
+  {key:'room_america',      type:'img', src:'room america.jpeg', optional:true},
+  {key:'potus',             type:'img', src:'potus.png', optional:true},   // America dancing NPC (18-frame dance loop)
   {key:'room_dnb',          type:'img', src:'room dnb.jpeg', optional:true},
   {key:'room_hiphop',       type:'img', src:'room hiphop.jpeg', optional:true},
   {key:'room_special',      type:'img', src:'room special.jpeg', optional:true},
@@ -191,7 +193,7 @@ const SECTIONS=[
   {id:'southampton', name:'Southampton &mdash; Above Bar Street', bgKey:'southampton', BGW:1879, srcY:90, flatGround:296, chain:true, next:'park', prev:null,
    enemies:[ {at:430,kind:0},{at:640,kind:0},{at:850,kind:0},{at:1050,kind:0},{at:1250,kind:0},{at:1450,kind:0},{at:1650,kind:0},{at:1800,kind:0},{at:540,kind:0},{at:1150,kind:0},{at:1370,kind:0},{at:1730,kind:0} ]},
   {id:'park', name:'Standard UK Park', bgKey:'park', BGW:1763, srcY:0, flatGround:196, chain:true, next:'belfast', prev:'southampton',
-   enemies:[ {at:520,kind:3},{at:880,kind:3},{at:1240,kind:3},{at:680,kind:12},{at:1040,kind:12},{at:1400,kind:12},{at:600,kind:6},{at:1100,kind:6},{at:1500,kind:6} ],
+   enemies:[ {at:520,kind:3},{at:880,kind:3},{at:1240,kind:3},{at:680,kind:12},{at:1040,kind:12},{at:1400,kind:12},{at:600,kind:5,spd:1.6},{at:1100,kind:5,spd:1.6},{at:1500,kind:5,spd:1.6} ],
    aliens:[ {at:700,kind:2},{at:1020,kind:2},{at:1360,kind:2},{at:1560,kind:2} ]},
   {id:'belfast', name:'Ballymacarrett &mdash; the loyal mile', bgKey:'bg3', BGW:2172, srcY:380, flatGround:560, chain:true, next:'pub', prev:'park',
    enemies:[ {at:760,kind:4},{at:1120,kind:4},{at:1480,kind:4},{at:1800,kind:4},{at:2020,kind:4},{at:600,kind:4},{at:1300,kind:4},{at:1650,kind:4},{at:1950,kind:4} ]},
@@ -375,6 +377,15 @@ const SECTIONS=[
            mp3:'Gardenman.mp3', range:240} ],
    doors:[]},
 
+  /* ── AMERICA (easyJet destination) ──────────────────────────────────────────
+     Placeholder walkable level — a dancing figure struts in place (proximity MP3
+     slot Potus.mp3 fades in as you approach). Add 'room america.jpeg' (asset key
+     room_america) for art; run off the LEFT edge to return to the hub. */
+  {id:'lvl_america', name:'America', bgKey:'room_america', BGW:2172, srcY:0, flatGround:300, charScale:1.3, interior:true, exitLeft:'home', enemies:[],
+   npcs:[ {img:'potus', fw:233, fh:362, at:1086, h:135, yOff:0, face:1,
+           clip:{start:0,count:18,fps:9,loop:true}, mp3:'Potus.mp3', range:260} ],
+   doors:[]},
+
   /* ── SLAMMIN' VINYL ROOMS (entered from the club lobby; EXIT door -> lobby) ──
      Interiors for the three club rooms (room dnb/hiphop/
      special.jpeg). Each loops its own track (see TRACKS). The engine draws a dark
@@ -411,8 +422,8 @@ const SECTIONS=[
   {id:'in_cottagers', name:'Cottagers Cove', bgKey:'room_cottagers', BGW:2172, zoom:0.72, srcY:160, flatGround:620, charScale:2.5, interior:true, walkMul:2.2,
    exitLeft:{target:'in_crackadilly', x:5500, face:-1},   // far LEFT -> back to the Crackadilly underpass entrance
    exitRight:'home',                                       // far RIGHT -> out to the main hub
-   enemies:[ {at:650,kind:9,hp:60,scaleMul:1.15}, {at:1250,kind:9,hp:60,scaleMul:1.15}, {at:1850,kind:9,hp:60,scaleMul:1.15},
-             {at:950,kind:11,hp:50,scaleMul:0.84}, {at:1550,kind:11,hp:50,scaleMul:0.84} ],   // bruiser ~= player height; tracksuit slightly bigger than player
+   enemies:[ {at:900,kind:9,hp:220,scaleMul:1.15},
+             {at:1500,kind:11,hp:220,scaleMul:0.84} ],   // just ONE bruiser + ONE tracksuit, both tanky (hp 220)
    doors:[]},
 
   /* Placeholder for travel destinations that aren't built yet (easyJet / train
@@ -439,7 +450,8 @@ const TRACKS={ select:'Character selection screen.mp3', home:'Home.mp3', street:
   in_police:'Police.mp3', in_nightclub:'Slamminvinyl.mp3', in_crackadilly:'Crackadilly.mp3',
   in_dnb:'Dnb.mp3', in_hiphop:'Hiphop.mp3', in_special:'Specialguest.mp3', in_cottagers:'Cottagerscove.mp3',
   /* ── BLACK LEVEL + HOLODECK MUSIC (the MP4s are silent; these are the sound) ── */
-  blacklevel:'Void.mp3', holodeck:'Holodeck.mp3' };
+  blacklevel:'Void.mp3', holodeck:'Holodeck.mp3', judgement:'Judgement.mp3',
+  lvl_europe:'Europe.mp3', lvl_america:'America.mp3' };
 /* ── THE WINCHESTER JUKEBOX ────────────────────────────────────────────────
    Works exactly like the house TV, but for MUSIC. Stand near the jukebox in the
    Winchester and STRIKE to flip to the next track; the chosen .mp3 becomes the
@@ -594,6 +606,7 @@ const TRAVEL_MENUS={
   ]},
   easyjet: { title:'easyJet Holidays', dests:[
     {label:'Europe',    target:'lvl_europe'},
+    {label:'America',   target:'lvl_america'},
   ]},
   /* ── DigiTown Station: every portal level broken out as its own stop ──
      These all point at the existing chain sections, so each one shows GO and
