@@ -217,6 +217,10 @@ const ENEMY_KINDS=[
   //      used as a slow rolling "walk". Melee/contact; last frame fades as death. Judgement Day.
   {img:'hawking', fw:281, fh:307, scale:1.45, color:'#20232a', hair:'#cfcfcf', mp3:'Hawking.mp3',
    clips:{walk:{start:0,count:15,fps:8,loop:true}, die:{start:14,count:1,fps:6,loop:false}}},
+  // 20 = BIG-BRAIN GENIUS (bigbrain.png). Robed mega-brained figure. 6-frame walk (0-5) then a
+  //      5-frame DYING collapse (6-10) used as the death animation. Crackadilly Gardens enemy.
+  {img:'bigbrain', fw:276, fh:274, scale:1.5, color:'#d8d8d0', hair:'#6a4a30', mp3:'Bigbrain.mp3',
+   clips:{walk:{start:0,count:6,fps:9,loop:true}, die:{start:6,count:5,fps:9,loop:false}}},
 ];
 const EH=78;
 let enemies=[];
