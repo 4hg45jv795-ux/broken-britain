@@ -110,6 +110,8 @@ const ASSETS = [
   {key:'teslabot', type:'img', src:'teslabot.png', optional:true},  // Judgement Day Atlas-style combat bot (kind 18)
   {key:'gardenman',type:'img', src:'gardenman.png', optional:true}, // Crackadilly Gardens pacing NPC (decorative, walks back and forth)
   {key:'hawking',  type:'img', src:'hawking.png', optional:true},   // Judgement Day wheelchair enemy (kind 19)
+  {key:'piggybackguy', type:'img', src:'piggybackguy.png', optional:true}, // Special Guest room NPC — carried sedan-chair group (paces the floor)
+  {key:'bigbrain',     type:'img', src:'bigbrain.png', optional:true},     // Crackadilly Gardens enemy (kind 20) — has its own dying animation
   {key:'hologram', type:'img', src:'hologram.png', optional:true},  // Library blue AI hologram NPC (centre)
   {key:'dancer',   type:'img', src:'dancer.png', optional:true},    // dancing NPC (now in the Hip-Hop room)
   {key:'couple',   type:'img', src:'couple.png', optional:true},    // Void dancing-couple NPCs
@@ -356,7 +358,7 @@ const SECTIONS=[
      between them. Stabbers walk you down and knife you on contact — die anim is the
      hit -> kneel -> lying-dead-with-blood sequence. Nudge at/hp to taste. */
   {id:'in_crackadilly', name:'Crackadilly Gardens', bgKey:'room_crackadilly', BGW:5946, srcY:140, flatGround:350, charScale:1.2, interior:true, helpers:true, exitLeft:'home',
-   enemies:[ {at:800,kind:13},{at:1200,kind:14,hp:50},{at:1600,kind:13},{at:2000,kind:14,hp:50},{at:2400,kind:13},{at:3200,kind:13},{at:3600,kind:14,hp:50},{at:4000,kind:13},{at:4800,kind:13},{at:5200,kind:14,hp:50} ],
+   enemies:[ {at:800,kind:13},{at:1200,kind:14,hp:50},{at:1600,kind:13},{at:2000,kind:14,hp:50},{at:2400,kind:13},{at:3200,kind:13},{at:3600,kind:14,hp:50},{at:4000,kind:13},{at:4800,kind:13},{at:5200,kind:14,hp:50},{at:2800,kind:20,hp:60},{at:4400,kind:20,hp:60} ],
    groundStep:100,
    groundPts:[350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,352,360,364,366,366,366,362,354,350,350,350,350,350,350,350,350,350],
    /* Decorative NPC: a bloke pacing back and forth near the FAR END (by the Cottagers
@@ -387,6 +389,10 @@ const SECTIONS=[
           {img:'tvguy',   fw:231, fh:369, at:490, h:128, yOff:0, face:-1, clip:{start:0,count:18,fps:7,loop:true}} ],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
   {id:'in_special', name:'Room 3 &mdash; Special Guest', bgKey:'room_special', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
+   /* Decorative NPC: the carried sedan-chair group strolls back and forth along the floor on
+      the player's path (normal size, ground level). Nudge h / paceFrom-To / paceSpd / face. */
+   npcs:[ {img:'piggybackguy', fw:151, fh:287, at:240, h:130, yOff:0, face:1,
+           clip:{start:0,count:11,fps:8,loop:true}, pace:true, paceFrom:130, paceTo:420, paceSpd:0.45} ],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
 
   /* ── COTTAGERS COVE (the underpass at the far end of Crackadilly Gardens) ──
