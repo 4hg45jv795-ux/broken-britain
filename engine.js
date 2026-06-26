@@ -215,7 +215,7 @@ const ENEMY_KINDS=[
    clips:{walk:{start:0,count:8,fps:10,loop:true}, die:{start:7,count:1,fps:6,loop:false}}},
   // 19 = PROFESSOR (hawking.png). Seated figure in a powered wheelchair; 15 near-idle frames
   //      used as a slow rolling "walk". Melee/contact; last frame fades as death. Judgement Day.
-  {img:'hawking', fw:281, fh:307, scale:1.45, color:'#20232a', hair:'#cfcfcf', mp3:'Hawking.mp3',
+  {img:'hawking', fw:281, fh:307, scale:0.87, color:'#20232a', hair:'#cfcfcf', mp3:'Hawking.mp3',
    clips:{walk:{start:0,count:15,fps:8,loop:true}, die:{start:14,count:1,fps:6,loop:false}}},
   // 20 = BIG-BRAIN GENIUS (bigbrain.png). Robed mega-brained figure. 6-frame walk (0-5) then a
   //      5-frame DYING collapse (6-10) used as the death animation. Crackadilly Gardens enemy.
@@ -228,7 +228,8 @@ const killedEnemies=new Set();          // ids of enemies killed this playthroug
 function pushEnemy(kind,at,id,opts){
   const k=ENEMY_KINDS[kind]; const sc=(k.scale||1)*((opts&&opts.scaleMul)||1); const h=Math.round(EH*sc); const w=Math.round(h*k.fw/k.fh);
   const hp=(opts&&opts.hp)||40;
-  const e={kind, x:at, w, h, y:0, vx:0, face:-1, id:id||null, static:!!(opts&&opts.static),
+  const e={kind, x:at, w, h, y:0, vx:0, face:((opts&&opts.face)||-1), id:id||null, static:!!(opts&&opts.static),
+    cross:!!(opts&&opts.cross), spd:(opts&&opts.spd)||null,
     hp, max:hp, state:'walk', ct:0, hitId:-1, dmgCool:0, fade:1, fireCd:80+Math.floor(Math.random()*60)};
   enemies.push(e); return e;            // returned so the arena can scale its speed/damage
 }
@@ -255,6 +256,19 @@ function updateEnemies(){
     if(e.shockT>0){ e.shockT--; if(e.shockT%2===0) vfx.push({type:'electric', x:e.x+e.w/2+(Math.random()*e.w*0.5-e.w*0.25), y:e.y+e.h*0.4+(Math.random()*e.h*0.3), t:0, life:6}); }
     if(e.burnT>0){ e.burnT--; for(let i=0;i<2;i++) vfx.push({type:'fire', x:e.x+e.w/2+(Math.random()*e.w*0.6-e.w*0.3), y:e.y+e.h*0.72, vx:(Math.random()-0.5)*0.6, vy:-1-Math.random()*1.4, t:0, life:14+Math.floor(Math.random()*10)}); }
     if(e.state==='die'){ e.ct++; if(enemyClipDone(e)){ e.state='dead'; if(e.id) killedEnemies.add(e.id); } continue; }
+    // CROSS rider (e.g. bikes): rides in a FIXED direction across the level, ignores the player,
+    // wraps around the far edge so riders keep coming from both directions. Hurts on contact.
+    if(e.cross){
+      e.x += e.face*(e.spd||2.3);
+      if(e.face>0 && e.x>BGW){ e.x=-e.w; } else if(e.face<0 && e.x<-e.w){ e.x=BGW; }
+      e.ct++;
+      if(e.dmgCool>0) e.dmgCool--;
+      const dxc=(player.x+PW/2)-(e.x+e.w/2);
+      if(!player.dead && Math.abs(dxc)<EHIT_RANGE+6 && e.dmgCool<=0){
+        damagePlayer(e.dmg||EDMG); e.dmgCool=70; player.x += (dxc>0?-10:10);
+      }
+      continue;
+    }
     // walking / chasing the player
     const K=ENEMY_KINDS[e.kind];
     const dx=(player.x+PW/2)-(e.x+e.w/2);
@@ -943,7 +957,7 @@ function drawTVMarker(){
   const sc=curScreen(); const r=sc.rect;
   const cx=(screenCenterX(sc)-camX)*ZOOM;
   const cy=Math.max(8,(r.y-SRCY)*ZOOM-50) + Math.sin(performance.now()/260)*4;
-  if(sc.playlist) drawMarker(cx, cy, 'CINEMA \u00B7 PART '+(sc.idx+1), 'STRIKE: next part \u00B7 2-tap: fullscreen');
+  if(sc.playlist) drawMarker(cx, cy, 'CINEMA \u00B7 PART '+(sc.idx+1), 'STRIKE: next part \u00B7 2-tap: fullscreen + sound');
   else            drawMarker(cx, cy, 'TV \u00B7 CH '+(sc.idx+1),      'STRIKE: next channel \u00B7 2-tap: fullscreen');
 }
 
