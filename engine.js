@@ -215,7 +215,7 @@ const ENEMY_KINDS=[
    clips:{walk:{start:0,count:8,fps:10,loop:true}, die:{start:7,count:1,fps:6,loop:false}}},
   // 19 = PROFESSOR (hawking.png). Seated figure in a powered wheelchair; 15 near-idle frames
   //      used as a slow rolling "walk". Melee/contact; last frame fades as death. Judgement Day.
-  {img:'hawking', fw:281, fh:307, scale:0.87, color:'#20232a', hair:'#cfcfcf', mp3:'Hawking.mp3',
+  {img:'hawking', fw:281, fh:307, scale:0.96, color:'#20232a', hair:'#cfcfcf', mp3:'Hawking.mp3',
    clips:{walk:{start:0,count:15,fps:8,loop:true}, die:{start:14,count:1,fps:6,loop:false}}},
   // 20 = BIG-BRAIN GENIUS (bigbrain.png). Robed mega-brained figure. 6-frame walk (0-5) then a
   //      5-frame DYING collapse (6-10) used as the death animation. Crackadilly Gardens enemy.
@@ -957,8 +957,8 @@ function drawTVMarker(){
   const sc=curScreen(); const r=sc.rect;
   const cx=(screenCenterX(sc)-camX)*ZOOM;
   const cy=Math.max(8,(r.y-SRCY)*ZOOM-50) + Math.sin(performance.now()/260)*4;
-  if(sc.playlist) drawMarker(cx, cy, 'CINEMA \u00B7 PART '+(sc.idx+1), 'STRIKE: next part \u00B7 2-tap: fullscreen + sound');
-  else            drawMarker(cx, cy, 'TV \u00B7 CH '+(sc.idx+1),      'STRIKE: next channel \u00B7 2-tap: fullscreen');
+  if(sc.playlist) drawMarker(cx, cy, 'CINEMA \u00B7 PART '+(sc.idx+1), 'STRIKE: next part \u00B7 double tap screen: fullscreen + sound');
+  else            drawMarker(cx, cy, 'TV \u00B7 CH '+(sc.idx+1),      'STRIKE: next channel \u00B7 double tap screen: fullscreen');
 }
 
 /* ── THE WINCHESTER JUKEBOX (works like the TV, but switches MUSIC) ──────────
