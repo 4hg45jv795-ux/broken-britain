@@ -405,8 +405,8 @@ const SECTIONS=[
   {id:'in_cottagers', name:'Cottagers Cove', bgKey:'room_cottagers', BGW:2172, zoom:0.72, srcY:160, flatGround:620, charScale:2.5, interior:true, walkMul:2.2,
    exitLeft:{target:'in_crackadilly', x:5500, face:-1},   // far LEFT -> back to the Crackadilly underpass entrance
    exitRight:'home',                                       // far RIGHT -> out to the main hub
-   enemies:[ {at:650,kind:9,hp:60,scaleMul:1.6}, {at:1250,kind:9,hp:60,scaleMul:1.6}, {at:1850,kind:9,hp:60,scaleMul:1.6},
-             {at:950,kind:11,hp:50,scaleMul:0.72}, {at:1550,kind:11,hp:50,scaleMul:0.72} ],   // bigger bruisers + smaller tracksuit dancers
+   enemies:[ {at:650,kind:9,hp:60,scaleMul:1.15}, {at:1250,kind:9,hp:60,scaleMul:1.15}, {at:1850,kind:9,hp:60,scaleMul:1.15},
+             {at:950,kind:11,hp:50,scaleMul:0.84}, {at:1550,kind:11,hp:50,scaleMul:0.84} ],   // bruiser ~= player height; tracksuit slightly bigger than player
    doors:[]},
 
   /* Placeholder for travel destinations that aren't built yet (easyJet / train
