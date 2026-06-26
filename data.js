@@ -544,12 +544,12 @@ const GLOWS={
 const SCREENS = {
   in_house:   { rect:{ x:222, y:66, w:146, h:82 },                       // perfect already
                 files:['channel1.mp4','channel2.mp4','channel3.mp4','channel4.mp4','channel5.mp4','channel6.mp4','channel7.mp4','channel8.mp4'],
-                switchable:true, reach:120, idx:0, debug:false },
+                switchable:true, sound:true, reach:120, idx:0, debug:false },
   in_cinema:  { rect:{ x:183, y:61, w:240, h:120 },                      // measured to the painted cinema screen
                 files:['part1.mp4','part2.mp4','part3.mp4','part4.mp4','part5.mp4','part6.mp4','part7.mp4','part8.mp4','part9.mp4','part10.mp4','part11.mp4','part12.mp4'],
                 playlist:true, switchable:true, reach:160, idx:0, debug:false },
   in_restore: { rect:{ x:243, y:64, w:109, h:66 },                       // measured to the painted restore-room TV
-                files:['restore.mp4'], switchable:false, idx:0, debug:false },
+                files:['restore.mp4'], switchable:false, sound:true, idx:0, debug:false },
 };
 /* ── SCENE VIDEOS (full-level MP4 scenery: tiled WALL + FLOOR) ─────────────
    On a level flagged with a SCENE_VIDEOS entry, two looping MP4s become the
