@@ -856,7 +856,7 @@ function tvVidFor(src){
     v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
     const sc=curScreen(); const playlist=!!(sc&&sc.playlist);
     v.loop=!playlist;                        // channels loop; cinema parts play through then advance
-    v.preload='auto'; v.muted=musicMuted;
+    v.preload='auto'; v.muted=true;          // in-world screens stay MUTED: muted video autoplays reliably on iOS AND doesn't grab the audio session (which was suspending the SFX). Sound comes on in fullscreen.
     v.style.cssText='position:fixed;left:-9999px;top:-9999px;width:2px;height:2px;opacity:0;pointer-events:none;';
     document.body.appendChild(v);
     if(playlist){                            // when one part finishes (or 404s), roll to the next
@@ -885,7 +885,7 @@ function screenLoad(playNow){
   const sc=curScreen(); if(!sc){ tvPause(); return; }
   const v=tvVidFor(sc.files[sc.idx]);
   if(tvVideo && tvVideo!==v){ try{ tvVideo.pause(); }catch(_){} }   // pause the previous channel
-  tvVideo=v; v.muted=musicMuted;
+  tvVideo=v; v.muted=true;                                          // muted in-world (see tvVidFor) — unmuted only in fullscreen
   if(sc.playlist && v.readyState>=1 && (v.ended || v.currentTime>0.1)){ try{ v.currentTime=0; }catch(_){} }  // restart a FINISHED part, but never seek a still-loading element (that stalled part 1 on entry)
   if(playNow && !paused){ v.play().catch(()=>{}); requestWakeLock(); }
 }
@@ -912,6 +912,12 @@ function updateTV(){
   const sc=curScreen();
   tvHot = !!(sc && sc.switchable) &&
           Math.abs((player.x+PW/2) - screenCenterX(sc)) <= (sc.reach||120);
+  // Keep the screen video rolling: if it should be playing but isn't (e.g. the Restore TV wasn't
+  // buffered on first entry), retry play() each frame until it sticks. Muted, so iOS allows it.
+  if(sc && tvVideo && !paused && tvVideo.paused && !tvVideo.ended){ try{ tvVideo.play().catch(()=>{}); }catch(_){} }
+  // Belt-and-suspenders for the SFX: nudge the WebAudio context back awake if it drifted to
+  // suspended (the gesture/visibility handlers do the heavy lifting; this just speeds recovery).
+  if(AC && AC.state==='suspended'){ try{ AC.resume(); }catch(_){} }
 }
 function drawTV(){
   const sc=curScreen(); if(!sc) return;
@@ -1595,7 +1601,7 @@ document.querySelectorAll('.helperbtn').forEach(btn=>{
    native fullscreen player with sound + scrub controls. Each part is its own file,
    so at a part boundary the native player closes — double-tap again to carry on. */
 let _lastCinTap=0, _cinFsEl=null, _cinFsWired=false;
-function _cinRestore(){ if(_cinFsEl){ try{ _cinFsEl.muted=musicMuted; _cinFsEl.controls=false; }catch(_){} _cinFsEl=null; } }
+function _cinRestore(){ if(_cinFsEl){ try{ _cinFsEl.muted=true; _cinFsEl.controls=false; }catch(_){} _cinFsEl=null; } }  // back to muted in-world
 function cinemaFullscreen(){
   const v=tvVideo; if(!v||v.readyState<1) return;
   if(!_cinFsWired){          // when the video fullscreen ends, put mute/controls back
