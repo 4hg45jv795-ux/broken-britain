@@ -72,24 +72,6 @@ function onAllLoaded(){
 
 function buildCards(){
   const grid=document.getElementById('cards');
-  grid.innerHTML='';
-  const sv=(typeof loadSaveData==='function') ? loadSaveData() : null;
-  if(sv){                                            // a saved game exists -> offer CONTINUE first
-    const sm=META.find(x=>x.id===sv.charId)||META[0];
-    const c=document.createElement('button'); c.className='card';
-    const thumbDiv=document.createElement('div'); thumbDiv.className='thumb';
-    const cv2=document.createElement('canvas');
-    const TW=150, dh=Math.round(TW*sm.fh/sm.fw); cv2.width=TW; cv2.height=dh;
-    const ctx2=cv2.getContext('2d'); ctx2.imageSmoothingEnabled=true;
-    if(imgOk(loaded[sm.id])){ try{ ctx2.drawImage(loaded[sm.id],0,0,sm.fw,sm.fh,0,0,TW,dh); }catch(err){ drawThumbPlaceholder(ctx2,TW,dh);} }
-    else drawThumbPlaceholder(ctx2,TW,dh);
-    thumbDiv.appendChild(cv2); c.appendChild(thumbDiv);
-    const nameDiv=document.createElement('div'); nameDiv.className='name'; nameDiv.textContent='CONTINUE';
-    const flagDiv=document.createElement('div'); flagDiv.className='flagtag'; flagDiv.textContent=sm.name+'  \u00B7  \u00A3'+(sv.money||0);
-    c.appendChild(nameDiv); c.appendChild(flagDiv);
-    c.onclick=()=>resumeGame();
-    grid.appendChild(c);
-  }
   META.forEach(m=>{
     const c=document.createElement('button'); c.className='card';
     const thumbDiv=document.createElement('div'); thumbDiv.className='thumb';
@@ -442,7 +424,6 @@ function updateItems(){
       if(d.money){ addMoney(d.money); flashBanner('Found '+(d.label||('\u00A3'+d.money))+'!'); }
       else flashBanner('Picked up '+(d.label||d.id));
       [0,4,7,12].forEach((s,i)=>setTimeout(()=>blip(520*Math.pow(2,s/12),0,0.12,'triangle',0.16),i*60));
-      if(typeof saveGame==='function') saveGame();        // inventory / money changed -> persist
     }
   }
 }
@@ -806,7 +787,6 @@ function enterSection(opts){
   initPickup();
   tvEnter();                                       // start this room's wall screen (or stop if none)
   sceneEnter();                                    // start this level's full-scene wall+floor videos (or stop)
-  if(typeof saveGame==='function') saveGame();     // autosave on every area change (banks money/weapons/keys)
 }
 
 /* ── WORLD / DOORWAYS (hub <-> rooms) ────────────────────── */
@@ -1271,7 +1251,6 @@ function buyWeapon(w){
     if(w.id==='vest'){ player.armour=ARMOUR_HITS; updateArmourHUD(); flashBanner('Armour on &mdash; '+ARMOUR_HITS+' hits'); }
     else { addWeaponToLoadout(w.id); flashBanner(w.name+' ready'); }
     [0,4,7,12].forEach((s,i)=>setTimeout(()=>blip(440*Math.pow(2,s/12),0,0.12,'triangle',0.15),i*60));
-    if(typeof saveGame==='function') saveGame();    // persist the purchase
   }
   else { flashBanner('Not enough money for the '+w.name); blip(200,110,0.12,'square',0.16); }
 }
@@ -1749,7 +1728,7 @@ function goFullscreen(){
   if(rq){ try{ rq.call(el); }catch(e){} }
   if(screen.orientation&&screen.orientation.lock){ try{ screen.orientation.lock('landscape').catch(()=>{}); }catch(e){} }
 }
-function start(m, save){
+function start(m){
   cur=m; FW=m.fw; FH=m.fh; PW=Math.round(PH*FW/FH); CLIPS=m.clips;
   goFullscreen(); actx(); requestWakeLock();          // keep the screen awake for the whole session
   document.getElementById('select').style.display='none';
@@ -1770,36 +1749,9 @@ function start(m, save){
   killedEnemies.clear(); pickup.active=false; inventory.clear();
   for(const k in roomReturn) delete roomReturn[k];   // forget remembered door-return spots
   setPaused(false);
-  if(save){                                          // CONTINUE: restore saved progression and drop back at the hub
-    money = (typeof save.money==='number') ? save.money : money;
-    player.armour = save.armour||0;
-    owned.clear(); (save.owned||['pistol']).forEach(id=>owned.add(id)); owned.add('pistol');
-    inventory.clear(); (save.inventory||[]).forEach(id=>inventory.add(id));
-    weaponList = WEAPON_ORDER.filter(x=>owned.has(x));
-    weaponSel = (typeof save.weaponSel==='number' && save.weaponSel>=0 && save.weaponSel<weaponList.length) ? save.weaponSel : 0;
-    updateMoneyHUD(); updateArmourHUD(); refreshWeaponBtn();
-    gotoId('home', {x:hubReturnX, face:1});
-  } else {
-    gotoId('in_library', {x:90, face:1});            // NEW GAME: start in the Library (walk right toward the exit)
-  }
+  gotoId('in_library', {x:90, face:1});            // start in the Library (walk right toward the exit)
   if(!raf)loop();
 }
-/* ── SAVE SYSTEM ──────────────────────────────────────────────────────────
-   Progression (character, money, armour, owned weapons + current selection,
-   and collected items/keys) is auto-saved to this device and offered back as a
-   CONTINUE card on the select screen. Continue drops you at the hub. Picking a
-   fighter instead starts a fresh game and overwrites the save. */
-const SAVE_KEY='eie_save';
-function saveGame(){
-  if(!cur) return;
-  try{ localStorage.setItem(SAVE_KEY, JSON.stringify({
-    v:1, charId:cur.id, sectionId:SECTIONS[sectionIndex].id,
-    money, armour:player.armour, owned:[...owned], inventory:[...inventory], weaponSel
-  })); }catch(_){}
-}
-function loadSaveData(){ try{ return JSON.parse(localStorage.getItem(SAVE_KEY)||'null'); }catch(_){ return null; } }
-function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(_){} }
-function resumeGame(){ const sv=loadSaveData(); if(!sv) return; const m=META.find(x=>x.id===sv.charId)||META[0]; start(m, sv); }
 
 /* ── PAUSE / MUTE ────────────────────────────────────────── */
 let paused=false, musicMuted=false;
@@ -1818,31 +1770,6 @@ function setPaused(p){
 }
 document.getElementById('pause').onclick=(e)=>{ e.stopPropagation(); setPaused(!paused); };
 document.getElementById('pausemenu').onclick=()=>setPaused(false);
-/* SAVE & QUIT: persist progress, stop the game loop + audio, and return to the
-   character-select title (where the CONTINUE card now reflects the save). */
-function quitToMenu(){
-  saveGame();
-  paused=false;
-  document.getElementById('pausemenu').classList.remove('on');
-  document.getElementById('pause').innerHTML='&#10073;&#10073;';
-  try{ document.getElementById('bgm').pause(); }catch(_){}
-  tvPause(); scenePause(); pauseAllProxAudio(); releaseWakeLock();
-  if(raf){ cancelAnimationFrame(raf); raf=null; }     // stop the loop so draw() doesn't run with no character
-  cur=null;
-  document.getElementById('game').style.display='none';
-  document.getElementById('select').style.display='';
-  document.getElementById('kbhint').style.display='';
-  buildCards();                                       // refresh the title so CONTINUE shows the just-saved run
-}
-(function(){                                          // inject the Save & Quit button into the pause card
-  const card=document.querySelector('#pausemenu .pausecard'); if(!card) return;
-  const b=document.createElement('button'); b.id='savequit'; b.textContent='Save \u0026 Quit';
-  b.style.cssText='display:block;margin:18px auto 0;background:#7a1f25;border:0;color:#fff;'
-    +'font:800 13px sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:11px 22px;'
-    +'border-radius:9px;cursor:pointer;pointer-events:auto;';
-  b.onclick=(e)=>{ e.stopPropagation(); quitToMenu(); };   // don't let the tap also resume
-  card.appendChild(b);
-})();
 document.getElementById('shopclose').onclick=(e)=>{ e.stopPropagation(); closeShop(); };
 document.getElementById('shop').onclick=(e)=>{ if(e.target.id==='shop') closeShop(); };
 document.getElementById('travel-close').onclick=(e)=>{ e.stopPropagation(); closeTravel(); };
