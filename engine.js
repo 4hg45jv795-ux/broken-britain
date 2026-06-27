@@ -52,11 +52,16 @@ function onLoad(){
 }
 ASSETS.forEach(a=>{
   const im=new Image();
+  let tries=0;
   im.onload=onLoad;
-  im.onerror=()=>{ if(!a.optional) failed.push(a.src); console.warn('[EnoughIsEnough] failed to load:',a.src); onLoad(); };
+  im.onerror=()=>{
+    if(tries<2){ tries++; setTimeout(()=>{ im.src=a.src+(a.src.indexOf('?')<0?'?':'&')+'retry='+tries; }, 500*tries); return; }  // a cold first launch can time out images mid-download; retry before declaring them missing
+    if(!a.optional) failed.push(a.src); console.warn('[EnoughIsEnough] failed to load:',a.src); onLoad();
+  };
   im.src=a.src;
   loaded[a.key]=im;
 });
+if('serviceWorker' in navigator){ try{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(_){} }  // PWA: cache media for fast, reliable repeat launches (see sw.js)
 function onAllLoaded(){
   document.getElementById('loading').style.display='none';
   document.getElementById('app').style.display='flex';
