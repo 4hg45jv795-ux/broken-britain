@@ -72,6 +72,24 @@ function onAllLoaded(){
 
 function buildCards(){
   const grid=document.getElementById('cards');
+  grid.innerHTML='';
+  const sv=(typeof loadSaveData==='function') ? loadSaveData() : null;
+  if(sv){                                            // a saved game exists -> offer CONTINUE first
+    const sm=META.find(x=>x.id===sv.charId)||META[0];
+    const c=document.createElement('button'); c.className='card';
+    const thumbDiv=document.createElement('div'); thumbDiv.className='thumb';
+    const cv2=document.createElement('canvas');
+    const TW=150, dh=Math.round(TW*sm.fh/sm.fw); cv2.width=TW; cv2.height=dh;
+    const ctx2=cv2.getContext('2d'); ctx2.imageSmoothingEnabled=true;
+    if(imgOk(loaded[sm.id])){ try{ ctx2.drawImage(loaded[sm.id],0,0,sm.fw,sm.fh,0,0,TW,dh); }catch(err){ drawThumbPlaceholder(ctx2,TW,dh);} }
+    else drawThumbPlaceholder(ctx2,TW,dh);
+    thumbDiv.appendChild(cv2); c.appendChild(thumbDiv);
+    const nameDiv=document.createElement('div'); nameDiv.className='name'; nameDiv.textContent='CONTINUE';
+    const flagDiv=document.createElement('div'); flagDiv.className='flagtag'; flagDiv.textContent=sm.name+'  \u00B7  \u00A3'+(sv.money||0);
+    c.appendChild(nameDiv); c.appendChild(flagDiv);
+    c.onclick=()=>resumeGame();
+    grid.appendChild(c);
+  }
   META.forEach(m=>{
     const c=document.createElement('button'); c.className='card';
     const thumbDiv=document.createElement('div'); thumbDiv.className='thumb';
@@ -174,7 +192,7 @@ const ENEMY_KINDS=[
    clips:{walk:{start:0,count:6,fps:11,loop:true}, die:{start:12,count:6,fps:10,loop:false}}},
   // 10 = GUNMAN: hooded shooter (shooter.png). 12 frames -> 0-3 walk, 4-7 aim/fire, 8-11 die.
   //      Fires the Big-Blaster bolt and plays its SHOOT pose while firing. In the Holodeck.
-  {img:'shooter', fw:292, fh:343, scale:1.7, shooter:true, shotDmg:10, color:'#3a4250', hair:'#20242c', mp3:'Gunman.mp3',
+  {img:'shooter', fw:292, fh:343, scale:1.7, shooter:true, shotDmg:10, bullet:'pistol', color:'#3a4250', hair:'#20242c', mp3:'Gunman.mp3',
    clips:{walk:{start:0,count:4,fps:9,loop:true}, shoot:{start:4,count:4,fps:11,loop:false}, die:{start:8,count:4,fps:9,loop:false}}},
   // 11 = TRACKSUIT (tracksuit.png). 12 dance-pose frames -> 0-9 a strut/dance loop used as the
   //      "walk", 10-11 used as the death flourish. Melee only; lives in Cottagers Cove.
@@ -237,7 +255,9 @@ function spawnEnemiesForSection(){
   if(SECTIONS[sectionIndex].arena){ arenaEnter(); return; }   // arena sections run their own wave spawner
   arenaActive=false;                                          // any normal section leaves the arena
   enemies=[]; enemyBullets=[];
-  SECTIONS[sectionIndex].enemies.forEach((e,i)=>{ const id=sectionIndex+'-e'+i; if(!killedEnemies.has(id)) pushEnemy(e.kind, e.at, id, e); });
+  const sec=SECTIONS[sectionIndex];
+  if(sec.respawn){ (sec.enemies||[]).forEach((e,i)=>killedEnemies.delete(sectionIndex+'-e'+i)); }  // respawn sections (e.g. Cottagers Cove): enemies are back every visit
+  sec.enemies.forEach((e,i)=>{ const id=sectionIndex+'-e'+i; if(!killedEnemies.has(id)) pushEnemy(e.kind, e.at, id, e); });
   if(SECTIONS[sectionIndex].id==='park' && parkInvaded) spawnParkAliens();
 }
 function spawnParkAliens(){
@@ -412,10 +432,17 @@ function updateItems(){
   for(const it of items){
     if(it.taken) continue;
     const d=it.def;
-    if(Math.abs((player.x+PW/2)-it.x) < PW/2+34){
+    let near = Math.abs((player.x+PW/2)-it.x) < PW/2+34;
+    if(near && d.float){                                  // a floating item: must also be near it vertically (swim up to it)
+      const itemY = groundAt(it.x) - (d.h||34) - (d.yOff||0);
+      near = Math.abs((player.y+PH*0.4) - itemY) < 100;
+    }
+    if(near){
       it.taken=true; inventory.add(d.id);
-      flashBanner('Picked up '+(d.label||d.id));
+      if(d.money){ addMoney(d.money); flashBanner('Found '+(d.label||('\u00A3'+d.money))+'!'); }
+      else flashBanner('Picked up '+(d.label||d.id));
       [0,4,7,12].forEach((s,i)=>setTimeout(()=>blip(520*Math.pow(2,s/12),0,0.12,'triangle',0.16),i*60));
+      if(typeof saveGame==='function') saveGame();        // inventory / money changed -> persist
     }
   }
 }
@@ -431,20 +458,34 @@ function drawKeyFallback(cx, top, hh){
   ctx.fillRect(11,-2.4,2.6,8); ctx.fillRect(14.5,-2.4,2.6,6);                 // teeth
   ctx.restore();
 }
+function drawCashFallback(cx, top, hh){
+  // a green stack of banknotes with a £ on it, scaled to height hh
+  ctx.save(); ctx.translate(cx, top); const s=hh/34; ctx.scale(s,s);
+  ctx.shadowColor='rgba(80,220,120,0.85)'; ctx.shadowBlur=9;
+  for(let i=3;i>=0;i--){                       // a few offset notes => a stack
+    ctx.fillStyle=i%2?'#1f7a3a':'#249447'; ctx.strokeStyle='#0c3a1c'; ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.rect(-17+i*1.5, i*-3.2, 34, 18); ctx.fill(); ctx.stroke();
+  }
+  ctx.shadowBlur=0; ctx.fillStyle='#eaffe2'; ctx.font='800 12px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('\u00A3', 0, -9.5+13);
+  ctx.restore(); ctx.textAlign='start';
+}
 function drawItems(){
   for(const it of items){
     if(it.taken) continue;
     const d=it.def; const h=(d.h||34);
     const gy=groundAt(it.x);
-    const bob=Math.sin(performance.now()/360)*3;
-    const sx=(it.x-camX)*ZOOM, sy=(gy-h-SRCY)*ZOOM+bob;
+    const bob=Math.sin(performance.now()/360)*(d.float?6:3);
+    const sx=(it.x-camX)*ZOOM, sy=(gy-h-(d.yOff||0)-SRCY)*ZOOM+bob;
     if(sx<-80||sx>VW+80) continue;
-    const img=loaded[d.id];
+    const img=loaded[d.money?'cash':d.id];
     if(imgOk(img)){
       const dh=h*ZOOM, dw=dh*img.naturalWidth/img.naturalHeight;
-      ctx.save(); ctx.shadowColor='rgba(255,210,80,0.7)'; ctx.shadowBlur=10;
+      ctx.save(); ctx.shadowColor=d.money?'rgba(120,255,150,0.7)':'rgba(255,210,80,0.7)'; ctx.shadowBlur=10;
       try{ ctx.drawImage(img, sx-dw/2, sy, dw, dh); }catch(_){}
       ctx.restore();
+    } else if(d.money){
+      drawCashFallback(sx, sy, h*ZOOM);
     } else {
       drawKeyFallback(sx, sy, h*ZOOM);
     }
@@ -459,10 +500,11 @@ function enemyFire(e){
   const ex=e.x+e.w*0.5, ey=e.y+e.h*0.42;
   let dx=px-ex, dy=py-ey; const d=Math.hypot(dx,dy)||1;
   const mg=(K.bullet==='mg');
-  const sp = mg?9.6:4.6;
+  const pistol=(K.bullet==='pistol');
+  const sp = mg?9.6:(pistol?8.4:4.6);
   let vx=dx/d*sp, vy=dy/d*sp;
   if(mg){ const j=(Math.random()-0.5)*0.09, c=Math.cos(j), s=Math.sin(j); const nx=vx*c-vy*s, ny=vx*s+vy*c; vx=nx; vy=ny; } // slight spray
-  enemyBullets.push({x:ex, y:ey, vx, vy, dmg:(K.shotDmg||14), t:0, life:mg?80:150, mg});
+  enemyBullets.push({x:ex, y:ey, vx, vy, dmg:(K.shotDmg||14), t:0, life:mg?80:(pistol?90:150), mg, pistol});
   if(typeof sfxShot==='function') sfxShot();
 }
 function updateEnemyBullets(){
@@ -487,6 +529,14 @@ function drawEnemyBullets(){
       ctx.shadowColor='#ff9a1a'; ctx.shadowBlur=6;
       ctx.fillStyle='#ffe07a'; ctx.fillRect(-8*ZOOM,-1.4*ZOOM, 16*ZOOM, 2.8*ZOOM);
       ctx.fillStyle='#fff7d0'; ctx.fillRect(2*ZOOM,-1*ZOOM, 5*ZOOM, 2*ZOOM);
+      ctx.restore(); continue;
+    }
+    if(b.pistol){                                        // normal pistol round: small brass bullet
+      const ang=Math.atan2(b.vy,b.vx);
+      ctx.save(); ctx.translate(sx,sy); ctx.rotate(ang);
+      ctx.shadowColor='#ffd24a'; ctx.shadowBlur=5;
+      ctx.fillStyle='#ffe98a'; ctx.fillRect(-5*ZOOM,-1.1*ZOOM, 10*ZOOM, 2.2*ZOOM);
+      ctx.fillStyle='#fff7d0'; ctx.beginPath(); ctx.arc(5*ZOOM,0,1.3*ZOOM,0,7); ctx.fill();
       ctx.restore(); continue;
     }
     if(imgOk(loaded.bigblaster)){
@@ -756,6 +806,7 @@ function enterSection(opts){
   initPickup();
   tvEnter();                                       // start this room's wall screen (or stop if none)
   sceneEnter();                                    // start this level's full-scene wall+floor videos (or stop)
+  if(typeof saveGame==='function') saveGame();     // autosave on every area change (banks money/weapons/keys)
 }
 
 /* ── WORLD / DOORWAYS (hub <-> rooms) ────────────────────── */
@@ -1220,6 +1271,7 @@ function buyWeapon(w){
     if(w.id==='vest'){ player.armour=ARMOUR_HITS; updateArmourHUD(); flashBanner('Armour on &mdash; '+ARMOUR_HITS+' hits'); }
     else { addWeaponToLoadout(w.id); flashBanner(w.name+' ready'); }
     [0,4,7,12].forEach((s,i)=>setTimeout(()=>blip(440*Math.pow(2,s/12),0,0.12,'triangle',0.15),i*60));
+    if(typeof saveGame==='function') saveGame();    // persist the purchase
   }
   else { flashBanner('Not enough money for the '+w.name); blip(200,110,0.12,'square',0.16); }
 }
@@ -1697,7 +1749,7 @@ function goFullscreen(){
   if(rq){ try{ rq.call(el); }catch(e){} }
   if(screen.orientation&&screen.orientation.lock){ try{ screen.orientation.lock('landscape').catch(()=>{}); }catch(e){} }
 }
-function start(m){
+function start(m, save){
   cur=m; FW=m.fw; FH=m.fh; PW=Math.round(PH*FW/FH); CLIPS=m.clips;
   goFullscreen(); actx(); requestWakeLock();          // keep the screen awake for the whole session
   document.getElementById('select').style.display='none';
@@ -1718,9 +1770,36 @@ function start(m){
   killedEnemies.clear(); pickup.active=false; inventory.clear();
   for(const k in roomReturn) delete roomReturn[k];   // forget remembered door-return spots
   setPaused(false);
-  gotoId('in_library', {x:90, face:1});            // start in the Library (walk right toward the exit)
+  if(save){                                          // CONTINUE: restore saved progression and drop back at the hub
+    money = (typeof save.money==='number') ? save.money : money;
+    player.armour = save.armour||0;
+    owned.clear(); (save.owned||['pistol']).forEach(id=>owned.add(id)); owned.add('pistol');
+    inventory.clear(); (save.inventory||[]).forEach(id=>inventory.add(id));
+    weaponList = WEAPON_ORDER.filter(x=>owned.has(x));
+    weaponSel = (typeof save.weaponSel==='number' && save.weaponSel>=0 && save.weaponSel<weaponList.length) ? save.weaponSel : 0;
+    updateMoneyHUD(); updateArmourHUD(); refreshWeaponBtn();
+    gotoId('home', {x:hubReturnX, face:1});
+  } else {
+    gotoId('in_library', {x:90, face:1});            // NEW GAME: start in the Library (walk right toward the exit)
+  }
   if(!raf)loop();
 }
+/* ── SAVE SYSTEM ──────────────────────────────────────────────────────────
+   Progression (character, money, armour, owned weapons + current selection,
+   and collected items/keys) is auto-saved to this device and offered back as a
+   CONTINUE card on the select screen. Continue drops you at the hub. Picking a
+   fighter instead starts a fresh game and overwrites the save. */
+const SAVE_KEY='eie_save';
+function saveGame(){
+  if(!cur) return;
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify({
+    v:1, charId:cur.id, sectionId:SECTIONS[sectionIndex].id,
+    money, armour:player.armour, owned:[...owned], inventory:[...inventory], weaponSel
+  })); }catch(_){}
+}
+function loadSaveData(){ try{ return JSON.parse(localStorage.getItem(SAVE_KEY)||'null'); }catch(_){ return null; } }
+function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(_){} }
+function resumeGame(){ const sv=loadSaveData(); if(!sv) return; const m=META.find(x=>x.id===sv.charId)||META[0]; start(m, sv); }
 
 /* ── PAUSE / MUTE ────────────────────────────────────────── */
 let paused=false, musicMuted=false;
@@ -1739,6 +1818,31 @@ function setPaused(p){
 }
 document.getElementById('pause').onclick=(e)=>{ e.stopPropagation(); setPaused(!paused); };
 document.getElementById('pausemenu').onclick=()=>setPaused(false);
+/* SAVE & QUIT: persist progress, stop the game loop + audio, and return to the
+   character-select title (where the CONTINUE card now reflects the save). */
+function quitToMenu(){
+  saveGame();
+  paused=false;
+  document.getElementById('pausemenu').classList.remove('on');
+  document.getElementById('pause').innerHTML='&#10073;&#10073;';
+  try{ document.getElementById('bgm').pause(); }catch(_){}
+  tvPause(); scenePause(); pauseAllProxAudio(); releaseWakeLock();
+  if(raf){ cancelAnimationFrame(raf); raf=null; }     // stop the loop so draw() doesn't run with no character
+  cur=null;
+  document.getElementById('game').style.display='none';
+  document.getElementById('select').style.display='';
+  document.getElementById('kbhint').style.display='';
+  buildCards();                                       // refresh the title so CONTINUE shows the just-saved run
+}
+(function(){                                          // inject the Save & Quit button into the pause card
+  const card=document.querySelector('#pausemenu .pausecard'); if(!card) return;
+  const b=document.createElement('button'); b.id='savequit'; b.textContent='Save \u0026 Quit';
+  b.style.cssText='display:block;margin:18px auto 0;background:#7a1f25;border:0;color:#fff;'
+    +'font:800 13px sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:11px 22px;'
+    +'border-radius:9px;cursor:pointer;pointer-events:auto;';
+  b.onclick=(e)=>{ e.stopPropagation(); quitToMenu(); };   // don't let the tap also resume
+  card.appendChild(b);
+})();
 document.getElementById('shopclose').onclick=(e)=>{ e.stopPropagation(); closeShop(); };
 document.getElementById('shop').onclick=(e)=>{ if(e.target.id==='shop') closeShop(); };
 document.getElementById('travel-close').onclick=(e)=>{ e.stopPropagation(); closeTravel(); };
