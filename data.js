@@ -269,24 +269,24 @@ const SECTIONS=[
    arenaSpecialBase:3, arenaSpecialMax:10, arenaBaseCount:6, arenaMaxCount:16, arenaGrowth:1.6, enemies:[]},
 
   /* ── INTERIOR ROOMS (entered from the hub; EXIT door returns to the street) ── */
-  {id:'in_house', name:'Inside &mdash; My House', bgKey:'room_house', BGW:591, srcY:46, flatGround:277, charScale:1.3, interior:true, enemies:[],
-   doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
-  {id:'in_church', name:'Inside &mdash; The Church', bgKey:'room_church', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
-   doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
-  {id:'in_gunstore', name:'Inside &mdash; FAFO Ammo &amp; Arms', bgKey:'room_gunstore', BGW:591, srcY:46, flatGround:273, charScale:1.3, interior:true, enemies:[],
-   doors:[ {x:250, w:95, label:'Buy weapons', target:'shop'}, {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
+  {id:'in_house', name:'Inside &mdash; My House', bgKey:'room_house', BGW:591, srcY:46, flatGround:277, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
+   doors:[]},
+  {id:'in_church', name:'Inside &mdash; The Church', bgKey:'room_church', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
+   doors:[]},
+  {id:'in_gunstore', name:'Inside &mdash; FAFO Ammo &amp; Arms', bgKey:'room_gunstore', BGW:591, srcY:46, flatGround:273, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
+   doors:[ {x:250, w:95, label:'Buy weapons', target:'shop'} ]},
   /* walking path was sitting too high — flatGround nudged 277->285 to drop the feet (this
      is the safe lever within the current view). If he's STILL floating above the painted
      floor, the camera needs to pan down: send a screenshot and I'll set srcY+flatGround
      exactly (raise flatGround to drop him; raise srcY to reveal more floor below). */
-  {id:'in_restore', name:'Inside &mdash; Restore Britain', bgKey:'room_restore', BGW:580, srcY:46, flatGround:285, charScale:1.7, interior:true, enemies:[],
-   doors:[ {x:495, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
-  {id:'in_cinema', name:'Inside &mdash; The Cinema', bgKey:'room_cinema', BGW:591, srcY:46, flatGround:273, charScale:1.3, interior:true, enemies:[],
-   doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
-  {id:'in_easyjet', name:'Inside &mdash; easyJet Holidays', bgKey:'room_easyjet', BGW:580, srcY:46, flatGround:277, charScale:1.3, interior:true, enemies:[],
-   doors:[ {x:290, w:74, label:'Departures', menu:'easyjet'}, {x:495, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
-  {id:'in_trainstation', name:'Inside &mdash; DigiTown Station', bgKey:'room_trainstation', BGW:580, srcY:46, flatGround:281, charScale:1.3, interior:true, enemies:[],
-   doors:[ {x:290, w:74, label:'Departures', menu:'trainstation'}, {x:495, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
+  {id:'in_restore', name:'Inside &mdash; Restore Britain', bgKey:'room_restore', BGW:580, srcY:46, flatGround:285, charScale:1.7, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
+   doors:[]},
+  {id:'in_cinema', name:'Inside &mdash; The Cinema', bgKey:'room_cinema', BGW:591, srcY:46, flatGround:273, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
+   doors:[]},
+  {id:'in_easyjet', name:'Inside &mdash; easyJet Holidays', bgKey:'room_easyjet', BGW:580, srcY:46, flatGround:277, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
+   doors:[ {x:290, w:74, label:'Departures', menu:'easyjet'} ]},
+  {id:'in_trainstation', name:'Inside &mdash; DigiTown Station', bgKey:'room_trainstation', BGW:580, srcY:46, flatGround:281, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
+   doors:[ {x:290, w:74, label:'Departures', menu:'trainstation'} ]},
   /* LIBRARY swapped to the wide Alexandria panorama (room library.jpeg now 2172x375).
      zoom:1.0 shows an 800px-wide slice; walk RIGHT to explore, walk off the far LEFT to
      leave (exitLeft:'home'). Nudge flatGround/srcY/charScale to taste. */
@@ -599,10 +599,10 @@ const SCENE_VIDEOS = {
    placeholder. Add/replace destinations here as new levels are built.       */
 const TRAVEL_MENUS={
   portal: { title:'The Portal \u2014 Wave Survival Maps', dests:[
-    {label:'Mortal Kombat \u2014 Wave Survival', target:'mk'},            // arena: melee mix, GUNMAN SQUAD every 5th wave
     {label:'The Void \u2014 Wave Survival', target:'blacklevel'},         // arena: full mix, UFO ASSAULT every 5th wave
     {label:'The Holodeck \u2014 Wave Survival', target:'holodeck'},       // arena: sci-fi mix, UFO ASSAULT every 5th wave
     {label:'Judgement Day \u2014 Wave Survival', target:'judgement'},     // arena: the machines, GUNBOT SQUAD every 5th wave
+    {label:'Mortal Kombat \u2014 Wave Survival', target:'mk'},            // arena: melee mix, GUNMAN SQUAD every 5th wave
   ]},
   easyjet: { title:'easyJet Holidays', dests:[
     {label:'Europe',    target:'lvl_europe'},
@@ -623,24 +623,25 @@ const TRAVEL_MENUS={
   ]},
 };
 const SHOP=[
-  {id:'rifle',   name:'Bullets',          price:0},
-  {id:'vest',    name:'Bulletproof Vest', price:0},
-  {id:'littleblaster', name:'Little Blaster',    price:0},
-  {id:'bigblaster',    name:'Big Blaster',       price:0},
-  {id:'weapon01', name:'Viper', price:0},
-  {id:'weapon02', name:'Hornet', price:0},
-  {id:'weapon03', name:'Ravager', price:0},
-  {id:'weapon04', name:'Sledgehammer', price:0},
-  {id:'weapon05', name:'Arc Lance', price:0},
-  {id:'weapon06', name:'Tempest', price:0},
-  {id:'weapon07', name:'Falcon', price:0},
-  {id:'weapon08', name:'Annihilator', price:0},
+  {id:'vest',          name:'Bulletproof Vest', price:150},
+  {id:'rifle',         name:'Bullets',          price:300},
+  {id:'weapon02',      name:'Hornet',           price:600},
+  {id:'weapon01',      name:'Viper',            price:900},
+  {id:'littleblaster', name:'Little Blaster',   price:1200},
+  {id:'weapon07',      name:'Falcon',           price:1600},
+  {id:'weapon05',      name:'Arc Lance',        price:2200},
+  {id:'weapon03',      name:'Ravager',          price:3000},
+  {id:'weapon06',      name:'Tempest',          price:4200},
+  {id:'weapon04',      name:'Sledgehammer',     price:6000},
+  {id:'weapon08',      name:'Annihilator',      price:9000},
+  {id:'bigblaster',    name:'Big Blaster',      price:20000},   // the ultimate — clears the whole screen in one shot
 ];
 const WEAPONS={
+  pistol:  {name:'Pistol', auto:false, cooldown:14, type:'bullet', pellets:1, spread:0.04, speed:14, range:600, dmg:14, knock:5 },   // the free starting sidearm — semi-auto, tap to fire
   rifle:   {name:'Bullets', auto:true,  cooldown:6,  type:'bullet', pellets:1, spread:0.05, speed:14, range:640, dmg:18, knock:6 },
   grenade: {name:'Grenade', auto:false, cooldown:48, type:'grenade', speed:8, dmg:80, radius:95, knock:22 },
   littleblaster:{name:'Little Blaster', auto:false, cooldown:16, type:'bullet', pellets:1, spread:0.02, speed:12, range:600, dmg:34, knock:9,  sprite:'littleblaster', spriteH:30, shake:false},
-  bigblaster:   {name:'Big Blaster',    auto:false, cooldown:34, type:'bullet', pellets:1, spread:0.00, speed:10, range:680, dmg:90, knock:24, sprite:'bigblaster',    spriteH:58, shake:true },
+  bigblaster:   {name:'Big Blaster',    auto:false, cooldown:75, type:'bullet', pellets:1, spread:0.00, speed:10, range:680, dmg:999, knock:30, sprite:'bigblaster', spriteH:58, shake:true, clearAll:true },  // THE ultimate: one shot wipes every enemy on the level. Long cooldown so each blast is an event.
   // NOTE: the 'fireblaster' weapon AND its asset were removed completely by request.
   // Shooter enemies (the UFO) now fire the BIG BLASTER bolt instead (bigblaster.png),
   // which also remains a buyable weapon below.
