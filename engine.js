@@ -131,7 +131,7 @@ const VW=800,VH=360;
 let ZOOM=1.5,SRCW=VW/ZOOM,SRCH=VH/ZOOM;   // recomputed per-section in loadSectionConfig (see section.zoom)
 const PH=80; let PW=Math.round(PH*FW/FH);
 let cur=null,raf=null,camX=0;
-const player={x:120,y:200,vx:0,vy:0,face:1,onGround:true,clip:'idle',ct:0,hp:100,max:100,dead:false,deadT:0,attackId:0,hurtCool:0,armour:0,buff:null,buffT:0};
+const player={x:120,y:200,vx:0,vy:0,face:1,onGround:true,clip:'idle',ct:0,hp:100,max:100,dead:false,deadT:0,attackId:0,hurtCool:0,armour:0};
 const keys={left:false,right:false,jump:false};
 let punchDown=false,punchEdge=false,runHold=0;
 function setClip(name){ if(player.clip!==name){player.clip=name;player.ct=0;} }
@@ -313,8 +313,7 @@ function applyPlayerHits(){
   const c=CLIPS[player.clip]; const dur=Math.ceil(c.count*60/c.fps);
   const prog=player.ct/dur;
   if(prog<0.18||prog>0.62) return;               // active strike window only
-  let dmg = player.clip==='headbutt'?60:26;
-  if(player.buff==='frenzy') dmg=Math.round(dmg*1.6);
+  const dmg = player.clip==='headbutt'?60:26;
   const reach=64;
   const front = player.x + (player.face>0?PW*0.4:PW*0.6);
   for(const e of enemies){
@@ -414,7 +413,7 @@ function updateItems(){
     if(it.taken) continue;
     const d=it.def;
     if(Math.abs((player.x+PW/2)-it.x) < PW/2+34){
-      it.taken=true; inventory.add(d.id); saveProgress();
+      it.taken=true; inventory.add(d.id);
       flashBanner('Picked up '+(d.label||d.id));
       [0,4,7,12].forEach((s,i)=>setTimeout(()=>blip(520*Math.pow(2,s/12),0,0.12,'triangle',0.16),i*60));
     }
@@ -653,36 +652,14 @@ function damagePlayer(d){
   }
   player.hp=Math.max(0,player.hp-d); player.hurtCool=18; sfxHurt();
   document.getElementById('hpbar').style.width=(player.hp/player.max*100)+'%';
-  if(player.hp<=0){ player.dead=true; player.deadT=0; setClip('die'); sfxKO();
-    if(isArena()){ arenaBankScore(); arenaSummaryT=0; const _id=SECTIONS[sectionIndex].id; sessionBest[_id]=Math.max(sessionBest[_id]||0,arenaScore); }
-    flashBanner('YOU GOT DONE &mdash; respawning'); }
+  if(player.hp<=0){ player.dead=true; player.deadT=0; setClip('die'); sfxKO(); if(isArena()) arenaBankScore(); flashBanner('YOU GOT DONE &mdash; respawning'); }
 }
 function respawnPlayer(){
   player.x=120; player.y=groundAt(120+PW/2)-PH; player.vx=0; player.vy=0; player.onGround=true;
   player.hp=player.max; player.dead=false; player.deadT=0; setClip('idle');
-  player.buff=null; player.buffT=0;
   document.getElementById('hpbar').style.width='100%';
   if(isArena()) arenaBankScore();                   // record the run before the wave counter resets
-  saveProgress();
   spawnEnemiesForSection();
-}
-
-/* ── TEMPORARY POWER-UPS (arena wave rewards) ──────────────────────────────
-   'frenzy' = +60% damage and roughly half the shoot cooldown for a few seconds. */
-function grantBuff(type, frames){
-  player.buff=type; player.buffT=frames;
-  flashBanner('POWER-UP \u2014 '+String(type).toUpperCase());
-  [0,4,7,12].forEach((s,i)=>setTimeout(()=>blip(520*Math.pow(2,s/12),0,0.12,'triangle',0.16),i*55));
-}
-function updateBuff(){ if(player.buffT>0){ player.buffT--; if(player.buffT<=0) player.buff=null; } }
-function buffDmgMul(){ return player.buff==='frenzy'?1.6:1; }
-function drawBuffBadge(){
-  if(!player.buff||player.buffT<=0) return;
-  const secs=Math.ceil(player.buffT/60);
-  ctx.save(); ctx.textAlign='left'; ctx.font='900 13px monospace'; ctx.lineWidth=3; ctx.strokeStyle='#000';
-  const label=String(player.buff).toUpperCase()+' '+secs+'s';
-  ctx.strokeText(label,14,58); ctx.fillStyle='#ff8af0'; ctx.fillText(label,14,58);
-  ctx.restore();
 }
 
 /* ── LEVEL TRANSITION ────────────────────────────────────── */
@@ -1145,26 +1122,6 @@ function drawSceneVideos(){
 let money=0;
 function updateMoneyHUD(){ const m=document.getElementById('money'); if(m) m.textContent='\u00A3'+money; }
 function addMoney(n){ money+=n; updateMoneyHUD(); }
-/* ── SAVE SYSTEM (localStorage): money, owned weapons, inventory items.
-   Arena top-runs save separately per map (arenaBankScore). Saved on purchases,
-   pickups, wave clears, deaths and when leaving a level; loaded on character select. */
-const SAVE_KEY='eie_save_v1';
-function saveProgress(){
-  try{ localStorage.setItem(SAVE_KEY, JSON.stringify({ money, owned:[...owned], inventory:[...inventory] })); }catch(_){}
-}
-function loadProgress(){
-  try{
-    const raw=localStorage.getItem(SAVE_KEY); if(!raw) return;
-    const d=JSON.parse(raw);
-    if(typeof d.money==='number') money=d.money;
-    if(Array.isArray(d.owned)){ owned.clear(); d.owned.forEach(x=>owned.add(x)); }
-    if(Array.isArray(d.inventory)){ inventory.clear(); d.inventory.forEach(x=>inventory.add(x)); }
-    updateMoneyHUD();
-    weaponList=WEAPON_ORDER.filter(x=>owned.has(x)); weaponSel=-1;
-    if(owned.has('vest')) player.armour=ARMOUR_HITS;
-    refreshWeaponBtn(); updateArmourHUD();
-  }catch(_){}
-}
 let floaters=[];
 function addFloater(x,y,txt){ floaters.push({x,y,txt,t:0}); }
 function updateFloaters(){ for(const f of floaters) f.t++; floaters=floaters.filter(f=>f.t<55); }
@@ -1179,7 +1136,6 @@ function drawFloaters(){
 /* ── RETURN TO HUB (run off the left edge of a level) ─────── */
 function returnToHub(){
   if(transitioning) return;
-  saveProgress();
   transitioning=true;
   doFade('Back to the high street', ()=>{ killedEnemies.clear(); gotoId('home',{x:hubReturnX,face:1}); transitioning=false; });
 }
@@ -1241,7 +1197,6 @@ function buyWeapon(w){
     money-=w.price; owned.add(w.id); updateMoneyHUD(); renderShop();
     if(w.id==='vest'){ player.armour=ARMOUR_HITS; updateArmourHUD(); flashBanner('Armour on &mdash; '+ARMOUR_HITS+' hits'); }
     else { addWeaponToLoadout(w.id); flashBanner(w.name+' ready'); }
-    saveProgress();
     [0,4,7,12].forEach((s,i)=>setTimeout(()=>blip(440*Math.pow(2,s/12),0,0.12,'triangle',0.15),i*60));
   }
   else { flashBanner('Not enough money for the '+w.name); blip(200,110,0.12,'square',0.16); }
@@ -1342,12 +1297,11 @@ function hitEnemy(e,dmg,knock,dir){
 }
 function fireWeapon(w){
   const m=muzzlePoint();
-  const dmgMul=buffDmgMul();
   vfx.push({type:'muzzle', x:m.x, y:m.y, face:player.face, t:0, life:7});
   for(let i=0;i<3;i++) vfx.push({type:'spark', x:m.x+player.face*(4+Math.random()*9), y:m.y+(Math.random()*7-3.5), t:0, life:6});
   if(w.type==='grenade'){
     sfxThrow();
-    bullets.push({grenade:true, x:m.x, y:m.y-4, vx:player.face*w.speed, vy:-7.5, fuse:60, dmg:Math.round(w.dmg*dmgMul), radius:w.radius, knock:w.knock});
+    bullets.push({grenade:true, x:m.x, y:m.y-4, vx:player.face*w.speed, vy:-7.5, fuse:60, dmg:w.dmg, radius:w.radius, knock:w.knock});
     return;
   }
   sfxShot();
@@ -1355,14 +1309,14 @@ function fireWeapon(w){
   for(let i=0;i<w.pellets;i++){
     const spread=(Math.random()*2-1)*w.spread;
     bullets.push({ x:m.x, y:m.y, vx:player.face*w.speed*Math.cos(spread), vy:w.speed*Math.sin(spread),
-                   dmg:Math.round(w.dmg*dmgMul), knock:w.knock, range:w.range, traveled:0, sprite:w.sprite, spriteH:w.spriteH,
+                   dmg:w.dmg, knock:w.knock, range:w.range, traveled:0, sprite:w.sprite, spriteH:w.spriteH,
                    hitfx:w.hitfx });   // only weapons with an explicit hitfx get the fire/electric burst
   }
 }
 function tryFire(){
   const w=curWeapon(); if(!w) return;
   if(shootCool>0) return;
-  fireWeapon(w); shootCool = (player.buff==='frenzy') ? Math.max(2,Math.round(w.cooldown*0.5)) : w.cooldown;
+  fireWeapon(w); shootCool=w.cooldown;
   if(CLIPS.shoot){ if(player.clip!=='shoot') setClip('shoot'); player.shootPoseT=14; }
 }
 function explodeGrenade(b){
@@ -1718,7 +1672,6 @@ function start(m){
   helper.active=false; helperCool=[0,0]; buildHelperThumbs(); refreshHelperBtns();
   killedEnemies.clear(); pickup.active=false; inventory.clear();
   for(const k in roomReturn) delete roomReturn[k];   // forget remembered door-return spots
-  player.buff=null; player.buffT=0; loadProgress();   // restore saved money / weapons / inventory
   setPaused(false);
   gotoId('in_library', {x:90, face:1});            // start in the Library (walk right toward the exit)
   if(!raf)loop();
@@ -2068,9 +2021,7 @@ function update(){
   if(player.dead){
     player.ct++; player.vy+=GRAV; player.y+=player.vy;
     const g=groundAt(player.x+PW/2); if(player.y+PH>=g){player.y=g-PH;player.vy=0;}
-    player.deadT++;
-    if(isArena()){ arenaSummaryT++; if(player.deadT>ARENA_RESPAWN) respawnPlayer(); }
-    else if(player.deadT>90){ respawnPlayer(); }
+    player.deadT++; if(player.deadT>90){ respawnPlayer(); }
     updateEnemies(); updateHelper(); return;
   }
 
@@ -2139,7 +2090,6 @@ function update(){
   updatePickup();
   updateFloaters();
   updateProxAudio();
-  updateBuff();
   updateLibraryNarration();
   sceneUpdate();
 
@@ -2159,7 +2109,6 @@ function update(){
   if(curSec.exitRight && player.x>=BGW-PW-2 && keys.right && !transitioning) exitVia(curSec.exitRight);
 }
 function exitVia(spec){
-  saveProgress();
   const tgt  = (typeof spec==='string') ? spec : spec.target;
   const dest = SECTIONS.find(s=>s.id===tgt);
   const x    = (typeof spec==='object' && typeof spec.x==='number')    ? spec.x    : hubReturnX;
@@ -2249,7 +2198,6 @@ function draw(){
   drawRaveLights();   // DnB room: sweeping laser fan + strobe, over the action
   drawFloaters();
   drawArenaHud();         // WAVE / SCORE / leaderboard (only shows in the arena)
-  drawBuffBadge();
   if(_shaking) ctx.restore();
 }
 function drawNoBg(){
@@ -2308,9 +2256,6 @@ function loop(){ if(!paused) update(); draw(); raf=requestAnimationFrame(loop); 
    >>> Add your future tougher enemy kinds to arenaPool(), gated behind a higher
        wave number, so they only start appearing once the early waves are dead. */
 let arenaActive=false, arenaWave=0, arenaScore=0, arenaGrace=0, arenaScored=false;
-let arenaKills=0, arenaPBHit=false, arenaBestAtStart=0, arenaSummaryT=0;
-const ARENA_RESPAWN=330, SUMMARY_DUR=150;
-const sessionBest={};
 function isArena(){ return !!SECTIONS[sectionIndex].arena; }
 function arenaPool(){
   // Each arena section can define its OWN wave mix via `arenaPool` in data.js; otherwise
@@ -2321,8 +2266,6 @@ function arenaPool(){
 }
 function arenaEnter(){
   arenaActive=true; arenaWave=0; arenaScore=0; arenaGrace=0; arenaScored=false;
-  arenaKills=0; arenaPBHit=false; arenaBestAtStart=arenaBest(); arenaSummaryT=0;
-  player.buff=null; player.buffT=0;
   enemies=[]; bullets=[]; vfx=[]; enemyBullets=[];
   arenaNextWave();
 }
@@ -2330,63 +2273,40 @@ function arenaNextWave(){
   arenaWave++;
   const w=arenaWave;
   const s=SECTIONS[sectionIndex];
-  if(w>1) arenaWaveReward(w-1);                            // reward for the wave you just cleared
-  const bossRush=!!s.bossRush;
-  const bossWave = bossRush ? true : (w%5===0);            // boss-rush: EVERY wave is a boss wave
-  if(bossWave && !bossRush){                               // normal arenas: every 5th wave tops health to full
+  const bossWave = (w%5===0);                              // every 5th wave is this map's "boss" round
+  if(bossWave){                                            // ...and every 5th wave tops your health back up to full
     player.hp=player.max; document.getElementById('hpbar').style.width='100%';
     addFloater(player.x+PW/2, player.y, 'FULL HEALTH');
   }
-  const spd=ESPEED*(1+(w-1)*0.05);
-  const dmg=EDMG+(w-1)*2;
-  let kinds, count, hp, bannerName=null;
-  if(bossRush){
-    const pool=s.bossRushPool||[10,8,16,9,20,11];
-    const special=pool[(w-1)%pool.length];
-    kinds=[special];
-    count=Math.min(s.arenaSpecialMax||12, (s.arenaSpecialBase||3)+Math.floor((w-1)*0.8));
-    hp=Math.round((s.arenaSpecialHp||150)*(1+(w-1)*0.22));
-    if(w%3===0){ player.hp=player.max; document.getElementById('hpbar').style.width='100%'; }
-    const kn=ENEMY_KINDS[special]; bannerName='BOSS '+w+' \u2014 '+((kn&&kn.img)||'BOSS').toUpperCase();
-  } else if(bossWave){
-    const special = (s.arenaSpecial!=null) ? s.arenaSpecial : 8;
-    kinds=[special];
+  const spd=ESPEED*(1+(w-1)*0.05);                         // a touch faster each wave
+  const dmg=EDMG+(w-1)*2;                                  // hits harder each wave
+  let kinds, count, hp;
+  if(bossWave){
+    const special = (s.arenaSpecial!=null) ? s.arenaSpecial : 8;   // default: UFO gunship (kind 8)
+    kinds=[special];                                       // ONLY this map's special enemy
     count=Math.min(s.arenaSpecialMax||16, Math.round((s.arenaSpecialBase||4) + (w/5 - 1)*1.5));
-    hp=Math.round((s.arenaSpecialHp||220)*(1+(w/5-1)*0.6));
-    bannerName='WAVE '+w+' \u2014 '+(s.arenaSpecialName||'UFO ASSAULT');
+    hp=Math.round((s.arenaSpecialHp||220)*(1+(w/5-1)*0.6));       // very tanky, tougher each boss round
   } else {
-    kinds=arenaPool();
+    kinds=arenaPool();                                     // this map's normal wave mix
     count=Math.min(s.arenaMaxCount||50, (s.arenaBaseCount||18)+Math.floor(w*(s.arenaGrowth||3)));
-    hp=Math.round(40*(1+(w-1)*0.40));
-    bannerName='WAVE '+w;
+    hp=Math.round(40*(1+(w-1)*0.40));                      // tougher each wave
   }
+  // build a bag with roughly equal numbers of each kind, then shuffle it
   const bag=[];
   for(let i=0;i<count;i++) bag.push(kinds[i % kinds.length]);
   for(let i=bag.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; const t=bag[i]; bag[i]=bag[j]; bag[j]=t; }
-  const lo=200, hi=BGW-200;
+  const lo=200, hi=BGW-200;                                // spread across the entire level width
   for(let i=0;i<count;i++){
     const kind=bag[i];
-    let at = lo + (hi-lo)*((i+Math.random())/count);
-    if(Math.abs(at-player.x)<260) at += (at<player.x?-1:1)*320;
+    let at = lo + (hi-lo)*((i+Math.random())/count);       // evenly spaced with jitter, whole map
+    if(Math.abs(at-player.x)<260) at += (at<player.x?-1:1)*320;  // never spawn right on top of you
     at=Math.max(40,Math.min(BGW-60,at));
     const e=pushEnemy(kind, at, null, {hp});
     if(e){ e.spd=spd; e.dmg=dmg; }
   }
-  flashBanner(bannerName);
+  const bossName=s.arenaSpecialName||'UFO ASSAULT';
+  flashBanner(bossWave ? ('WAVE '+w+' \u2014 '+bossName) : ('WAVE '+w));
   blip(420,640,0.12,'square',0.14);
-}
-/* Reward for clearing a wave: money always; a plate of food (heal) every 3rd
-   wave; a FRENZY power-up every 4th wave. */
-function arenaWaveReward(clearedWave){
-  const bonus=50+clearedWave*10;
-  addMoney(bonus); saveProgress();
-  addFloater(player.x+PW/2, player.y-10, 'WAVE CLEAR +\u00A3'+bonus);
-  if(clearedWave%3===0){
-    player.hp=Math.min(player.max, player.hp+Math.round(player.max*0.5));
-    document.getElementById('hpbar').style.width=(player.hp/player.max*100)+'%';
-    addFloater(player.x+PW/2, player.y-32, 'PLATE OF FOOD');
-  }
-  if(clearedWave%4===0) grantBuff('frenzy', 8*60);
 }
 function arenaUpdate(){
   if(!arenaActive||player.dead) return;
@@ -2397,12 +2317,6 @@ function arenaUpdate(){
 function arenaAddKillScore(){
   if(!arenaActive) return;
   arenaScore += 10 + arenaWave*5;
-  arenaKills++;
-  const id=SECTIONS[sectionIndex].id;
-  sessionBest[id]=Math.max(sessionBest[id]||0, arenaScore);
-  if(!arenaPBHit && arenaBestAtStart>0 && arenaScore>arenaBestAtStart){
-    arenaPBHit=true; flashBanner('\u2605 NEW PERSONAL BEST \u2605');
-  }
 }
 function arenaScoreKey(){ return 'arena_'+SECTIONS[sectionIndex].id; }   // each arena keeps its own local top-runs board
 function arenaLoadScores(){ try{ return JSON.parse(localStorage.getItem(arenaScoreKey())||'[]'); }catch(_){ return []; } }
@@ -2418,7 +2332,8 @@ function arenaBankScore(){
 function drawArenaHud(){
   if(!isArena()) return;
   ctx.save();
-  const px=14, py=70, pw=164, ph=82;
+  // dark backing panel so the stats read clearly over the bright moon, and clear of the screen edge
+  const px=14, py=70, pw=150, ph=66;
   ctx.globalAlpha=0.62; ctx.fillStyle='#05070c'; roundRect(px,py,pw,ph,10); ctx.fill();
   ctx.globalAlpha=1; ctx.lineWidth=1.5; ctx.strokeStyle='rgba(255,211,77,0.55)'; roundRect(px,py,pw,ph,10); ctx.stroke();
   ctx.textAlign='left'; ctx.lineWidth=3; ctx.strokeStyle='#000';
@@ -2429,28 +2344,8 @@ function drawArenaHud(){
   ctx.font='700 11px monospace';
   const best=Math.max(arenaBest(),arenaScore);
   ctx.strokeText('BEST '+best,tx,y+37);        ctx.fillStyle='#cdd6e6'; ctx.fillText('BEST '+best,tx,y+37);
-  const sess=Math.max(sessionBest[SECTIONS[sectionIndex].id]||0, arenaScore);
-  ctx.strokeText('SESSION '+sess,tx,y+52);     ctx.fillStyle='#9fe0b0'; ctx.fillText('SESSION '+sess,tx,y+52);
   ctx.restore();
-  if(player.dead){ if(arenaSummaryT < SUMMARY_DUR) drawRunSummary(); else drawArenaBoard(); }
-}
-function drawRunSummary(){
-  const bw=300, bh=150, bx=(VW-bw)/2, by=70;
-  ctx.save();
-  ctx.globalAlpha=0.94; ctx.fillStyle='#0b0e14'; roundRect(bx,by,bw,bh,12); ctx.fill();
-  ctx.globalAlpha=1; ctx.lineWidth=2; ctx.strokeStyle='#ff5a5a'; roundRect(bx,by,bw,bh,12); ctx.stroke();
-  ctx.textAlign='center';
-  ctx.fillStyle='#ff7a7a'; ctx.font='900 20px sans-serif'; ctx.fillText('YOU GOT DONE', bx+bw/2, by+34);
-  ctx.fillStyle='#ffe46b'; ctx.font='900 16px monospace';
-  ctx.fillText('WAVE '+arenaWave+'  \u00B7  '+arenaScore+' PTS', bx+bw/2, by+66);
-  ctx.fillStyle='#cdd6e6'; ctx.font='800 14px monospace';
-  ctx.fillText(arenaKills+' KILLS', bx+bw/2, by+90);
-  if(arenaPBHit){ ctx.fillStyle='#7dffb0'; ctx.font='900 13px monospace'; ctx.fillText('\u2605 NEW PERSONAL BEST \u2605', bx+bw/2, by+116); }
-  else { const sess=Math.max(sessionBest[SECTIONS[sectionIndex].id]||0, arenaScore);
-    ctx.fillStyle='#9fb4d8'; ctx.font='700 12px monospace';
-    ctx.fillText('best '+Math.max(arenaBest(),arenaScore)+'  \u00B7  session '+sess, bx+bw/2, by+116); }
-  ctx.fillStyle='#9fe0ff'; ctx.font='700 11px monospace'; ctx.fillText('the board\u2026', bx+bw/2, by+138);
-  ctx.restore();
+  if(player.dead) drawArenaBoard();
 }
 function drawArenaBoard(){
   const s=arenaLoadScores().slice(0,5);
