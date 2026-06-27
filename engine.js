@@ -1962,20 +1962,6 @@ function _proxEl(src){
   return _proxEls[src];
 }
 function pauseAllProxAudio(){ for(const k in _proxEls){ try{ _proxEls[k].pause(); }catch(_){} } }
-/* LIBRARY INSTRUCTIONS: play the hologram's Hologram.mp3 reliably, ONCE, as the player
-   walks in from the left. Latched (plays right through, doesn't cut out if they wander
-   past the hologram), no loop. Resets when they leave the library so it plays again next visit. */
-let _libNarr=false;
-function updateLibraryNarration(){
-  if(SECTIONS[sectionIndex].id!=='in_library'){ _libNarr=false; return; }
-  if(_libNarr || musicMuted || paused || !cur || player.dead) return;
-  // Start the instructions as the player approaches/passes the hologram (centre, x~1086).
-  if(Math.abs((player.x+PW/2)-1086) < 720){
-    const a=_proxEl('Hologram.mp3'); a.loop=false; a.muted=musicMuted; a.volume=0.9;
-    if(a.paused){ if(a.ended||a.currentTime>0.1){ try{ a.currentTime=0; }catch(_){} } a.play().catch(()=>{}); } // KEEP retrying each frame
-    if(!a.paused && a.currentTime>0.05) _libNarr=true;   // latch ONLY once it's truly rolling, so a blocked first attempt can't kill it
-  }
-}
 function updateProxAudio(){
   const secId=SECTIONS[sectionIndex].id;
   for(const p of PROX_AUDIO){
@@ -2104,7 +2090,6 @@ function update(){
   updatePickup();
   updateFloaters();
   updateProxAudio();
-  updateLibraryNarration();
   sceneUpdate();
 
   // section edges: chained levels advance to the right; running off the LEFT returns to the hub
