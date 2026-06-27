@@ -278,7 +278,7 @@ const SECTIONS=[
      makes the wave spawner ignore the normal mix and run the sequence; full
      health is restored every 3rd wave so it stays just-about survivable.
      Reorder/extend arenaBossSequence to taste (kind numbers from ENEMY_KINDS). */
-  {id:'bossmode', name:'Boss Mode', bgKey:'__black__', black:true, BGW:1602, srcY:0, flatGround:200, chain:true, next:null, prev:null,
+  {id:'bossmode', name:'Boss Mode', bgKey:'__black__', black:true, BGW:1602, srcY:0, flatGround:225, chain:true, next:null, prev:null,
    arena:true, arenaBossMode:true,
    arenaBossSequence:[ {kind:10, name:'GUNMAN SQUAD'}, {kind:8, name:'UFO ASSAULT'}, {kind:16, name:'GUNBOT SQUAD'} ],
    arenaSpecialHp:150, arenaBaseCount:4, arenaMaxCount:14, arenaGrowth:0.8, enemies:[]},
