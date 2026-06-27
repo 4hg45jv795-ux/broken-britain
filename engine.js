@@ -859,8 +859,12 @@ document.addEventListener('visibilitychange',()=>{
    This is what was killing the jump/shoot SFX after a period of play. */
 ['pointerdown','touchstart','keydown'].forEach(ev=>document.addEventListener(ev, ()=>{
   try{ if(AC && AC.state!=='running') AC.resume(); }catch(_){}
-  // an UNMUTED screen (house TV / Restore) needs a gesture to start on iOS — kick it on any tap
-  try{ const sc=curScreen(); if(sc && tvVideo && !paused && tvVideo.paused && !tvVideo.ended) tvVideo.play().catch(()=>{}); }catch(_){}
+  // The screen PICTURE already autoplays muted on entry. A sound screen (house TV / Restore)
+  // gets its in-world audio switched on here, on the first gesture — iOS forbids cold unmuted autoplay.
+  try{ const sc=curScreen(); if(sc && tvVideo && !paused){
+        if(sc.sound && !musicMuted && tvVideo.muted) tvVideo.muted=false;
+        if(tvVideo.paused && !tvVideo.ended) tvVideo.play().catch(()=>{});
+      } }catch(_){}
 }, {passive:true, capture:true}));
 function curScreen(){ return SCREENS[SECTIONS[sectionIndex].id] || null; }
 const _tvVidPool={};                 // src -> <video>, kept buffered so channels don't reload on switch
@@ -901,7 +905,7 @@ function screenLoad(playNow){
   const sc=curScreen(); if(!sc){ tvPause(); return; }
   const v=tvVidFor(sc.files[sc.idx]);
   if(tvVideo && tvVideo!==v){ try{ tvVideo.pause(); }catch(_){} }   // pause the previous channel
-  tvVideo=v; v.muted=(sc.sound?musicMuted:true);                   // sound screens (house TV / Restore) play in-world; cinema stays muted in-world (sound in fullscreen)
+  tvVideo=v; v.muted=true;                                        // START MUTED so the PICTURE autoplays instantly (muted autoplay always works on iOS). For sound screens (house TV / Restore) the first user gesture unmutes it — see the gesture listener. iOS will not allow a cold unmuted autoplay, so this is the reliable path.
   if(sc.playlist && v.readyState>=1 && (v.ended || v.currentTime>0.1)){ try{ v.currentTime=0; }catch(_){} }  // restart a FINISHED part, but never seek a still-loading element (that stalled part 1 on entry)
   if(playNow && !paused){ v.play().catch(()=>{}); requestWakeLock(); }
 }
