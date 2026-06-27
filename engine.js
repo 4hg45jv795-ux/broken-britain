@@ -1210,7 +1210,7 @@ const WEAPON_ART={
   vest:    {sx:190,  sy:544, sw:273, sh:281},
   grenade: {sx:856,  sy:653, sw:145, sh:128},
 };
-const WEAPON_ORDER=['rifle','littleblaster','bigblaster','weapon01','weapon02','weapon03','weapon04','weapon05','weapon06','weapon07','weapon08'];
+const WEAPON_ORDER=['pistol','rifle','weapon02','weapon01','littleblaster','weapon07','weapon05','weapon03','weapon06','weapon04','weapon08','bigblaster'];
 let weaponList=[];
 let weaponSel=-1;
 let shootCool=0;
@@ -1317,7 +1317,20 @@ function tryFire(){
   const w=curWeapon(); if(!w) return;
   if(shootCool>0) return;
   fireWeapon(w); shootCool=w.cooldown;
+  if(w.clearAll) blastClearAll();
   if(CLIPS.shoot){ if(player.clip!=='shoot') setClip('shoot'); player.shootPoseT=14; }
+}
+function blastClearAll(){            // Big Blaster: one shot wipes every enemy on the level
+  addShake(16,20);
+  let n=0;
+  for(const e of enemies){
+    if(e.state!=='walk') continue;
+    const dir=(e.x+e.w/2)>=(player.x+PW/2)?1:-1;
+    spawnBlood(e.x+e.w/2, e.y+e.h*0.5, dir);
+    killEnemy(e,true);   // awards money + arena score per enemy, same as a normal kill
+    n++;
+  }
+  if(n) flashBanner('ENOUGH IS ENOUGH');
 }
 function explodeGrenade(b){
   vfx.push({type:'boom', x:b.x, y:b.y, t:0, life:26, r:b.radius});
@@ -1667,6 +1680,7 @@ function start(m){
   photographerMet=false; npc.active=false;
   money=1000; owned.clear(); updateMoneyHUD(); closeShop(); floaters=[];
   weaponList=[]; weaponSel=-1; shootCool=0; bullets=[]; vfx=[];
+  owned.add('pistol'); addWeaponToLoadout('pistol');   // everyone starts with the free sidearm so SHOOT works from the off
   player.armour=0; updateArmourHUD(); refreshWeaponBtn();
   hubReturnX=200;
   helper.active=false; helperCool=[0,0]; buildHelperThumbs(); refreshHelperBtns();
