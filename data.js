@@ -10,53 +10,36 @@ const CLIPS_BRIT={
   die:    {start:20, count:2, fps:7,  loop:false},   // kneel -> lying
   shoot:  {start:13, count:2, fps:16, loop:false},   // raise -> fire
 };
-/* ── K-9 dog gunner ───────────────────────────────────────────
-   Single row of 19 frames, repacked from his 4-col sheet in order:
-     0-3   walk (rifle slung on back)
-     4-7   walk/run (second cycle)
-     8-9   stand, rifle ready   10-11 rifle raised
-     12-15 aim -> FIRE  (frame 15 has the muzzle flash + shell)
-     16-18 on all fours (currently UNUSED — wire later if you want
-           a four-legged sprint, etc.)
-   He carries the rifle IN the sprite, so his held-weapon overlay is
-   suppressed (noWeaponArt) and bullets leave his own barrel (muzzle). */
 const CLIPS_DOG={
   idle:   {start:8,  count:2, fps:3,  loop:true},
   walk:   {start:0,  count:4, fps:9,  loop:true},
   run:    {start:4,  count:4, fps:12, loop:true},
   jump:   {start:10, count:2, fps:8,  loop:false},
-  punch:  {start:12, count:3, fps:16, loop:false},   // melee when unarmed = rifle motion
+  punch:  {start:12, count:3, fps:16, loop:false},
   headbutt:{start:12,count:3, fps:16, loop:false},
-  die:    {start:8,  count:1, fps:6,  loop:false},    // no death art yet; freezes on idle
-  shoot:  {start:12, count:3, fps:18, loop:false},    // aim -> fire; holds on frame 14 (gun up, muzzle flash)
+  die:    {start:8,  count:1, fps:6,  loop:false},
+  shoot:  {start:12, count:3, fps:18, loop:false},
 };
-/* ── The Boss (blue-suit heavy with a machine gun). Single row, 8 frames:
-     0-1 walk, 2-4 raise+fire (muzzle flash/smoke), 5 idle (adjusting tie),
-     6 kneel, 7 lying dead. Gun is IN the sprite, so noWeaponArt + muzzle. */
 const CLIPS_BOSS={
   idle:   {start:5, count:1, fps:2,  loop:true},
   walk:   {start:0, count:2, fps:6,  loop:true},
   run:    {start:0, count:2, fps:9,  loop:true},
   jump:   {start:1, count:1, fps:8,  loop:false},
-  punch:  {start:2, count:3, fps:13, loop:false},   // unarmed melee = gun raise
+  punch:  {start:2, count:3, fps:13, loop:false},
   headbutt:{start:2,count:3, fps:13, loop:false},
-  die:    {start:6, count:2, fps:6,  loop:false},   // kneel -> lying
-  shoot:  {start:2, count:3, fps:15, loop:false},   // aim -> fire -> smoke
+  die:    {start:6, count:2, fps:6,  loop:false},
+  shoot:  {start:2, count:3, fps:15, loop:false},
 };
-/* ── NEW CHARACTER (candidate playable fighter) ──────────────────────
-   THE TEMPLAR (templar.png): single row, 5 frames -> 0-3 walk, 4 dead(lying).
-   Carries a rifle in-sprite, so noWeaponArt + muzzle (bullets leave the barrel). */
 const CLIPS_TEMPLAR={
   idle:   {start:0, count:1, fps:2,  loop:true},
   walk:   {start:0, count:4, fps:9,  loop:true},
   run:    {start:0, count:4, fps:13, loop:true},
   jump:   {start:1, count:1, fps:8,  loop:false},
-  punch:  {start:0, count:2, fps:13, loop:false},   // gun-thrust melee
+  punch:  {start:0, count:2, fps:13, loop:false},
   headbutt:{start:0,count:2, fps:13, loop:false},
   shoot:  {start:0, count:2, fps:15, loop:false},
   die:    {start:4, count:1, fps:6,  loop:false},
 };
-/* ── FIGHTER META ────────────────────────────────────────── */
 const META=[
   {id:'templar',  name:'Crusader',     flag:'CHRISTENDOM',   fw:240, fh:345, clips:CLIPS_TEMPLAR,
                   noWeaponArt:true, muzzle:{fwd:0.52, yfac:0.46}},
@@ -67,7 +50,6 @@ const META=[
   {id:'boss',     name:'Cousin V',     flag:'AMERICA',       fw:294, fh:299, clips:CLIPS_BOSS,
                   noWeaponArt:true, muzzle:{fwd:0.62, yfac:0.46}},
 ];
-/* ── ASSETS ──────────────────────────────────────────────── */
 const ASSETS = [
   {key:'home',     type:'img', src:'home4.png', optional:true},
   {key:'room_house',        type:'img', src:'room house.jpeg', optional:true},
@@ -79,18 +61,16 @@ const ASSETS = [
   {key:'room_trainstation', type:'img', src:'room trainstation.jpeg', optional:true},
   {key:'room_library',      type:'img', src:'room library.jpeg', optional:true},
   {key:'room_winchester',   type:'img', src:'room winchester.jpeg', optional:true},
-  /* ── NEW ROOM BACKGROUNDS (same "room NAME.jpeg" convention as above) ── */
   {key:'room_police',       type:'img', src:'room police 2.jpeg', optional:true},
   {key:'room_nightclub',    type:'img', src:'room nightclub.jpeg', optional:true},
   {key:'room_crackadilly',  type:'img', src:'room crackadilly.jpeg', optional:true},
   {key:'room_europe',       type:'img', src:'room europe.jpeg', optional:true},
   {key:'room_america',      type:'img', src:'room america.jpeg', optional:true},
-  {key:'potus',             type:'img', src:'potus.png', optional:true},   // America dancing NPC (18-frame dance loop)
+  {key:'potus',             type:'img', src:'potus.png', optional:true},
   {key:'room_dnb',          type:'img', src:'room dnb.jpeg', optional:true},
   {key:'room_hiphop',       type:'img', src:'room hiphop.jpeg', optional:true},
   {key:'room_special',      type:'img', src:'room special.jpeg', optional:true},
   {key:'room_cottagers',    type:'img', src:'room cottagers.jpeg', optional:true},
-  /* ── NEW: the Winchester gents toilet (placeholder until room toilet.jpeg exists) ── */
   {key:'room_toilet',       type:'img', src:'room toilet.jpeg', optional:true},
   {key:'bg',       type:'img', src:'bg.jpg'},
   {key:'pub',      type:'img', src:'pub2.jpeg'},
@@ -100,30 +80,28 @@ const ASSETS = [
   {key:'dog',      type:'img', src:'dog.png', optional:true},
   {key:'boss',     type:'img', src:'boss.png', optional:true},
   {key:'templar',  type:'img', src:'templar.png', optional:true},
-  {key:'ufoship',  type:'img', src:'ufoship.png', optional:true},   // shooting UFO enemy (kind 8)
-  {key:'bruiser',  type:'img', src:'bruiser.png', optional:true},   // Cottagers Cove thug enemy (kind 9)
-  {key:'shooter',  type:'img', src:'shooter.png', optional:true},   // gunman enemy (kind 10)
-  {key:'tracksuit',type:'img', src:'tracksuit.png', optional:true}, // Cottagers Cove tracksuit enemy (kind 11)
-  {key:'hippie',   type:'img', src:'hippie.png', optional:true},    // Park/street enemy (kind 12)
-  {key:'crackman', type:'img', src:'crackman.png', optional:true},  // Crackadilly Gardens enemy (kind 13)
-  {key:'stabber',  type:'img', src:'stabber.png', optional:true},   // Crackadilly Gardens hooded knife enemy (kind 14)
-  {key:'bladebot', type:'img', src:'bladebot.png', optional:true},  // Judgement Day blade android (kind 15)
-  {key:'gunbot',   type:'img', src:'gunbot.png', optional:true},    // Judgement Day minigun endoskeleton — SHOOTER (kind 16)
-  {key:'bostonbot',type:'img', src:'bostonbot.png', optional:true}, // Judgement Day blue-headed combat bot (kind 17)
-  {key:'teslabot', type:'img', src:'teslabot.png', optional:true},  // Judgement Day Atlas-style combat bot (kind 18)
-  {key:'gardenman',type:'img', src:'gardenman.png', optional:true}, // Crackadilly Gardens pacing NPC (decorative, walks back and forth)
-  {key:'hawking',  type:'img', src:'hawking.png', optional:true},   // Judgement Day wheelchair enemy (kind 19)
-  {key:'piggybackguy', type:'img', src:'piggybackguy.png', optional:true}, // Special Guest room NPC — carried sedan-chair group (paces the floor)
-  {key:'bigbrain',     type:'img', src:'bigbrain.png', optional:true},     // Crackadilly Gardens enemy (kind 20) — has its own dying animation
-  {key:'hologram', type:'img', src:'hologram.png', optional:true},  // Library blue AI hologram NPC (centre)
-  {key:'dancer',   type:'img', src:'dancer.png', optional:true},    // dancing NPC (now in the Hip-Hop room)
-  {key:'couple',   type:'img', src:'couple.png', optional:true},    // Void dancing-couple NPCs
-  {key:'dgreen',   type:'img', src:'dancer_green.png',  optional:true},  // Hip-Hop room dancer (green)
-  {key:'tvguy',    type:'img', src:'tvguy.png', optional:true},     // Hip-Hop room safe-carrying dancing NPC (18 frames)
-  /* ── NEW: Drum & Bass room dancing couples ── */
-  {key:'dnbcouple1', type:'img', src:'dnbcouple1.png', optional:true},   // Freddy + Queen couple (15 frames)
-  {key:'dnbcouple2', type:'img', src:'dnbcouple2.png', optional:true},   // green alien + raver couple (15 frames)
-  /* ── NEW: the Winchester toilet KEY pickup (drawn as a gold key if no png) ── */
+  {key:'ufoship',  type:'img', src:'ufoship.png', optional:true},
+  {key:'bruiser',  type:'img', src:'bruiser.png', optional:true},
+  {key:'shooter',  type:'img', src:'shooter.png', optional:true},
+  {key:'tracksuit',type:'img', src:'tracksuit.png', optional:true},
+  {key:'hippie',   type:'img', src:'hippie.png', optional:true},
+  {key:'crackman', type:'img', src:'crackman.png', optional:true},
+  {key:'stabber',  type:'img', src:'stabber.png', optional:true},
+  {key:'bladebot', type:'img', src:'bladebot.png', optional:true},
+  {key:'gunbot',   type:'img', src:'gunbot.png', optional:true},
+  {key:'bostonbot',type:'img', src:'bostonbot.png', optional:true},
+  {key:'teslabot', type:'img', src:'teslabot.png', optional:true},
+  {key:'gardenman',type:'img', src:'gardenman.png', optional:true},
+  {key:'hawking',  type:'img', src:'hawking.png', optional:true},
+  {key:'piggybackguy', type:'img', src:'piggybackguy.png', optional:true},
+  {key:'bigbrain',     type:'img', src:'bigbrain.png', optional:true},
+  {key:'hologram', type:'img', src:'hologram.png', optional:true},
+  {key:'dancer',   type:'img', src:'dancer.png', optional:true},
+  {key:'couple',   type:'img', src:'couple.png', optional:true},
+  {key:'dgreen',   type:'img', src:'dancer_green.png',  optional:true},
+  {key:'tvguy',    type:'img', src:'tvguy.png', optional:true},
+  {key:'dnbcouple1', type:'img', src:'dnbcouple1.png', optional:true},
+  {key:'dnbcouple2', type:'img', src:'dnbcouple2.png', optional:true},
   {key:'toiletkey',  type:'img', src:'toiletkey.png', optional:true},
   {key:'photog',   type:'img', src:'photog2.png'},
   {key:'athlete',  type:'img', src:'athlete.png', optional:true},
@@ -142,9 +120,6 @@ const ASSETS = [
   {key:'glasgow',  type:'img', src:'glasgow.jpeg', optional:true},
   {key:'southampton', type:'img', src:'southampton.jpeg', optional:true},
   {key:'mk',       type:'img', src:'mortalkombat.png', optional:true},
-  /* ── MORTAL KOMBAT NPC SPRITES (single-row strips, real PNG alpha) ──
-     Slots for the ambient MK characters wired in MK_NPCS below. Rename per
-     character once your sheets are repacked; missing files just stay silent. */
   {key:'mknpc1',   type:'img', src:'mknpc1.png', optional:true},
   {key:'mknpc2',   type:'img', src:'mknpc2.png', optional:true},
   {key:'mknpc3',   type:'img', src:'mknpc3.png', optional:true},
@@ -178,18 +153,10 @@ const SECTIONS=[
      {x:1490, w:82,  label:'The Portal',        menu:'portal'},
      {x:1740, w:112, label:'The Library',       target:'in_library'},
      {x:2040, w:120, label:'The Winchester',    target:'in_winchester'},
-     /* ── NEW BUILDINGS (enter just like the others). The x values below are
-        guesses past the Winchester (hub is BGW:2868 wide) — nudge each `x`
-        on the phone until the marker sits over the painted door in home4.png,
-        exactly how every other door here was lined up. */
      {x:2280, w:100, label:'Police Station',    target:'in_police'},
      {x:2490, w:110, label:"Slammin' Vinyl",    target:'in_nightclub'},
      {x:2700, w:120, label:'Crackadilly Gardens',  target:'in_crackadilly'}
    ]},
-  /* ── THE STREETS chain. SOUTHAMPTON is now the FIRST level (entered from the
-     Portal / Train Station "The Streets"); the old Southside "street" level is now
-     the LAST stop before the chain loops back to the hub. The photographer's first
-     appearance + cutscene now triggers at the start of Southampton (see engine.js). */
   {id:'southampton', name:'Southampton &mdash; Above Bar Street', bgKey:'southampton', BGW:1879, srcY:90, flatGround:296, chain:true, next:'park', prev:null,
    enemies:[ {at:430,kind:0},{at:640,kind:0},{at:850,kind:0},{at:1050,kind:0},{at:1250,kind:0},{at:1450,kind:0},{at:1650,kind:0},{at:1800,kind:0},{at:540,kind:0},{at:1150,kind:0},{at:1370,kind:0},{at:1730,kind:0} ]},
   {id:'park', name:'Standard UK Park', bgKey:'park', BGW:1763, srcY:0, flatGround:196, chain:true, next:'belfast', prev:'southampton',
@@ -200,42 +167,22 @@ const SECTIONS=[
   {id:'pub',     name:'The Red Hand &mdash; loyalist till I die', bgKey:'pub', BGW:533, srcY:8, flatGround:212, charScale:1.4, chain:true, next:'dundee', prev:'belfast',
    enemies:[ ]},
   {id:'dundee',  name:'Welcome to Dundee', bgKey:'dundee', BGW:560, srcY:65, flatGround:270, chain:true, next:'glasgow', prev:'pub',
-   /* THE TOILET KEY now lives here in Dundee — walk over it to pick it up; it then unlocks
-      the Winchester toilet door. Nudge at/h to taste. */
    enemies:[ ], items:[ {id:'toiletkey', at:300, h:34, label:'the Winchester toilet key'} ]},
   {id:'glasgow', name:'Glasgow &mdash; the Trongate', bgKey:'glasgow', BGW:2672, srcY:90, flatGround:296, chain:true, next:'street', prev:'dundee',
    enemies:[ {at:230,kind:6,hp:1,static:true},{at:760,kind:5},{at:1080,kind:0},{at:1380,kind:5},{at:1700,kind:1},{at:2000,kind:5},{at:2480,kind:5} ]},
+  /* SOUTHSIDE: bikeboy(6) removed entirely (it now only appears once, parked, at the
+     start of Glasgow). The three former bikeboys are now Deliveroo riders (kind 5,
+     spd1.6), and the whole roster is spread evenly across the 4047-wide level. */
   {id:'street', name:'Southside &mdash; the street', bgKey:'bg',  BGW:4047, srcY:120, flatGround:null, chain:true, next:null, prev:'glasgow',
-   enemies:[ {at:1200,kind:0},{at:1700,kind:1},{at:2300,kind:0},{at:3300,kind:1},{at:3700,kind:0},{at:2000,kind:12},{at:2800,kind:12},{at:600,kind:0},{at:3900,kind:0},{at:900,kind:6},{at:2200,kind:6},{at:3500,kind:6},{at:1500,kind:20,hp:60},{at:3000,kind:20,hp:60},{at:1900,kind:14,hp:50},{at:3100,kind:14,hp:50},{at:2600,kind:10,hp:60} ]},
-
-  /* ── MORTAL KOMBAT (entered from the hub Portal -> travel menu) ──
-     Standalone fight arena: the UMK3 "Blue Portal" bridge. Background
-     mortalkombat.png is 1432x240, floor surface ~196 (nudge flatGround).
-     chain:true so the helper bar + combat work; next:null so the right
-     edge gives the "THE END" exit and the left edge returns to the hub.
-     Ambient MK characters (NPCs) are wired separately in MK_NPCS below. */
+   enemies:[ {at:400,kind:0},{at:620,kind:12},{at:840,kind:5,spd:1.6},{at:1060,kind:0},{at:1290,kind:1},{at:1520,kind:20,hp:60},{at:1750,kind:0},{at:1980,kind:14,hp:50},{at:2210,kind:5,spd:1.6},{at:2440,kind:12},{at:2670,kind:10,hp:60},{at:2900,kind:0},{at:3130,kind:14,hp:50},{at:3360,kind:1},{at:3590,kind:5,spd:1.6},{at:3780,kind:20,hp:60},{at:3950,kind:0} ]},
+  /* ── MORTAL KOMBAT arena (Portal menu) ── */
   {id:'mk', name:'The Portal &mdash; Mortal Kombat', bgKey:'mk', BGW:1432, srcY:0, flatGround:206, chain:true, next:null, prev:null,
    arena:true, arenaPool:[0,1,4,9,14], arenaSpecial:10, arenaSpecialName:'GUNMAN SQUAD', arenaSpecialHp:120,
    arenaBaseCount:6, arenaMaxCount:14, arenaGrowth:1.5, enemies:[]},
 
-  /* ── BLACK LEVEL (entered from the hub Portal -> travel menu) ──────────
-     A long, currently-black stage that hosts the MP4 scenery system below
-     (SCENE_VIDEOS): a WALL video across the top 75% and a separate FLOOR
-     video across the bottom 25%, both TILED across the whole level and
-     scrolling with the camera. black:true paints the frame black underneath,
-     so anywhere a video hasn't loaded yet just stays black. chain:true lets
-     you walk it; the left edge returns to the hub. BGW is the level length. */
-  /* THE VOID is now an ENDLESS WAVE ARENA. The engine's wave spawner (arena* in
-     engine.js) takes over: each cleared wave brings a tougher one (more enemies,
-     more HP, faster, hits harder). Kills bank score; top runs save to this device
-     and show when you fall. Walk off the far LEFT to leave. Add future tougher
-     enemy kinds to arenaPool() in engine.js, gated behind a higher wave number. */
+  /* ── THE VOID: endless wave arena (SCENE_VIDEOS wall/floor; black underneath) ── */
   {id:'blacklevel', name:'Survive Waves in the Void', bgKey:'__black__', black:true, BGW:8534, srcY:0, flatGround:200, chain:true, next:null, prev:null,
    arena:true, enemies:[],
-   /* 8 dancing-couple NPCs (NOT enemies) — placed across the FINAL 2 MP4 panels
-      (tileW 1200 each, so x 6000-8400 = the last quarter of the level), 4 per panel.
-      Raised up the path (yOff) so they sit higher than the player as background
-      dancers. Dancingcouple.mp3 fades in near them. Nudge `at`/`yOff`/`h` to taste. */
    npcs:[
      {img:'couple', fw:234, fh:231, at:6150, h:105, yOff:-40, face:1,  clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
      {img:'couple', fw:234, fh:231, at:6450, h:105, yOff:-40, face:-1, clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
@@ -246,343 +193,170 @@ const SECTIONS=[
      {img:'couple', fw:234, fh:231, at:7950, h:105, yOff:-40, face:1,  clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
      {img:'couple', fw:234, fh:231, at:8250, h:105, yOff:-40, face:-1, clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220} ]},
 
-  /* ── HOLODECK (entered from the hub Portal -> travel menu) ─────────────
-     A full-screen MP4 backdrop: one widescreen clip (holodeck.mp4) fills the
-     WHOLE screen (no separate floor band) and is drawn TWICE side-by-side, so
-     the level is two screens wide and SCROLLS smoothly (the panels are anchored
-     to the world; the camera pans across as you run). Add flip:true to the line
-     below if you ever want a flip-screen camera instead (snaps panel-to-panel,
-     no scroll). black underneath, the video is silent, Holodeck.mp3 is the
-     sound. Want it longer? Add screens: set BGW to (number-of-screens x 534). */
+  /* ── HOLODECK arena ── */
   {id:'holodeck', name:'The Holodeck', bgKey:'__black__', black:true, BGW:2136, srcY:0, flatGround:180, chain:true, next:null, prev:null,
    arena:true, arenaPool:[2,3,7,12,14], arenaSpecial:8, arenaSpecialName:'UFO ASSAULT', arenaSpecialHp:200,
-   arenaBaseCount:8, arenaMaxCount:18, arenaGrowth:2, enemies:[]},   // 4 screens wide (4 x tileW 534); holodeck.mp4 tiles across all of them
+   arenaBaseCount:8, arenaMaxCount:18, arenaGrowth:2, enemies:[]},
 
-  /* ── JUDGEMENT DAY (entered from the hub Portal -> travel menu) ─────────
-     Endless wave arena vs the machines: BLADEBOT (arm-blades), GUNBOT (a SHOOTER
-     that sprays normal machine-gun rounds), and two MMA combat bots (BOSTONBOT /
-     TESLABOT). Every 5th wave is a GUNBOT SQUAD (a firing line of miniguns). Black
-     backdrop for now; walk off the far LEFT to leave. Its own leaderboard saves to
-     this device (arena_judgement). Add a backdrop later via SCENE_VIDEOS if wanted. */
+  /* ── JUDGEMENT DAY arena ── */
   {id:'judgement', name:'Judgement Day', bgKey:'__black__', black:true, BGW:2136, srcY:0, flatGround:200, chain:true, next:null, prev:null,
    arena:true, arenaPool:[15,17,18,19], arenaSpecial:16, arenaSpecialName:'GUNBOT SQUAD', arenaSpecialHp:150,
    arenaSpecialBase:3, arenaSpecialMax:10, arenaBaseCount:6, arenaMaxCount:16, arenaGrowth:1.6, enemies:[]},
 
-  /* ── INTERIOR ROOMS (entered from the hub; EXIT door returns to the street) ── */
-  {id:'in_house', name:'Inside &mdash; My House', bgKey:'room_house', BGW:591, srcY:46, flatGround:277, charScale:1.3, interior:true, enemies:[],
-   doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
-  {id:'in_church', name:'Inside &mdash; The Church', bgKey:'room_church', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
-   doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
-  {id:'in_gunstore', name:'Inside &mdash; FAFO Ammo &amp; Arms', bgKey:'room_gunstore', BGW:591, srcY:46, flatGround:273, charScale:1.3, interior:true, enemies:[],
-   doors:[ {x:250, w:95, label:'Buy weapons', target:'shop'}, {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
-  /* walking path was sitting too high — flatGround nudged 277->285 to drop the feet (this
-     is the safe lever within the current view). If he's STILL floating above the painted
-     floor, the camera needs to pan down: send a screenshot and I'll set srcY+flatGround
-     exactly (raise flatGround to drop him; raise srcY to reveal more floor below). */
-  {id:'in_restore', name:'Inside &mdash; Restore Britain', bgKey:'room_restore', BGW:580, srcY:46, flatGround:285, charScale:1.7, interior:true, enemies:[],
-   doors:[ {x:495, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
-  {id:'in_cinema', name:'Inside &mdash; The Cinema', bgKey:'room_cinema', BGW:591, srcY:46, flatGround:273, charScale:1.3, interior:true, enemies:[],
-   doors:[ {x:506, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
-  {id:'in_easyjet', name:'Inside &mdash; easyJet Holidays', bgKey:'room_easyjet', BGW:580, srcY:46, flatGround:277, charScale:1.3, interior:true, enemies:[],
-   doors:[ {x:290, w:74, label:'Departures', menu:'easyjet'}, {x:495, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
-  {id:'in_trainstation', name:'Inside &mdash; DigiTown Station', bgKey:'room_trainstation', BGW:580, srcY:46, flatGround:281, charScale:1.3, interior:true, enemies:[],
-   doors:[ {x:290, w:74, label:'Departures', menu:'trainstation'}, {x:495, w:92, label:'EXIT &mdash; to the street', target:'home'} ]},
-  /* LIBRARY swapped to the wide Alexandria panorama (room library.jpeg now 2172x375).
-     zoom:1.0 shows an 800px-wide slice; walk RIGHT to explore, walk off the far LEFT to
-     leave (exitLeft:'home'). Nudge flatGround/srcY/charScale to taste. */
+  /* ── BOSS RUSH (Portal menu) ─────────────────────────────────────────────
+     EVERY wave is a boss-only wave. It cycles through bossRushPool — gunman(10),
+     UFO gunship(8), gunbot(16), bruiser(9), big-brain(20), tracksuit(11) — and
+     escalates every wave (more of them, more HP). Black backdrop; walk off the
+     far LEFT to leave. Own leaderboard saves to this device (arena_bossrush). */
+  {id:'bossrush', name:'Boss Rush', bgKey:'__black__', black:true, BGW:2136, srcY:0, flatGround:200, chain:true, next:null, prev:null,
+   arena:true, bossRush:true, bossRushPool:[10,8,16,9,20,11],
+   arenaSpecialHp:150, arenaSpecialBase:3, arenaSpecialMax:12, enemies:[]},
+  /* ── INTERIOR ROOMS — exit by walking off the LEFT or RIGHT edge (no STRIKE).
+     Only functional doors (shop, departures, club rooms, toilet, underpass) remain. ── */
+  {id:'in_house', name:'Inside &mdash; My House', bgKey:'room_house', BGW:591, srcY:46, flatGround:277, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
+   doors:[]},
+  {id:'in_church', name:'Inside &mdash; The Church', bgKey:'room_church', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
+   doors:[]},
+  {id:'in_gunstore', name:'Inside &mdash; FAFO Ammo &amp; Arms', bgKey:'room_gunstore', BGW:591, srcY:46, flatGround:273, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
+   doors:[ {x:250, w:95, label:'Buy weapons', target:'shop'} ]},
+  {id:'in_restore', name:'Inside &mdash; Restore Britain', bgKey:'room_restore', BGW:580, srcY:46, flatGround:285, charScale:1.7, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
+   doors:[]},
+  {id:'in_cinema', name:'Inside &mdash; The Cinema', bgKey:'room_cinema', BGW:591, srcY:46, flatGround:273, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
+   doors:[]},
+  {id:'in_easyjet', name:'Inside &mdash; easyJet Holidays', bgKey:'room_easyjet', BGW:580, srcY:46, flatGround:277, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
+   doors:[ {x:290, w:74, label:'Departures', menu:'easyjet'} ]},
+  {id:'in_trainstation', name:'Inside &mdash; DigiTown Station', bgKey:'room_trainstation', BGW:580, srcY:46, flatGround:281, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
+   doors:[ {x:290, w:74, label:'Departures', menu:'trainstation'} ]},
   {id:'in_library', name:'Inside &mdash; The Library', bgKey:'room_library', BGW:2172, zoom:1.0, srcY:8, flatGround:332, charScale:1.7, interior:true, walkMul:1.7, exitLeft:{target:'home',x:1740,face:1}, exitRight:{target:'home',x:1740,face:1},
    enemies:[],
-   /* A blue AI HOLOGRAM hums in the CENTRE of the library (x:1086, room is 2172 wide).
-      Harmless background NPC with a proximity-audio slot — Hologram.mp3 fades in as you
-      approach. Optional art: hologram.png as a single-row strip; until it exists nothing
-      is drawn, but the proximity sound still works. Nudge fw/fh/h/range once art is in. */
    npcs:[ {img:'hologram', fw:240, fh:360, at:1086, h:170, face:1,
            clip:{start:0, count:6, fps:8, loop:true}} ],
    doors:[]},
-  /* WINCHESTER swapped to the wide pub panorama (room winchester.jpeg now 2172x387).
-     zoom:1.0 shows an 800px-wide slice. Character made BIGGER (charScale 2.2) and the view
-     panned down (srcY:27) with flatGround:360 so he walks the front floorboards IN FRONT of
-     the bar stools (seats behind him). EXIT from EITHER end by walking off the edge
-     (exitLeft + exitRight). Nudge flatGround/charScale to taste. */
-  /* Positions measured against room winchester.jpeg (2172 wide): the TOILET door sits under
-     the green "Toilets" sign (x:880) and is LOCKED until you carry 'toiletkey' (found in
-     DUNDEE). The JUKEBOX (see JUKEBOX below) is the Wurlitzer at the far right (x:1994) —
-     STRIKE near it to flip through its track slots, like the house TV but for music. */
   {id:'in_winchester', name:'Inside &mdash; The Winchester', bgKey:'room_winchester', BGW:2172, zoom:1.0, srcY:27, flatGround:360, charScale:2.2, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
    doors:[ {x:880, w:110, label:'The Toilet', target:'in_toilet', locked:true, key:'toiletkey'} ]},
-
-  /* ── THE WINCHESTER TOILET (the gents). Reached from the locked door inside the
-     Winchester. Placeholder dark room until room toilet.jpeg exists; EXIT door goes
-     back to the bar. Nudge BGW/srcY/flatGround/charScale once the art is in. */
-  {id:'in_toilet', name:'Inside &mdash; The Gents', bgKey:'room_toilet', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
-   doors:[ {x:506, w:92, label:'EXIT &mdash; back to the bar', target:'in_winchester'} ]},
-
-  /* ── NEW INTERIOR ROOMS ───────────────────────────────────────────────
-     Same shape as the rooms above: enter from the hub, EXIT door (right side)
-     pops back to the street. Defaults copied from the church room — nudge
-     BGW / srcY / flatGround / charScale to match each new room jpeg, and move
-     the EXIT door x to sit over the painted doorway. Each has a music slot in
-     TRACKS (see below) and a room-background image in ASSETS. */
-  /* Police Station is a wide walk-through (enquiries -> custody cells -> staff
-     room) so it uses the full 2182px-wide image. srcY/flatGround/charScale are
-     starting guesses — nudge on the phone. EXIT door sits near the entrance. */
-  {id:'in_police', name:'Inside &mdash; Police Station', bgKey:'room_police', BGW:2182, zoom:0.85, srcY:150, flatGround:545, charScale:2.2, interior:true, exitLeft:'home', enemies:[],
-   doors:[]},   // EXIT by walking off the far LEFT of the room (no STRIKE) — exitLeft:'home'
-  /* ── SLAMMIN' VINYL (the club lobby; room nightclub.jpeg, 2048px wide). Leave
-     by walking off the far LEFT, back through the turnstiles (exitLeft:'home').
-     The 3 doors lead to the club rooms — nudge each x so the marker sits over the
-     painted door, and tune srcY/flatGround/charScale so feet land on the floor in
-     front of them (mirrors the police-room camera as a sensible starting point).
-     walkMul:2.0 stops the walk feeling sluggish at this low zoom. */
-  {id:'in_nightclub', name:"Inside &mdash; Slammin' Vinyl", bgKey:'room_nightclub', BGW:2048, zoom:0.85, srcY:150, flatGround:560, charScale:2.5, interior:true, walkMul:2.0, exitLeft:'home', enemies:[],
+  {id:'in_toilet', name:'Inside &mdash; The Gents', bgKey:'room_toilet', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true,
+   exitLeft:{target:'in_winchester',x:980,face:-1}, exitRight:{target:'in_winchester',x:980,face:1}, enemies:[],
+   doors:[]},
+  {id:'in_police', name:'Inside &mdash; Police Station', bgKey:'room_police', BGW:2182, zoom:0.85, srcY:150, flatGround:545, charScale:2.2, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
+   doors:[]},
+  {id:'in_nightclub', name:"Inside &mdash; Slammin' Vinyl", bgKey:'room_nightclub', BGW:2048, zoom:0.85, srcY:150, flatGround:560, charScale:2.5, interior:true, walkMul:2.0, exitLeft:'home', exitRight:'home', enemies:[],
    doors:[ {x:958,  w:100, label:'Room 1 &mdash; Drum &amp; Bass', target:'in_dnb'},
            {x:1335, w:100, label:'Room 2 &mdash; Hip-Hop',        target:'in_hiphop'},
            {x:1712, w:100, label:'Room 3 &mdash; Special Guest',  target:'in_special'} ]},
-  /* ── CRACKADILLY GARDENS (the stitched 3-panorama park; end of the hub) ──
-     One wide outdoor walk-through built from Park1+Park2+Park3 stitched into a
-     single seamless jpeg (room crackadilly.jpeg, 5946px wide). interior:true so
-     the EXIT door pops you back to the hub. srcY / flatGround / charScale are
-     tuned from your in-game screenshots: srcY:140 slides the view DOWN so the
-     wet pavement (the bottom ~45% of the image) shows along the bottom of the
-     screen, and flatGround:350 drops the player's feet onto that pavement.
-     Nudge if needed — raise flatGround (e.g. 350->370) to push him lower; raise
-     srcY (e.g. 140->165) to reveal even more pavement at the very bottom.
-     EXIT: walk off the far LEFT of the level (no STRIKE) — exitLeft:'home'. The
-     door at the far-right end is the Cottagers Cove underpass (a separate room).
-     groundPts gives the walk a DIP through the canal basin: 350 (towpath) for most
-     of the level, dropping to ~366 across the basin (world x ~4300-5000) so the
-     player walks the wet stone quay in FRONT of the water, then climbs back to 350
-     for the towpath/underpass. Each point spans groundStep (100) world px. To drop
-     him further into the basin, raise those dip numbers toward 378 (378 is ~the
-     very bottom of the view); flatGround:350 stays as a fallback if the image ever
-     fails to load. Nudge the underpass door x (5300) to sit over the tunnel mouth.
-     Music: Crackadilly.mp3 (already in TRACKS).
-     ENEMIES: six crackmen (kind 13) plus four hooded STABBERS (kind 14) interspersed
-     between them. Stabbers walk you down and knife you on contact — die anim is the
-     hit -> kneel -> lying-dead-with-blood sequence. Nudge at/hp to taste. */
   {id:'in_crackadilly', name:'Crackadilly Gardens', bgKey:'room_crackadilly', BGW:5946, srcY:140, flatGround:350, charScale:1.2, interior:true, helpers:true, exitLeft:'home',
    enemies:[ {at:800,kind:13},{at:1200,kind:14,hp:50},{at:1600,kind:13},{at:2000,kind:14,hp:50},{at:2400,kind:13},{at:3200,kind:13},{at:3600,kind:14,hp:50},{at:4000,kind:13},{at:4800,kind:13},{at:5200,kind:14,hp:50},{at:2800,kind:20,hp:60},{at:4400,kind:20,hp:60},
              {at:1400,kind:5,spd:1.6,scaleMul:1.08},{at:2600,kind:5,spd:1.6,scaleMul:1.08},{at:3800,kind:5,spd:1.6,scaleMul:1.08},{at:5000,kind:5,spd:1.6,scaleMul:1.08} ],
    groundStep:100,
    groundPts:[350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,352,360,364,366,366,366,362,354,350,350,350,350,350,350,350,350,350],
    doors:[ {x:5500, w:150, label:'Cottagers Cove &mdash; underpass', target:'in_cottagers'} ]},
-
-  /* ── EUROPE (easyJet destination) ──────────────────────────────────────────
-     A simple walkable level — gardenman paces here for now. Placeholder backdrop
-     until 'room europe.jpeg' (asset key room_europe) exists. Run off the LEFT edge
-     to return to the hub. Nudge BGW / flatGround / gardenman pace once art is in. */
-  {id:'lvl_europe', name:'Europe', bgKey:'room_europe', BGW:2172, srcY:0, flatGround:300, charScale:1.3, interior:true, exitLeft:'home', enemies:[],
+  {id:'lvl_europe', name:'Europe', bgKey:'room_europe', BGW:2172, srcY:0, flatGround:300, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
    npcs:[ {img:'gardenman', fw:229, fh:427, at:1086, h:120, yOff:0, face:1,
            clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:300, paceTo:1850, paceSpd:0.7,
            mp3:'Gardenman.mp3', range:240} ],
    doors:[]},
-
-  /* ── AMERICA (easyJet destination) ──────────────────────────────────────────
-     Placeholder walkable level — a dancing figure struts in place (proximity MP3
-     slot Potus.mp3 fades in as you approach). Add 'room america.jpeg' (asset key
-     room_america) for art; run off the LEFT edge to return to the hub. */
-  {id:'lvl_america', name:'America', bgKey:'room_america', BGW:2172, srcY:0, flatGround:300, charScale:1.3, interior:true, exitLeft:'home', enemies:[],
+  {id:'lvl_america', name:'America', bgKey:'room_america', BGW:2172, srcY:0, flatGround:300, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
    npcs:[ {img:'potus', fw:233, fh:362, at:1086, h:135, yOff:0, face:1,
            clip:{start:0,count:18,fps:9,loop:true}, mp3:'Potus.mp3', range:260} ],
    doors:[]},
-
-  /* ── SLAMMIN' VINYL ROOMS (entered from the club lobby; EXIT door -> lobby) ──
-     Interiors for the three club rooms (room dnb/hiphop/
-     special.jpeg). Each loops its own track (see TRACKS). The engine draws a dark
-     room until the art exists; nudge BGW/srcY/flatGround/charScale once it does. */
-  {id:'in_dnb', name:'Room 1 &mdash; Drum &amp; Bass', bgKey:'room_dnb', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
-   /* two background dancing couples (NOT enemies) just looping a dance on the floor */
+  {id:'in_dnb', name:'Room 1 &mdash; Drum &amp; Bass', bgKey:'room_dnb', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true,
+   exitLeft:{target:'in_nightclub',x:1000,face:-1}, exitRight:{target:'in_nightclub',x:1000,face:1}, enemies:[],
    npcs:[ {img:'dnbcouple1', fw:328, fh:310, at:175, h:130, yOff:0, face:1,  clip:{start:0,count:15,fps:6,loop:true}},
           {img:'dnbcouple2', fw:260, fh:272, at:410, h:130, yOff:0, face:-1, clip:{start:0,count:15,fps:8,loop:true}} ],
-   doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
-  /* HIP-HOP room: the original dancer + the green dancer + the "TV guy" (orange-shirt
-     bloke hugging a safe, tvguy.png) boogieing on the spot. The purple dancer was removed.
-     Decorative NPCs: no collision, can't be hit. Nudge at/h/face to taste. */
-  {id:'in_hiphop', name:'Room 2 &mdash; Hip-Hop', bgKey:'room_hiphop', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
-   /* background dancers (NOT enemies) just looping a dance on the floor.
-      Green dancer sits in the MIDDLE, flanked by the original dancer (left) and the TV guy (right). */
+   doors:[]},
+  {id:'in_hiphop', name:'Room 2 &mdash; Hip-Hop', bgKey:'room_hiphop', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true,
+   exitLeft:{target:'in_nightclub',x:1380,face:-1}, exitRight:{target:'in_nightclub',x:1380,face:1}, enemies:[],
    npcs:[ {img:'dancer',  fw:163, fh:310, at:220, h:135, yOff:0, face:1,  clip:{start:8,count:6,fps:9,loop:true}, mp3:'Dancer.mp3', range:180},
           {img:'dgreen',  fw:156, fh:231, at:355, h:104, yOff:0, face:1,  clip:{start:0,count:6,fps:9,loop:true}},
           {img:'tvguy',   fw:231, fh:369, at:490, h:128, yOff:0, face:-1, clip:{start:0,count:18,fps:7,loop:true}} ],
-   doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
-  {id:'in_special', name:'Room 3 &mdash; Special Guest', bgKey:'room_special', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
-   /* Decorative NPC: the carried sedan-chair group strolls back and forth along the floor on
-      the player's path (normal size, ground level). Nudge h / paceFrom-To / paceSpd / face. */
+   doors:[]},
+  {id:'in_special', name:'Room 3 &mdash; Special Guest', bgKey:'room_special', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true,
+   exitLeft:{target:'in_nightclub',x:1760,face:-1}, exitRight:{target:'in_nightclub',x:1760,face:1}, enemies:[],
    npcs:[ {img:'piggybackguy', fw:151, fh:287, at:240, h:130, yOff:0, face:1,
            clip:{start:0,count:11,fps:8,loop:true}, pace:true, paceFrom:130, paceTo:420, paceSpd:0.45} ],
-   doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
-
-  /* ── COTTAGERS COVE (the underpass at the far end of Crackadilly Gardens) ──
-     A standalone room reached from the gardens' right-hand underpass door.
-     Placeholder until you make room cottagers.jpeg; EXIT pops back to the hub. */
-  /* COTTAGERS COVE now uses the wide underpass panorama (room cottagers.jpeg, 2172x724).
-     zoom:0.72 fits the wall+railing above and the brick towpath below; flatGround:620 stands
-     the player on the front bricks (railing/canal behind). Reached from the Crackadilly
-     underpass door; walk off the far LEFT to return to the hub (exitLeft:'home'). */
-  {id:'in_cottagers', name:'Cottagers Cove', bgKey:'room_cottagers', BGW:2172, zoom:0.72, srcY:160, flatGround:620, charScale:2.5, interior:true, walkMul:2.2,
-   exitLeft:{target:'in_crackadilly', x:5500, face:-1},   // far LEFT -> back to the Crackadilly underpass entrance
-   exitRight:'home',                                       // far RIGHT -> out to the main hub
-   enemies:[ {at:900,kind:9,hp:220,scaleMul:1.15},
-             {at:1500,kind:11,hp:220,scaleMul:0.84} ],   // just ONE bruiser + ONE tracksuit, both tanky (hp 220)
    doors:[]},
-
-  /* Placeholder for travel destinations that aren't built yet (easyJet / train
-     station locations). When you create a real level, give it its own id and
-     point the travel menu entry at it — anything still pointing at a missing
-     id lands here.                                                          */
-  {id:'empty', name:'Under construction', bgKey:'__empty__', BGW:1000, srcY:26, flatGround:245, interior:true, enemies:[],
-   doors:[ {x:500, w:130, label:'EXIT &mdash; back', target:'home'} ]},
+  {id:'in_cottagers', name:'Cottagers Cove', bgKey:'room_cottagers', BGW:2172, zoom:0.72, srcY:160, flatGround:620, charScale:2.5, interior:true, walkMul:2.2,
+   exitLeft:{target:'in_crackadilly', x:5500, face:-1},
+   exitRight:'home',
+   enemies:[ {at:900,kind:9,hp:220,scaleMul:1.15},
+             {at:1500,kind:11,hp:220,scaleMul:0.84} ],
+   doors:[]},
+  {id:'empty', name:'Under construction', bgKey:'__empty__', BGW:1000, srcY:26, flatGround:245, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
+   doors:[]},
 ];
 /* ── PER-LEVEL MUSIC ── */
 const TRACKS={ select:'Character selection screen.mp3', home:'Home.mp3', street:'Street.mp3',
   park:'Park.mp3', belfast:'Belfast.mp3', pub:'Pub.mp3', dundee:'Dundee.mp3', glasgow:'Glasgow.mp3', southampton:'Southampton.mp3',
   mk:'Mortalkombat.mp3',
-  /* ── INTERIOR AUDIO SLOTS ─────────────────────────────────────────────
-     One looping .mp3 per building that has NO video screen. Upload each
-     file to GitHub next to index.html with the EXACT name below (Vercel is
-     case-sensitive). Any slot whose file isn't uploaded just stays silent —
-     nothing breaks. Buildings WITH a screen (house, cinema, restore) get
-     their sound from the .mp4 instead and are deliberately left out here.  */
   in_church:'Church.mp3', in_gunstore:'Gunstore.mp3', in_easyjet:'Easyjet.mp3',
   in_trainstation:'Trainstation.mp3', in_library:'Library.mp3', in_winchester:'Winchester.mp3',
   in_toilet:'Toilet.mp3',
-  /* ── NEW ROOM MUSIC SLOTS (upload these three .mp3s next to index.html) ── */
   in_police:'Police.mp3', in_nightclub:'Slamminvinyl.mp3', in_crackadilly:'Crackadilly.mp3',
   in_dnb:'Dnb.mp3', in_hiphop:'Hiphop.mp3', in_special:'Specialguest.mp3', in_cottagers:'Cottagerscove.mp3',
-  /* ── BLACK LEVEL + HOLODECK MUSIC (the MP4s are silent; these are the sound) ── */
-  blacklevel:'Void.mp3', holodeck:'Holodeck.mp3', judgement:'Judgement.mp3',
+  blacklevel:'Void.mp3', holodeck:'Holodeck.mp3', judgement:'Judgement.mp3', bossrush:'Bossrush.mp3',
   lvl_europe:'Europe.mp3', lvl_america:'America.mp3' };
-/* ── THE WINCHESTER JUKEBOX ────────────────────────────────────────────────
-   Works exactly like the house TV, but for MUSIC. Stand near the jukebox in the
-   Winchester and STRIKE to flip to the next track; the chosen .mp3 becomes the
-   room's music. `x` is the jukebox spot in ROOM pixels (room is 2172 wide) and
-   `reach` is how close you must be before the STRIKE-to-change prompt appears.
-   TEN slots are provided below — Track 1 is the existing Winchester.mp3 so the
-   room sounds the same until you flip it; upload Juke2.mp3 .. Juke10.mp3 next to
-   index.html (EXACT lower-case names) to fill the rest. Missing files just stay
-   silent. Add a jukebox to any other room by adding another `id:{...}` entry. */
 const JUKEBOX={
   in_winchester:{ x:1994, reach:150, idx:0, glowY:0.49, glowR:84,
     files:['Winchester.mp3','Juke2.mp3','Juke3.mp3','Juke4.mp3','Juke5.mp3',
            'Juke6.mp3','Juke7.mp3','Juke8.mp3','Juke9.mp3','Juke10.mp3'] },
 };
-/* ── AMBIENT GLOWS ─────────────────────────────────────────────────────────
-   Soft pulsing halos painted onto things that emit light (candles, neon, lamps,
-   signs) so rooms feel lit — the same idea as the jukebox glow, but data-driven
-   per room. Drawn additively BEHIND the characters. Each entry uses WORLD coords
-   (the same space as enemies/doors):
-     x,y   = world position of the light (room pixels; y measured like the floor line)
-     r     = base glow radius (world px)
-     mode  = 'warm'  -> flickering candle / warm-bulb amber (fire, lanterns, lamps)
-             'cycle' -> slow rainbow neon (clubs, signs)
-             (omit)  -> a steady glow at fixed `hue`
-     hue   = 0 red · 16 orange · 40 amber · 120 green · 200 cyan · 300 magenta (when no mode)
-     alpha = peak strength (default 0.22); sat/light optional fine-tuning
-   All positions are EYEBALLED — nudge x/y on the phone so each glow sits on the
-   actual candle / sign / lamp in the room art. Add lights to any room by adding an
-   `id:[ ... ]` block; remove a glow by deleting its line. */
 const GLOWS={
-  /* HIGH STREET (home4.png 2868x266) — daytime, so only the things that truly emit:
-     the portal vortex, the cinema marquee + poster boxes, the club neon, police sign. */
   home: [
-    {x:1489, y:126, r:64, hue:205, sat:90, light:62, alpha:0.26},   // the blue PORTAL vortex
-    {x:905,  y:62,  r:42, hue:42,  sat:90, light:60, alpha:0.18},   // CINEMA marquee
-    {x:840,  y:172, r:26, hue:205, sat:70, light:60, alpha:0.12},   // cinema poster lightbox
+    {x:1489, y:126, r:64, hue:205, sat:90, light:62, alpha:0.26},
+    {x:905,  y:62,  r:42, hue:42,  sat:90, light:60, alpha:0.18},
+    {x:840,  y:172, r:26, hue:205, sat:70, light:60, alpha:0.12},
     {x:975,  y:172, r:26, hue:205, sat:70, light:60, alpha:0.12},
-    {x:2504, y:103, r:50, hue:305, sat:92, light:62, alpha:0.22},   // SLAMMIN VINYL neon
-    {x:2304, y:103, r:26, hue:215, sat:80, light:62, alpha:0.12},   // police 'DP' sign
+    {x:2504, y:103, r:50, hue:305, sat:92, light:62, alpha:0.22},
+    {x:2304, y:103, r:26, hue:215, sat:80, light:62, alpha:0.12},
   ],
-  /* THE WINCHESTER (room_winchester.jpeg 2172x387) — warm bar dome lamps, wall sconces,
-     the pool-table pendant, the right-hand candle, the green Toilets sign. Read off the
-     art. The jukebox has its own glow (drawJukeGlow). */
   in_winchester: [
-    {x:122,  y:70,  r:34, mode:'warm', alpha:0.22},                 // left wall sconce
-    {x:355,  y:55,  r:42, mode:'warm', alpha:0.22},                 // pool-table pendant
-    {x:605,  y:130, r:28, mode:'warm', alpha:0.18},                 // mid wall sconce (right of England flag)
-    {x:815,  y:120, r:28, mode:'warm', alpha:0.18},                 // sconce by the dartboard
-    {x:878,  y:68,  r:22, hue:130, sat:85, light:55, alpha:0.16},   // green 'Toilets' sign
-    {x:1198, y:95,  r:44, mode:'warm', alpha:0.26},                 // bar dome lamp (left)
-    {x:1480, y:95,  r:44, mode:'warm', alpha:0.26},                 // bar dome lamp (right)
-    {x:1840, y:140, r:24, mode:'warm', alpha:0.32},                 // lit candle on the cabinet
+    {x:122,  y:70,  r:34, mode:'warm', alpha:0.22},
+    {x:355,  y:55,  r:42, mode:'warm', alpha:0.22},
+    {x:605,  y:130, r:28, mode:'warm', alpha:0.18},
+    {x:815,  y:120, r:28, mode:'warm', alpha:0.18},
+    {x:878,  y:68,  r:22, hue:130, sat:85, light:55, alpha:0.16},
+    {x:1198, y:95,  r:44, mode:'warm', alpha:0.26},
+    {x:1480, y:95,  r:44, mode:'warm', alpha:0.26},
+    {x:1840, y:140, r:24, mode:'warm', alpha:0.32},
   ],
-  /* THE GUN STORE (room_gunstore.jpeg 591x323) — neon kept by request; other lights removed. */
   in_gunstore: [
-    {x:296, y:74,  r:78, hue:345, sat:95, light:58, alpha:0.26},    // FAFO neon (red/pink) — kept; other lights removed
+    {x:296, y:74,  r:78, hue:345, sat:95, light:58, alpha:0.26},
   ],
-  /* THE LIBRARY (room_library.jpeg 2172x375) — the central AI hologram glows cyan (body
-     + floor ring), warm wall lanterns, blue digital-archive kiosks. */
   in_library: [
-    {x:1086, y:158, r:95, hue:195, sat:85, light:66, alpha:0.24},   // AI hologram (centre)
-    {x:1086, y:270, r:85, hue:200, sat:90, light:60, alpha:0.20},   // hologram floor ring
-    {x:98,   y:113, r:30, mode:'warm', alpha:0.18},                 // left lantern
-    {x:250,  y:113, r:26, mode:'warm', alpha:0.16},                 // left lantern 2
-    {x:2074, y:113, r:30, mode:'warm', alpha:0.18},                 // right lantern
-    {x:586,  y:233, r:26, hue:205, sat:80, light:60, alpha:0.16},   // blue archive kiosk
+    {x:1086, y:158, r:95, hue:195, sat:85, light:66, alpha:0.24},
+    {x:1086, y:270, r:85, hue:200, sat:90, light:60, alpha:0.20},
+    {x:98,   y:113, r:30, mode:'warm', alpha:0.18},
+    {x:250,  y:113, r:26, mode:'warm', alpha:0.16},
+    {x:2074, y:113, r:30, mode:'warm', alpha:0.18},
+    {x:586,  y:233, r:26, hue:205, sat:80, light:60, alpha:0.16},
     {x:977,  y:225, r:24, hue:205, sat:80, light:60, alpha:0.16},
     {x:1346, y:225, r:24, hue:205, sat:80, light:60, alpha:0.16},
     {x:1694, y:240, r:26, hue:205, sat:80, light:60, alpha:0.16},
   ],
-  /* COTTAGERS COVE (room_cottagers.jpeg 2172x724) — only the two harsh strip-lights on
-     the right of the underpass. */
   in_cottagers: [
-    {x:1553, y:195, r:56, hue:210, sat:12, light:88, alpha:0.20},   // strip light 1
-    {x:2020, y:188, r:56, hue:210, sat:12, light:88, alpha:0.20},   // strip light 2
+    {x:1553, y:195, r:56, hue:210, sat:12, light:88, alpha:0.20},
+    {x:2020, y:188, r:56, hue:210, sat:12, light:88, alpha:0.20},
   ],
-  /* SLAMMIN' VINYL LOBBY (room_nightclub.jpeg 2048x768) — wall-to-wall neon: the club
-     sign, reception, the three coloured door signs, the SLAM MODE poster + spotlight. */
   in_nightclub: [
-    {x:338,  y:276, r:48, hue:320, sat:95, light:62, alpha:0.20},   // SLAMMIN VINYL neon
-    {x:666,  y:161, r:40, hue:315, sat:95, light:62, alpha:0.18},   // RECEPTION sign
-    {x:686,  y:399, r:55, hue:315, sat:95, light:60, alpha:0.22},   // reception desk underglow
-    {x:1003, y:160, r:48, hue:205, sat:90, light:62, alpha:0.18},   // ROOM 1 — DNB (blue)
-    {x:1403, y:160, r:48, hue:25,  sat:95, light:60, alpha:0.18},   // ROOM 2 — HIP-HOP (orange)
-    {x:1700, y:160, r:48, hue:282, sat:90, light:62, alpha:0.18},   // ROOM 3 — SPECIAL GUEST (purple)
-    {x:1905, y:269, r:50, hue:282, sat:90, light:62, alpha:0.20},   // SLAM MODE poster
-    {x:1884, y:476, r:55, hue:285, sat:85, light:60, alpha:0.16},   // purple spotlight on the floor
+    {x:338,  y:276, r:48, hue:320, sat:95, light:62, alpha:0.20},
+    {x:666,  y:161, r:40, hue:315, sat:95, light:62, alpha:0.18},
+    {x:686,  y:399, r:55, hue:315, sat:95, light:60, alpha:0.22},
+    {x:1003, y:160, r:48, hue:205, sat:90, light:62, alpha:0.18},
+    {x:1403, y:160, r:48, hue:25,  sat:95, light:60, alpha:0.18},
+    {x:1700, y:160, r:48, hue:282, sat:90, light:62, alpha:0.18},
+    {x:1905, y:269, r:50, hue:282, sat:90, light:62, alpha:0.20},
+    {x:1884, y:476, r:55, hue:285, sat:85, light:60, alpha:0.16},
   ],
 };
-/* ── ROOM SCREENS (looping .mp4s with sound, painted onto wall screens) ──
-   Each room id below maps to a screen rectangle (measured in THAT room's
-   background-image pixels, same space as the room jpeg) plus the video
-   file(s) shown on it. The video is drawn straight onto the canvas so it
-   scrolls with the wall and sits behind the player.
-
-   >>> ALIGNING A SCREEN: nudge its rect {x,y,w,h}. Flip that screen's
-       `debug` to true to draw a bright green outline, line it up with the
-       painted screen, then set it back to false.
-
-   >>> VIDEO FILES: upload to GitHub next to index.html, EXACT lower-case
-       names, H.264/AAC .mp4 so iPhones can play them. Each loops with sound:
-         in_house   -> channel1.mp4 .. channel8.mp4  (STRIKE by the TV flips channel)
-         in_cinema  -> part1.mp4, part2.mp4, ...  a long film split into parts. Plays them
-                       in order and AUTO-ADVANCES (part ends -> next part starts). STRIKE by
-                       the screen skips to the next part. Set `files` to EXACTLY the parts you
-                       upload (missing parts are skipped; spare slots just show static).
-         in_restore -> restore.mp4                                            */
 const SCREENS = {
-  in_house:   { rect:{ x:222, y:66, w:146, h:82 },                       // perfect already
+  in_house:   { rect:{ x:222, y:66, w:146, h:82 },
                 files:['channel1.mp4','channel2.mp4','channel3.mp4','channel4.mp4','channel5.mp4','channel6.mp4','channel7.mp4','channel8.mp4'],
                 switchable:true, sound:true, reach:120, idx:0, debug:false },
-  in_cinema:  { rect:{ x:183, y:61, w:240, h:120 },                      // measured to the painted cinema screen
+  in_cinema:  { rect:{ x:183, y:61, w:240, h:120 },
                 files:['part1.mp4','part2.mp4','part3.mp4','part4.mp4','part5.mp4','part6.mp4','part7.mp4','part8.mp4','part9.mp4','part10.mp4','part11.mp4','part12.mp4'],
                 playlist:true, switchable:true, reach:160, idx:0, debug:false },
-  in_restore: { rect:{ x:243, y:64, w:109, h:66 },                       // measured to the painted restore-room TV
+  in_restore: { rect:{ x:243, y:64, w:109, h:66 },
                 files:['restore.mp4'], switchable:false, sound:true, idx:0, debug:false },
 };
-/* ── SCENE VIDEOS (full-level MP4 scenery: tiled WALL + FLOOR) ─────────────
-   On a level flagged with a SCENE_VIDEOS entry, two looping MP4s become the
-   whole backdrop: the WALL video fills the top band, the FLOOR video fills
-   the bottom band, each TILED across the entire level and scrolling with the
-   camera. Both are ALWAYS muted — a scene level's sound comes from its TRACKS
-   mp3 instead. Upload the files next to index.html with the EXACT lower-case
-   names below; until they exist, each band shows a labelled placeholder over
-   the black so you can see the layout.
-
-   >>> TUNE PER LEVEL:
-     wallFrac = fraction of screen HEIGHT the wall band fills (rest = floor)
-     tileW    = how many LEVEL pixels one copy of the video spans (smaller =
-                repeats more often). Author each clip to loop seamlessly so
-                the left and right edges butt together with no visible seam. */
 const SCENE_VIDEOS = {
   blacklevel: { wallFrac:0.75, tileW:1200, zones:[
     {from:0,    wall:'wall.mp4',  floor:'floor.mp4' },
@@ -590,31 +364,24 @@ const SCENE_VIDEOS = {
     {from:4267, wall:'wall3.mp4', floor:'floor3.mp4'},
     {from:6400, wall:'wall4.mp4', floor:'floor4.mp4'},
   ]},
-  holodeck:   { wall:'holodeck.mp4', floor:null, wallFrac:1.0, tileW:534 },   // full-screen clip, tiled across 4 panels (BGW 2136)
-  judgement:  { wall:'judgement.mp4', floor:null, wallFrac:1.0, tileW:534 },  // same as holodeck: one clip tiled across 4 panels (BGW 2136). Drop judgement.mp4 in; black until then.
+  holodeck:   { wall:'holodeck.mp4', floor:null, wallFrac:1.0, tileW:534 },
+  judgement:  { wall:'judgement.mp4', floor:null, wallFrac:1.0, tileW:534 },
 };
-/* ── TRAVEL MENUS (the portal + departure boards) ─────────────────────────
-   Each menu = a title and a list of destinations. `target` is the section id
-   to travel to; if that section doesn't exist yet you land on the 'empty'
-   placeholder. Add/replace destinations here as new levels are built.       */
 const TRAVEL_MENUS={
   portal: { title:'The Portal \u2014 Wave Survival Maps', dests:[
-    {label:'Mortal Kombat \u2014 Wave Survival', target:'mk'},            // arena: melee mix, GUNMAN SQUAD every 5th wave
-    {label:'The Void \u2014 Wave Survival', target:'blacklevel'},         // arena: full mix, UFO ASSAULT every 5th wave
-    {label:'The Holodeck \u2014 Wave Survival', target:'holodeck'},       // arena: sci-fi mix, UFO ASSAULT every 5th wave
-    {label:'Judgement Day \u2014 Wave Survival', target:'judgement'},     // arena: the machines, GUNBOT SQUAD every 5th wave
+    {label:'Mortal Kombat \u2014 Wave Survival', target:'mk'},
+    {label:'The Void \u2014 Wave Survival', target:'blacklevel'},
+    {label:'The Holodeck \u2014 Wave Survival', target:'holodeck'},
+    {label:'Judgement Day \u2014 Wave Survival', target:'judgement'},
+    {label:'Boss Rush \u2014 Special Waves', target:'bossrush'},
   ]},
   easyjet: { title:'easyJet Holidays', dests:[
     {label:'Europe',    target:'lvl_europe'},
     {label:'America',   target:'lvl_america'},
   ]},
-  /* ── DigiTown Station: every portal level broken out as its own stop ──
-     These all point at the existing chain sections, so each one shows GO and
-     drops you straight into that level (you can still walk it through to the
-     next, or run off the left edge to come back to the hub).                */
   trainstation: { title:'DigiTown Station', dests:[
-    {label:'Southampton',            target:'southampton'},   // the streets, named back-to-back
-    {label:'The Park',               target:'park'},          // in the order you play them
+    {label:'Southampton',            target:'southampton'},
+    {label:'The Park',               target:'park'},
     {label:'Belfast',                target:'belfast'},
     {label:'The Red Hand (Pub)',     target:'pub'},
     {label:'Dundee',                 target:'dundee'},
@@ -622,29 +389,27 @@ const TRAVEL_MENUS={
     {label:'Southside (the Street)', target:'street'},
   ]},
 };
+/* ── SHOP: real prices (a real economy). Bullets stay free as the starter gun;
+   earn money from kills + arena wave-clear bonuses, then kit out. ── */
 const SHOP=[
   {id:'rifle',   name:'Bullets',          price:0},
-  {id:'vest',    name:'Bulletproof Vest', price:0},
-  {id:'littleblaster', name:'Little Blaster',    price:0},
-  {id:'bigblaster',    name:'Big Blaster',       price:0},
-  {id:'weapon01', name:'Viper', price:0},
-  {id:'weapon02', name:'Hornet', price:0},
-  {id:'weapon03', name:'Ravager', price:0},
-  {id:'weapon04', name:'Sledgehammer', price:0},
-  {id:'weapon05', name:'Arc Lance', price:0},
-  {id:'weapon06', name:'Tempest', price:0},
-  {id:'weapon07', name:'Falcon', price:0},
-  {id:'weapon08', name:'Annihilator', price:0},
+  {id:'vest',    name:'Bulletproof Vest', price:300},
+  {id:'littleblaster', name:'Little Blaster',    price:400},
+  {id:'bigblaster',    name:'Big Blaster',       price:1200},
+  {id:'weapon01', name:'Viper', price:500},
+  {id:'weapon02', name:'Hornet', price:550},
+  {id:'weapon03', name:'Ravager', price:800},
+  {id:'weapon04', name:'Sledgehammer', price:1000},
+  {id:'weapon05', name:'Arc Lance', price:900},
+  {id:'weapon06', name:'Tempest', price:1100},
+  {id:'weapon07', name:'Falcon', price:650},
+  {id:'weapon08', name:'Annihilator', price:1500},
 ];
 const WEAPONS={
   rifle:   {name:'Bullets', auto:true,  cooldown:6,  type:'bullet', pellets:1, spread:0.05, speed:14, range:640, dmg:18, knock:6 },
   grenade: {name:'Grenade', auto:false, cooldown:48, type:'grenade', speed:8, dmg:80, radius:95, knock:22 },
   littleblaster:{name:'Little Blaster', auto:false, cooldown:16, type:'bullet', pellets:1, spread:0.02, speed:12, range:600, dmg:34, knock:9,  sprite:'littleblaster', spriteH:30, shake:false},
   bigblaster:   {name:'Big Blaster',    auto:false, cooldown:34, type:'bullet', pellets:1, spread:0.00, speed:10, range:680, dmg:90, knock:24, sprite:'bigblaster',    spriteH:58, shake:true },
-  // NOTE: the 'fireblaster' weapon AND its asset were removed completely by request.
-  // Shooter enemies (the UFO) now fire the BIG BLASTER bolt instead (bigblaster.png),
-  // which also remains a buyable weapon below.
-  // 8 NAMELESS neon weapons (rename freely — the key/sprite stay the same).
   weapon01: {name:'Viper', auto:false, cooldown:12, type:'bullet', pellets:1, spread:0.03, speed:14, range:660, dmg:30, knock:8,  sprite:'weapon01', spriteH:26, shake:false},
   weapon02: {name:'Hornet', auto:true,  cooldown:10, type:'bullet', pellets:1, spread:0.04, speed:13, range:640, dmg:26, knock:7,  sprite:'weapon02', spriteH:26, shake:false},
   weapon03: {name:'Ravager', auto:false, cooldown:16, type:'bullet', pellets:1, spread:0.02, speed:12, range:660, dmg:44, knock:11, sprite:'weapon03', spriteH:28, shake:false},
@@ -654,77 +419,23 @@ const WEAPONS={
   weapon07: {name:'Falcon', auto:false, cooldown:12, type:'bullet', pellets:1, spread:0.03, speed:14, range:650, dmg:34, knock:9,  sprite:'weapon07', spriteH:24, shake:false},
   weapon08: {name:'Annihilator', auto:false, cooldown:26, type:'bullet', pellets:1, spread:0.00, speed:12, range:700, dmg:70, knock:20, sprite:'weapon08', spriteH:30, shake:true },
 };
-/* ── HUB WANDERERS (ambient NPCs on the high street, can't hit / be hit) ──
-   One of each, they just stroll back and forth on the hub. Add more by
-   dropping entries here (each needs a single-row walk strip png).        */
 const HUB_NPCS=[
-  // home = the hub x he hangs around; range = how far he paces each way from it.
-  // The Winchester door is at x:2040, so the captain patrols right outside it.
   {key:'captain', fw:110, fh:221, frames:6,  h:84, home:2010, range:120},
 ];
-/* ── CHURCH PRIEST (paces the stage at the back-centre of the church) ──
-   Lives only inside the in_church room. He walks left/right within a
-   centred band — the stage — and is clamped so he never steps off it.
-   PRIEST.x is treated as his CENTRE in room pixels (the room is BGW wide).
-   All four numbers are hand-tunable on the phone:
-     centre  = middle of the stage, in room pixels
-     halfRun = how far each way he paces from the centre (stage half-width)
-     lift    = pixels his feet sit ABOVE the floor (raises him onto the stage)
-     height  = his drawn height before the room's charScale is applied      */
 const PRIEST_DEF={ key:'priest', fw:117, fh:161, frames:12 };
 const PRIEST={ centre:296, halfRun:58, lift:46, height:66 };
-/* ── "Burger King guy" NPC (now in the SPECIAL GUEST room, moved from the Library) ──
-   Lives only inside the in_special room. He does NOT walk: he
-   stands in place and loops his baton-strike, turning to face the
-   other way every few seconds so he strikes in BOTH directions.
-   He is purely decorative — his swings never touch the player and
-   he takes no damage. Uses row 5 of his sheet = 6 strike frames.
-   Tunables (safe to nudge on the phone):
-     x         = where he stands, in room pixels (room is BGW wide)
-     lift      = pixels his feet sit ABOVE the floor (0 = on the floor)
-     height    = drawn height before the room's charScale is applied
-     animSpd   = strike playback speed (higher = faster swings)
-     flipEvery = ticks between turning to face the other direction   */
 const BK_DEF={ key:'burgerking', fw:170, fh:170, frames:6 };
-const BK={ x:280, lift:110, height:60, animSpd:0.16, flipEvery:80 };  // raised higher onto the stage + a touch smaller (background)
-/* ── MORTAL KOMBAT NPCS (ambient characters in the Portal / MK arena) ──────
-   These live ONLY in the 'mk' section. They pace back and forth like the hub
-   wanderers and are purely decorative — they can't hit the player and take no
-   damage (the level's real opponents still come from the mk `enemies:` list).
-   Every character needs a single horizontal sprite strip with real PNG alpha,
-   the SAME format as every other character (see the K-9 dog notes up top).
-
-   >>> ADD A CHARACTER:
-       1. Drop a line in MK_NPCS below pointing at its `key`.
-       2. Add a matching {key, src} line in ASSETS (mknpc1/2/3 slots already
-          exist — rename them or add more).
-       3. Set fw/fh to the sheet's cell size and `frames` to the cell count,
-          then `home` (centre x in the 1432-wide arena) and `range` (how far
-          it paces each way). `h` is its drawn height.
-   Send me the sheets and I'll repack them + fill in the exact fw/fh/frames. */
+const BK={ x:280, lift:110, height:60, animSpd:0.16, flipEvery:80 };
 const MK_NPCS=[
-  // EXAMPLE SLOTS — invisible until the matching png is uploaded. Tune freely.
   {key:'mknpc1', fw:120, fh:200, frames:6, h:88, home:430,  range:150},
   {key:'mknpc2', fw:120, fh:200, frames:6, h:88, home:760,  range:150},
   {key:'mknpc3', fw:120, fh:200, frames:6, h:88, home:1080, range:150},
 ];
-/* ── PROXIMITY NPC AUDIO ───────────────────────────────────────
-   A looping mp3 tied to a specific NPC that fades IN when the player
-   gets near and OUT when they leave. It layers on top of the room
-   music (separate audio element). Upload each file next to index.html
-   with the EXACT name below; any missing file just stays silent.
-   range = how close, in room pixels, before it begins.              */
 const PROX_AUDIO=[
   {section:'in_church',  src:'Priest.mp3',     range:180, getX:()=>priestNpc?priestNpc.x:null},
   {section:'in_special', src:'Burgerking.mp3', range:180, getX:()=>bkNpc?bkNpc.x:null},
   {section:'home',       src:'Captain.mp3',    range:180,
      getX:()=>{ const c=hubNpcs.find(n=>n.def&&n.def.key==='captain'); return c?c.x:null; }},
-  /* ── POLICE STATION proximity sounds (FIXED spots, measured in room pixels) ──
-     A different looping mp3 fades in as you stand in front of each cell, the
-     pool table and the staff-room seating. The four cells sit close together,
-     so their `range` is kept tight (60) to stop them overlapping. The x values
-     (room is 2182 wide) are estimates — nudge each `x` and `range` by ear.
-     These layer on top of Police.mp3.                                        */
   {section:'in_police', src:'Cell1.mp3',     range:60,  getX:()=>895},
   {section:'in_police', src:'Cell2.mp3',     range:60,  getX:()=>1025},
   {section:'in_police', src:'Cell3.mp3',     range:60,  getX:()=>1155},
