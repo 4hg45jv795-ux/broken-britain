@@ -1128,11 +1128,10 @@ function sceneVidFor(src){
   }
   return v;
 }
-function scenePreloadAll(){
-  /* Used to warm EVERY zone's clip on entry — but on a phone that fired up to 8 video
-     downloads at once and starved the one actually on screen, so it wouldn't buffer.
-     Each zone now loads on demand (sceneLoad as you cross into it), then stays pooled
-     + service-worker-cached. Same fix as the TV channels (tvPreloadOthers). */
+function scenePreloadAll(){                     // warm up EVERY zone's clips on entry so later zones are ready before you reach them
+  const cfg=curSceneCfg(); if(!cfg) return;
+  if(cfg.zones){ for(const z of cfg.zones){ sceneVidFor(z.wall); sceneVidFor(z.floor); } }
+  else { sceneVidFor(cfg.wall); sceneVidFor(cfg.floor); }
 }
 let sceneZoneIdx=-1;
 function sceneSrc(){
