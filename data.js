@@ -293,9 +293,10 @@ const SECTIONS=[
   {id:'in_library', name:'Inside &mdash; The Library', bgKey:'room_library', BGW:2172, zoom:1.0, srcY:8, flatGround:332, charScale:1.7, interior:true, walkMul:1.7, exitLeft:{target:'home',x:1740,face:1}, exitRight:{target:'home',x:1740,face:1},
    enemies:[],
    /* A blue AI HOLOGRAM hums in the CENTRE of the library (x:1086, room is 2172 wide).
-      Harmless background NPC with a proximity-audio slot — Hologram.mp3 fades in as you
-      approach. Optional art: hologram.png as a single-row strip; until it exists nothing
-      is drawn, but the proximity sound still works. Nudge fw/fh/h/range once art is in. */
+      Harmless background NPC (visual only). Its narration now plays as the room's
+      background music (Library.mp3 in TRACKS) — the old Hologram.mp3 proximity slot was
+      removed. Optional art: hologram.png as a single-row strip; until it exists nothing
+      is drawn. Nudge fw/fh/h once art is in. */
    npcs:[ {img:'hologram', fw:240, fh:360, at:1086, h:170, face:1,
            clip:{start:0, count:6, fps:8, loop:true}} ],
    doors:[]},
@@ -624,7 +625,7 @@ const TRAVEL_MENUS={
 };
 const SHOP=[
   {id:'vest',          name:'Bulletproof Vest', price:150},
-  {id:'rifle',         name:'Bullets',          price:300},
+  {id:'rifle',         name:'Fully Automatic',  price:300},
   {id:'weapon02',      name:'Hornet',           price:600},
   {id:'weapon01',      name:'Viper',            price:900},
   {id:'littleblaster', name:'Little Blaster',   price:1200},
@@ -638,7 +639,7 @@ const SHOP=[
 ];
 const WEAPONS={
   pistol:  {name:'Pistol', auto:false, cooldown:14, type:'bullet', pellets:1, spread:0.04, speed:14, range:600, dmg:14, knock:5 },   // the free starting sidearm — semi-auto, tap to fire
-  rifle:   {name:'Bullets', auto:true,  cooldown:6,  type:'bullet', pellets:1, spread:0.05, speed:14, range:640, dmg:18, knock:6 },
+  rifle:   {name:'Fully Automatic', auto:true,  cooldown:10, type:'bullet', pellets:1, spread:0.06, speed:14, range:640, dmg:15, knock:5 },
   grenade: {name:'Grenade', auto:false, cooldown:48, type:'grenade', speed:8, dmg:80, radius:95, knock:22 },
   littleblaster:{name:'Little Blaster', auto:false, cooldown:16, type:'bullet', pellets:1, spread:0.02, speed:12, range:600, dmg:34, knock:9,  sprite:'littleblaster', spriteH:30, shake:false},
   bigblaster:   {name:'Big Blaster',    auto:false, cooldown:75, type:'bullet', pellets:1, spread:0.00, speed:10, range:680, dmg:999, knock:30, sprite:'bigblaster', spriteH:58, shake:true, clearAll:true },  // THE ultimate: one shot wipes every enemy on the level. Long cooldown so each blast is an event.
