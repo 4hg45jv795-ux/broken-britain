@@ -2341,15 +2341,23 @@ function arenaNextWave(){
   arenaWave++;
   const w=arenaWave;
   const s=SECTIONS[sectionIndex];
-  const bossWave = (w%5===0);                              // every 5th wave is this map's "boss" round
-  if(bossWave){                                            // ...and every 5th wave tops your health back up to full
+  const bossMode = !!s.arenaBossMode;                      // BOSS MODE: every wave is a special squad
+  const bossWave = bossMode || (w%5===0);                  // a "boss" round (special enemies)
+  const heal = bossMode ? (w%3===0) : (w%5===0);           // health top-up: every 3rd wave in boss mode, else every 5th
+  if(heal){
     player.hp=player.max; document.getElementById('hpbar').style.width='100%';
     addFloater(player.x+PW/2, player.y, 'FULL HEALTH');
   }
   const spd=ESPEED*(1+(w-1)*0.05);                         // a touch faster each wave
   const dmg=EDMG+(w-1)*2;                                  // hits harder each wave
-  let kinds, count, hp;
-  if(bossWave){
+  let kinds, count, hp, bossName=s.arenaSpecialName||'UFO ASSAULT';
+  if(bossMode){
+    const seq=s.arenaBossSequence||[{kind:10,name:'GUNMAN SQUAD'},{kind:8,name:'UFO ASSAULT'},{kind:16,name:'GUNBOT SQUAD'}];
+    const item=seq[(w-1)%seq.length];                      // cycle through the squads, escalating
+    kinds=[item.kind]; bossName=item.name;
+    count=Math.min(s.arenaMaxCount||14, (s.arenaBaseCount||4)+Math.floor((w-1)*(s.arenaGrowth||0.8)));
+    hp=Math.round((s.arenaSpecialHp||150)*(1+(w-1)*0.22));
+  } else if(w%5===0){
     const special = (s.arenaSpecial!=null) ? s.arenaSpecial : 8;   // default: UFO gunship (kind 8)
     kinds=[special];                                       // ONLY this map's special enemy
     count=Math.min(s.arenaSpecialMax||16, Math.round((s.arenaSpecialBase||4) + (w/5 - 1)*1.5));
@@ -2372,7 +2380,6 @@ function arenaNextWave(){
     const e=pushEnemy(kind, at, null, {hp});
     if(e){ e.spd=spd; e.dmg=dmg; }
   }
-  const bossName=s.arenaSpecialName||'UFO ASSAULT';
   flashBanner(bossWave ? ('WAVE '+w+' \u2014 '+bossName) : ('WAVE '+w));
   blip(420,640,0.12,'square',0.14);
 }
