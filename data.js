@@ -601,7 +601,7 @@ const SCREENS = {
                 files:['channel1.mp4','channel2.mp4','channel3.mp4','channel4.mp4','channel5.mp4','channel6.mp4','channel7.mp4','channel8.mp4'],
                 switchable:true, sound:true, reach:120, idx:0, debug:false },
   in_cinema:  { rect:{ x:183, y:61, w:240, h:120 },                      // measured to the painted cinema screen
-                files:['cinema.mp4'], playlist:false, switchable:false, reach:160, idx:0, debug:false },   // ONE small looping clip on the screen (no parts, no auto-advance)
+                files:['cinema.mp4'], playlist:false, switchable:false, sound:true, reach:160, idx:0, debug:false },   // ONE small looping clip on the screen (no parts, no auto-advance)
   in_restore: { rect:{ x:243, y:64, w:109, h:66 },                       // measured to the painted restore-room TV
                 files:['restore.mp4'], switchable:false, sound:true, idx:0, debug:false },
 };
