@@ -13,6 +13,30 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
 <link rel="stylesheet" href="game.css">
+<style>
+  /* ── Joystick movement + bigger, more transparent action buttons.
+     Lives here (not game.css) so it overrides cleanly; tweak the px/opacity
+     freely. Joystick replaces the old left/right D-pad. ── */
+  .pad.joypad{display:flex;align-items:center;justify-content:center;}
+  #joystick{position:relative;width:120px;height:120px;border-radius:50%;
+    background:radial-gradient(circle at 50% 42%,rgba(60,130,255,.16),rgba(0,0,0,.30) 70%);
+    border:1.5px solid rgba(120,180,255,.30);backdrop-filter:blur(2px);
+    touch-action:none;user-select:none;-webkit-user-select:none;
+    box-shadow:inset 0 0 22px rgba(20,60,140,.25);}
+  #stick{position:absolute;left:50%;top:50%;width:56px;height:56px;border-radius:50%;
+    transform:translate(-50%,-50%);background:rgba(180,210,255,.34);
+    border:1.5px solid rgba(200,225,255,.55);box-shadow:0 0 12px rgba(60,150,255,.5);
+    pointer-events:none;}
+  /* slightly larger + slightly more transparent action buttons */
+  .controls .btn.punch,.controls .btn.jump{width:80px !important;height:80px !important;opacity:.80 !important;}
+  .controls .weaponsel{width:80px !important;height:80px !important;opacity:.84 !important;}
+  @media(max-height:520px){
+    #joystick{width:104px;height:104px;}
+    #stick{width:48px;height:48px;}
+    .controls .btn.punch,.controls .btn.jump{width:66px !important;height:66px !important;opacity:.80 !important;}
+    .controls .weaponsel{width:66px !important;height:66px !important;opacity:.84 !important;}
+  }
+</style>
 </head>
 <body>
 
@@ -76,9 +100,8 @@
     <div id="cutscene-skip">Tap to continue &#9654;</div>
   </div>
   <div class="controls">
-    <div class="pad">
-      <div class="btn" data-k="left">&#9664;</div>
-      <div class="btn" data-k="right">&#9654;</div>
+    <div class="pad joypad">
+      <div id="joystick"><div id="stick"></div></div>
     </div>
     <div class="helperbar">
       <button class="helperbtn" data-h="0">
@@ -105,5 +128,43 @@
 
 <script src="data.js"></script>
 <script src="engine.js"></script>
+<script>
+/* Joystick controller — self-contained; drives the engine's global `keys`.
+   Horizontal drag past a small dead-zone sets keys.left / keys.right, exactly
+   like the old D-pad did, so no engine change is needed for movement. */
+(function(){
+  var pad=document.getElementById('joystick'), stick=document.getElementById('stick');
+  if(!pad||!stick) return;
+  var MAXR=44, DEAD=12, active=false, pid=null;
+  function setKeys(dx){
+    if(typeof keys==='undefined') return;
+    keys.left  = dx < -DEAD;
+    keys.right = dx >  DEAD;
+  }
+  function move(clientX, clientY){
+    var r=pad.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2;
+    var dx=clientX-cx, dy=clientY-cy;
+    var d=Math.hypot(dx,dy); if(d>MAXR){ dx=dx/d*MAXR; dy=dy/d*MAXR; }
+    stick.style.transform='translate('+(dx-28)+'px,'+(dy-28)+'px)';
+    setKeys(dx);
+  }
+  function reset(){
+    active=false; pid=null;
+    stick.style.transform='translate(-50%,-50%)';
+    if(typeof keys!=='undefined'){ keys.left=false; keys.right=false; }
+  }
+  pad.addEventListener('pointerdown', function(e){
+    active=true; pid=e.pointerId; try{ pad.setPointerCapture(pid); }catch(_){}
+    try{ if(typeof actx==='function') actx(); }catch(_){}
+    move(e.clientX,e.clientY); e.preventDefault();
+  });
+  pad.addEventListener('pointermove', function(e){
+    if(!active||e.pointerId!==pid) return; move(e.clientX,e.clientY); e.preventDefault();
+  });
+  pad.addEventListener('pointerup',     reset);
+  pad.addEventListener('pointercancel', reset);
+  pad.addEventListener('lostpointercapture', reset);
+})();
+</script>
 </body>
 </html>
