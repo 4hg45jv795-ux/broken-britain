@@ -254,7 +254,7 @@ const SECTIONS=[
      below if you ever want a flip-screen camera instead (snaps panel-to-panel,
      no scroll). black underneath, the video is silent, Holodeck.mp3 is the
      sound. Want it longer? Add screens: set BGW to (number-of-screens x 534). */
-  {id:'holodeck', name:'The Holodeck', bgKey:'__black__', black:true, BGW:2136, srcY:0, flatGround:180, chain:true, next:null, prev:null,
+  {id:'holodeck', name:'The Underworld', bgKey:'__black__', black:true, BGW:2136, srcY:0, flatGround:180, chain:true, next:null, prev:null,
    arena:true, arenaPool:[2,3,7,12,14], arenaSpecial:8, arenaSpecialName:'UFO ASSAULT', arenaSpecialHp:200,
    arenaBaseCount:8, arenaMaxCount:18, arenaGrowth:2, enemies:[]},   // 4 screens wide (4 x tileW 534); holodeck.mp4 tiles across all of them
 
@@ -267,6 +267,20 @@ const SECTIONS=[
   {id:'judgement', name:'Judgement Day', bgKey:'__black__', black:true, BGW:2136, srcY:0, flatGround:200, chain:true, next:null, prev:null,
    arena:true, arenaPool:[15,17,18,19], arenaSpecial:16, arenaSpecialName:'GUNBOT SQUAD', arenaSpecialHp:150,
    arenaSpecialBase:3, arenaSpecialMax:10, arenaBaseCount:6, arenaMaxCount:16, arenaGrowth:1.6, enemies:[]},
+
+  /* ── BOSS MODE (entered from the hub Portal -> travel menu) ─────────────
+     A gauntlet where EVERY wave is one of the portal "special squads", cycling
+     through the list below and getting bigger + tankier each wave. 3 screens
+     wide (3 x tileW 534 = BGW 1602); one MP4 (bossmode.mp4 via SCENE_VIDEOS)
+     tiles across all three and scrolls. Bossmode.mp3 is the sound. arenaBossMode
+     makes the wave spawner ignore the normal mix and run the sequence; full
+     health is restored every 3rd wave so it stays just-about survivable.
+     Reorder/extend arenaBossSequence to taste (kind numbers from ENEMY_KINDS). */
+  {id:'bossmode', name:'Boss Mode', bgKey:'__black__', black:true, BGW:1602, srcY:0, flatGround:200, chain:true, next:null, prev:null,
+   arena:true, arenaBossMode:true,
+   arenaBossSequence:[ {kind:10, name:'GUNMAN SQUAD'}, {kind:8, name:'UFO ASSAULT'}, {kind:16, name:'GUNBOT SQUAD'} ],
+   arenaSpecialHp:150, arenaBaseCount:4, arenaMaxCount:14, arenaGrowth:0.8, enemies:[]},
+
 
   /* ── INTERIOR ROOMS (entered from the hub; EXIT door returns to the street) ── */
   {id:'in_house', name:'Inside &mdash; My House', bgKey:'room_house', BGW:591, srcY:46, flatGround:277, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
@@ -315,7 +329,7 @@ const SECTIONS=[
   /* ── THE WINCHESTER TOILET (the gents). Reached from the locked door inside the
      Winchester. Placeholder dark room until room toilet.jpeg exists; EXIT door goes
      back to the bar. Nudge BGW/srcY/flatGround/charScale once the art is in. */
-  {id:'in_toilet', name:'Inside &mdash; The Gents', bgKey:'room_toilet', BGW:591, zoom:1.35, srcY:46, flatGround:275, charScale:1.0, interior:true, enemies:[],
+  {id:'in_toilet', name:'Inside &mdash; The Gents', bgKey:'room_toilet', BGW:591, zoom:1.35, srcY:46, flatGround:275, charScale:1.7, interior:true, enemies:[],
    /* The wall door is JAMMED: striking it flashes a message and reveals the only real way out —
       a DIVE into the toilet pan in the middle of the room, which drops you into 'in_shitter'.
       The pan exit (needArm) only appears AFTER the player tries the jammed door. Nudge the pan
@@ -467,7 +481,7 @@ const TRACKS={ select:'Character selection screen.mp3', home:'Home.mp3', street:
   in_police:'Police.mp3', in_nightclub:'Slamminvinyl.mp3', in_crackadilly:'Crackadilly.mp3',
   in_dnb:'Dnb.mp3', in_hiphop:'Hiphop.mp3', in_special:'Specialguest.mp3', in_cottagers:'Cottagerscove.mp3',
   /* ── BLACK LEVEL + HOLODECK MUSIC (the MP4s are silent; these are the sound) ── */
-  blacklevel:'Void.mp3', holodeck:'Holodeck.mp3', judgement:'Judgement.mp3',
+  blacklevel:'Void.mp3', holodeck:'Holodeck.mp3', judgement:'Judgement.mp3', bossmode:'Bossmode.mp3',
   lvl_europe:'Europe.mp3', lvl_america:'America.mp3', in_shitter:'Shitter.mp3' };
 /* ── THE WINCHESTER JUKEBOX ────────────────────────────────────────────────
    Works exactly like the house TV, but for MUSIC. Stand near the jukebox in the
@@ -581,8 +595,7 @@ const SCREENS = {
                 files:['channel1.mp4','channel2.mp4','channel3.mp4','channel4.mp4','channel5.mp4','channel6.mp4','channel7.mp4','channel8.mp4'],
                 switchable:true, sound:true, reach:120, idx:0, debug:false },
   in_cinema:  { rect:{ x:183, y:61, w:240, h:120 },                      // measured to the painted cinema screen
-                files:['part1.mp4','part2.mp4','part3.mp4','part4.mp4','part5.mp4','part6.mp4','part7.mp4','part8.mp4','part9.mp4','part10.mp4','part11.mp4','part12.mp4'],
-                playlist:true, switchable:true, reach:160, idx:0, debug:false },
+                files:['cinema.mp4'], playlist:false, switchable:false, reach:160, idx:0, debug:false },   // ONE small looping clip on the screen (no parts, no auto-advance)
   in_restore: { rect:{ x:243, y:64, w:109, h:66 },                       // measured to the painted restore-room TV
                 files:['restore.mp4'], switchable:false, sound:true, idx:0, debug:false },
 };
@@ -610,6 +623,7 @@ const SCENE_VIDEOS = {
   holodeck:   { wall:'holodeck.mp4', floor:null, wallFrac:1.0, tileW:534 },   // full-screen clip, tiled across 4 panels (BGW 2136)
   judgement:  { wall:'judgement.mp4', floor:null, wallFrac:1.0, tileW:534 },  // same as holodeck: one clip tiled across 4 panels (BGW 2136). Drop judgement.mp4 in; black until then.
   in_shitter: { wall:'shitter.mp4', floor:null, wallFrac:1.0, tileW:800 },     // THE SHITTER: one full-screen underwater clip, tileW=BGW so it fills the single screen with no repeat/scroll. Black until shitter.mp4 is uploaded.
+  bossmode:   { wall:'bossmode.mp4', floor:null, wallFrac:1.0, tileW:534 },     // BOSS MODE: one clip tiled across all 3 screens (BGW 1602 = 3 x 534), same style as the Underworld. Black until bossmode.mp4 is uploaded.
 };
 /* ── TRAVEL MENUS (the portal + departure boards) ─────────────────────────
    Each menu = a title and a list of destinations. `target` is the section id
@@ -618,8 +632,9 @@ const SCENE_VIDEOS = {
 const TRAVEL_MENUS={
   portal: { title:'The Portal \u2014 Wave Survival Maps', dests:[
     {label:'The Void \u2014 Wave Survival', target:'blacklevel'},         // arena: full mix, UFO ASSAULT every 5th wave
-    {label:'The Holodeck \u2014 Wave Survival', target:'holodeck'},       // arena: sci-fi mix, UFO ASSAULT every 5th wave
+    {label:'The Underworld \u2014 Wave Survival', target:'holodeck'},     // arena: sci-fi mix, UFO ASSAULT every 5th wave
     {label:'Judgement Day \u2014 Wave Survival', target:'judgement'},     // arena: the machines, GUNBOT SQUAD every 5th wave
+    {label:'Boss Mode \u2014 Special Wave Gauntlet', target:'bossmode'},  // arena: EVERY wave is a special squad (Gunman/UFO/Gunbot), escalating
     {label:'Mortal Kombat \u2014 Wave Survival', target:'mk'},            // arena: melee mix, GUNMAN SQUAD every 5th wave
   ]},
   easyjet: { title:'easyJet Holidays', dests:[
