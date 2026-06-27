@@ -150,6 +150,7 @@ const ASSETS = [
   {key:'mknpc3',   type:'img', src:'mknpc3.png', optional:true},
   {key:'weapons',  type:'img', src:'weapons.png', optional:true},
   {key:'bigblaster',   type:'img', src:'bigblaster.png', optional:true},
+  {key:'cash',         type:'img', src:'cash.png', optional:true},
   {key:'littleblaster',type:'img', src:'littleblaster.png', optional:true},
   {key:'weapon01', type:'img', src:'weapon01.png', optional:true},
   {key:'weapon02', type:'img', src:'weapon02.png', optional:true},
@@ -200,10 +201,11 @@ const SECTIONS=[
   {id:'pub',     name:'The Red Hand &mdash; loyalist till I die', bgKey:'pub', BGW:533, srcY:8, flatGround:212, charScale:1.4, chain:true, next:'dundee', prev:'belfast',
    enemies:[ ]},
   {id:'dundee',  name:'Welcome to Dundee', bgKey:'dundee', BGW:560, srcY:65, flatGround:270, chain:true, next:'glasgow', prev:'pub',
-   /* THE TOILET KEY now lives here in Dundee — walk over it to pick it up; it then unlocks
-      the Winchester toilet door. Nudge at/h to taste. */
-   enemies:[ ], items:[ {id:'toiletkey', at:300, h:34, label:'the Winchester toilet key'} ]},
+   enemies:[ ]},
   {id:'glasgow', name:'Glasgow &mdash; the Trongate', bgKey:'glasgow', BGW:2672, srcY:90, flatGround:296, chain:true, next:'street', prev:'dundee',
+   /* THE TOILET KEY lives here now, near the END of the Trongate (x:2500 of 2672) — walk over it
+      to pick it up; it then unlocks the Winchester toilet door. Nudge at/h to taste. */
+   items:[ {id:'toiletkey', at:2500, h:34, label:'the Winchester toilet key'} ],
    enemies:[ {at:230,kind:6,hp:1,static:true},{at:760,kind:5},{at:1080,kind:0},{at:1380,kind:5},{at:1700,kind:1},{at:2000,kind:5},{at:2480,kind:5} ]},
   {id:'street', name:'Southside &mdash; the street', bgKey:'bg',  BGW:4047, srcY:120, flatGround:null, chain:true, next:null, prev:'glasgow',
    enemies:[ {at:1200,kind:0},{at:1700,kind:1},{at:2300,kind:0},{at:3300,kind:1},{at:3700,kind:0},{at:2000,kind:12},{at:2800,kind:12},{at:600,kind:0},{at:3900,kind:0},{at:900,kind:6},{at:2200,kind:6},{at:3500,kind:6},{at:1500,kind:20,hp:60},{at:3000,kind:20,hp:60},{at:1900,kind:14,hp:50},{at:3100,kind:14,hp:50},{at:2600,kind:10,hp:60} ]},
@@ -345,6 +347,10 @@ const SECTIONS=[
      with zoom 1.0 = exactly one screen, so it doesn't scroll. The ONLY way out is
      the door at the BOTTOM-RIGHT: STRIKE there to climb out to Cottagers Cove. */
   {id:'in_shitter', name:'The Shitter', bgKey:'__black__', black:true, BGW:800, zoom:1.0, srcY:0, flatGround:330, charScale:1.2, interior:true, water:true, dropIn:true, enemies:[],
+   /* A floating STACK OF CASH (£2000) bobs in mid-water — swim up to it to grab it. float:true +
+      yOff raise it off the floor; money:2000 pays out on pickup. cash.png optional (green stack
+      drawn until it's uploaded). id is unique so once grabbed it won't respawn (saved in inventory). */
+   items:[ {id:'shittercash', at:400, h:46, yOff:150, float:true, money:2000, label:'\u00A32000'} ],
    doors:[ {x:744, w:120, label:'Climb out &mdash; to Cottagers Cove', target:'in_cottagers'} ]},
 
 
@@ -450,11 +456,11 @@ const SECTIONS=[
      zoom:0.72 fits the wall+railing above and the brick towpath below; flatGround:620 stands
      the player on the front bricks (railing/canal behind). Reached from the Crackadilly
      underpass door; walk off the far LEFT to return to the hub (exitLeft:'home'). */
-  {id:'in_cottagers', name:'Cottagers Cove', bgKey:'room_cottagers', BGW:2172, zoom:0.72, srcY:160, flatGround:620, charScale:2.5, interior:true, walkMul:2.2,
+  {id:'in_cottagers', name:'Cottagers Cove', bgKey:'room_cottagers', BGW:2172, zoom:0.72, srcY:160, flatGround:620, charScale:2.5, interior:true, walkMul:2.2, respawn:true,
    exitLeft:{target:'in_crackadilly', x:5500, face:-1},   // far LEFT -> back to the Crackadilly underpass entrance
    exitRight:'home',                                       // far RIGHT -> out to the main hub
    enemies:[ {at:900,kind:9,hp:220,scaleMul:1.15},
-             {at:1500,kind:11,hp:220,scaleMul:0.84} ],   // just ONE bruiser + ONE tracksuit, both tanky (hp 220)
+             {at:1500,kind:11,hp:220,scaleMul:0.84} ],   // just ONE bruiser + ONE tracksuit, both tanky (hp 220); respawn:true = they're back every time you enter
    doors:[]},
 
   /* Placeholder for travel destinations that aren't built yet (easyJet / train
@@ -631,11 +637,11 @@ const SCENE_VIDEOS = {
    placeholder. Add/replace destinations here as new levels are built.       */
 const TRAVEL_MENUS={
   portal: { title:'The Portal \u2014 Wave Survival Maps', dests:[
-    {label:'The Void \u2014 Wave Survival', target:'blacklevel'},         // arena: full mix, UFO ASSAULT every 5th wave
-    {label:'The Underworld \u2014 Wave Survival', target:'holodeck'},     // arena: sci-fi mix, UFO ASSAULT every 5th wave
-    {label:'Judgement Day \u2014 Wave Survival', target:'judgement'},     // arena: the machines, GUNBOT SQUAD every 5th wave
-    {label:'Boss Mode \u2014 Special Wave Gauntlet', target:'bossmode'},  // arena: EVERY wave is a special squad (Gunman/UFO/Gunbot), escalating
-    {label:'Mortal Kombat \u2014 Wave Survival', target:'mk'},            // arena: melee mix, GUNMAN SQUAD every 5th wave
+    {label:'The Void', target:'blacklevel'},
+    {label:'The Underworld', target:'holodeck'},
+    {label:'Judgement Day', target:'judgement'},
+    {label:'Mortal Kombat', target:'mk'},
+    {label:'Boss Mode', target:'bossmode'},
   ]},
   easyjet: { title:'easyJet Holidays', dests:[
     {label:'Europe',    target:'lvl_europe'},
