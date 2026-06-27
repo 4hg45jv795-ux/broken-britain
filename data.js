@@ -315,8 +315,24 @@ const SECTIONS=[
   /* ── THE WINCHESTER TOILET (the gents). Reached from the locked door inside the
      Winchester. Placeholder dark room until room toilet.jpeg exists; EXIT door goes
      back to the bar. Nudge BGW/srcY/flatGround/charScale once the art is in. */
-  {id:'in_toilet', name:'Inside &mdash; The Gents', bgKey:'room_toilet', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
-   doors:[ {x:506, w:92, label:'EXIT &mdash; back to the bar', target:'in_winchester'} ]},
+  {id:'in_toilet', name:'Inside &mdash; The Gents', bgKey:'room_toilet', BGW:591, zoom:1.35, srcY:46, flatGround:275, charScale:1.0, interior:true, enemies:[],
+   /* The wall door is JAMMED: striking it flashes a message and reveals the only real way out —
+      a DIVE into the toilet pan in the middle of the room, which drops you into 'in_shitter'.
+      The pan exit (needArm) only appears AFTER the player tries the jammed door. Nudge the pan
+      door x/w so the down-arrow sits over the painted pan, and the jammed door x over the wall door. */
+   doors:[ {x:506, w:92, label:'EXIT &mdash; back to the bar', jammed:true},
+           {x:300, w:120, label:'Jump in the shitter!', target:'in_shitter', arrow:true, needArm:true} ]},
+
+  /* ── THE SHITTER (dive in from the toilet pan) ─────────────────────────
+     A single-screen UNDERWATER room. Full-screen MP4 backdrop (shitter.mp4 via
+     SCENE_VIDEOS; black until uploaded), Shitter.mp3 for sound. water:true gives
+     buoyant swim physics (JUMP = swim-stroke up, gentle sink); dropIn:true drops
+     the player in from the TOP-LEFT and they sink down through the water. BGW=800
+     with zoom 1.0 = exactly one screen, so it doesn't scroll. The ONLY way out is
+     the door at the BOTTOM-RIGHT: STRIKE there to climb out to Cottagers Cove. */
+  {id:'in_shitter', name:'The Shitter', bgKey:'__black__', black:true, BGW:800, zoom:1.0, srcY:0, flatGround:330, charScale:1.2, interior:true, water:true, dropIn:true, enemies:[],
+   doors:[ {x:744, w:120, label:'Climb out &mdash; to Cottagers Cove', target:'in_cottagers'} ]},
+
 
   /* ── NEW INTERIOR ROOMS ───────────────────────────────────────────────
      Same shape as the rooms above: enter from the hub, EXIT door (right side)
@@ -452,7 +468,7 @@ const TRACKS={ select:'Character selection screen.mp3', home:'Home.mp3', street:
   in_dnb:'Dnb.mp3', in_hiphop:'Hiphop.mp3', in_special:'Specialguest.mp3', in_cottagers:'Cottagerscove.mp3',
   /* ── BLACK LEVEL + HOLODECK MUSIC (the MP4s are silent; these are the sound) ── */
   blacklevel:'Void.mp3', holodeck:'Holodeck.mp3', judgement:'Judgement.mp3',
-  lvl_europe:'Europe.mp3', lvl_america:'America.mp3' };
+  lvl_europe:'Europe.mp3', lvl_america:'America.mp3', in_shitter:'Shitter.mp3' };
 /* ── THE WINCHESTER JUKEBOX ────────────────────────────────────────────────
    Works exactly like the house TV, but for MUSIC. Stand near the jukebox in the
    Winchester and STRIKE to flip to the next track; the chosen .mp3 becomes the
@@ -593,6 +609,7 @@ const SCENE_VIDEOS = {
   ]},
   holodeck:   { wall:'holodeck.mp4', floor:null, wallFrac:1.0, tileW:534 },   // full-screen clip, tiled across 4 panels (BGW 2136)
   judgement:  { wall:'judgement.mp4', floor:null, wallFrac:1.0, tileW:534 },  // same as holodeck: one clip tiled across 4 panels (BGW 2136). Drop judgement.mp4 in; black until then.
+  in_shitter: { wall:'shitter.mp4', floor:null, wallFrac:1.0, tileW:800 },     // THE SHITTER: one full-screen underwater clip, tileW=BGW so it fills the single screen with no repeat/scroll. Black until shitter.mp4 is uploaded.
 };
 /* ── TRAVEL MENUS (the portal + departure boards) ─────────────────────────
    Each menu = a title and a list of destinations. `target` is the section id
