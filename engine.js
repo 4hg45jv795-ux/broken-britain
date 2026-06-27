@@ -50,17 +50,26 @@ function onLoad(){
   document.getElementById('load-bar').style.width=(loadedCount/ASSETS.length*100)+'%';
   if(loadedCount>=ASSETS.length) onAllLoaded();
 }
-ASSETS.forEach(a=>{
-  const im=new Image();
+/* Load images a FEW AT A TIME instead of all at once. On a phone/slow link, firing
+   ~50 requests together (Vercel uses HTTP/2, so they really do all go at once) starves
+   the connection and a random couple time out and get flagged "missing". A small
+   concurrency window keeps every request healthy; each image also retries before
+   it's given up on. */
+const MAX_CONC=5;
+let _assetIdx=0;
+function loadNextAsset(){
+  if(_assetIdx>=ASSETS.length) return;
+  const a=ASSETS[_assetIdx++];
+  const im=new Image(); loaded[a.key]=im;
   let tries=0;
-  im.onload=onLoad;
+  im.onload=()=>{ onLoad(); loadNextAsset(); };
   im.onerror=()=>{
-    if(tries<2){ tries++; setTimeout(()=>{ im.src=a.src+(a.src.indexOf('?')<0?'?':'&')+'retry='+tries; }, 500*tries); return; }  // a cold first launch can time out images mid-download; retry before declaring them missing
-    if(!a.optional) failed.push(a.src); console.warn('[EnoughIsEnough] failed to load:',a.src); onLoad();
+    if(tries<3){ tries++; setTimeout(()=>{ im.src=a.src+(a.src.indexOf('?')<0?'?':'&')+'retry='+tries; }, 400*tries); return; }  // retry transient time-outs before declaring missing
+    if(!a.optional) failed.push(a.src); console.warn('[EnoughIsEnough] failed to load:',a.src); onLoad(); loadNextAsset();
   };
   im.src=a.src;
-  loaded[a.key]=im;
-});
+}
+for(let i=0;i<MAX_CONC;i++) loadNextAsset();
 if('serviceWorker' in navigator){ try{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(_){} }  // PWA: cache media for fast, reliable repeat launches (see sw.js)
 function onAllLoaded(){
   document.getElementById('loading').style.display='none';
