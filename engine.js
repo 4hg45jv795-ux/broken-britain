@@ -139,7 +139,7 @@ function clipDone(){ const c=CLIPS[player.clip]; return !c.loop && player.ct>=Ma
 function playerAttacking(){ return player.clip==='punch'||player.clip==='headbutt'; }
 // The photographer snaps on any action — a STRIKE or a SHOT (not used for melee damage).
 function playerActioning(){ return playerAttacking()||player.clip==='shoot'; }
-const SPEED=2.1,RUNSPEED=3.4,GRAV=0.55,JUMP=-9.6;
+const SPEED=2.1,RUNSPEED=3.4,GRAV=0.55,JUMP=-9.6,SWIM=-4.4;   // SWIM = upward stroke in water levels
 let bannerShown=false;
 
 /* ── ENEMIES ─────────────────────────────────────────────── */
@@ -731,6 +731,10 @@ function enterSection(opts){
   player.x=Math.max(0,Math.min(BGW-PW,ex));
   player.y=groundAt(player.x+PW/2)-PH; player.vx=0; player.vy=0; player.onGround=true; setClip('idle');
   if(opts && typeof opts.face==='number') player.face=opts.face;
+  toiletPanArmed=false;                                   // the toilet's pan-dive prompt re-arms each visit
+  if(SECTIONS[sectionIndex].dropIn){                      // water levels: splash in from the TOP-LEFT and sink
+    player.x=Math.max(0,Math.min(BGW-PW,40)); player.y=-PH; player.vy=0.6; player.onGround=false; player.face=1; setClip('jump');
+  }
   bannerShown=false; helper.active=false; helperCool=[0,0]; activeDoor=null;
   if(SECTIONS[sectionIndex].id==='southampton' && !photographerMet){
     photographerMet=true; initNPC();              // first time on Southampton (the streets start): the photographer turns up
@@ -755,7 +759,7 @@ function enterSection(opts){
 }
 
 /* ── WORLD / DOORWAYS (hub <-> rooms) ────────────────────── */
-let activeDoor=null, hubReturnX=120, photographerMet=false;
+let activeDoor=null, hubReturnX=120, photographerMet=false, toiletPanArmed=false;
 const roomReturn={};   // roomId -> {from, x, face}: where to drop the player when they pop back OUT of that room
 function gotoId(id, opts){
   const idx=SECTIONS.findIndex(s=>s.id===id);
@@ -767,10 +771,14 @@ function updateDoors(){
   const sec=SECTIONS[sectionIndex];
   if(!sec.doors) return;
   const cx=player.x+PW/2;
-  for(const d of sec.doors){ if(Math.abs(cx-d.x)<=d.w){ activeDoor=d; break; } }
+  for(const d of sec.doors){ if(d.needArm && !toiletPanArmed) continue; if(Math.abs(cx-d.x)<=d.w){ activeDoor=d; break; } }
 }
 function useDoor(d){
   if(transitioning||!d) return;
+  if(d.jammed){                                       // the toilet's wall door won't open — sends you to the pan instead
+    flashBanner('The door won&rsquo;t open &mdash; jump in the shitter!'); blip(200,110,0.12,'square',0.16);
+    toiletPanArmed=true; return;
+  }
   if(d.locked && !inventory.has(d.key)){          // locked door: needs the matching item in your inventory
     flashBanner('It&rsquo;s locked &mdash; you need a key'); blip(200,110,0.12,'square',0.16); return;
   }
@@ -806,9 +814,18 @@ function drawDoors(){
   const d=activeDoor;
   const mx=(d.x-camX)*ZOOM;                       // screen x over the doorway
   const bob=Math.sin(performance.now()/260)*4;
+  if(d.arrow){                                     // toilet pan: bubble up top + a big down-arrow aimed at the pan
+    drawMarker(mx, 36+bob, 'JUMP IN THE SHITTER', 'STRIKE to dive in');
+    ctx.save(); ctx.translate(mx, 92+bob);
+    ctx.fillStyle='#ffe46b'; ctx.shadowColor='#000'; ctx.shadowBlur=4;
+    ctx.beginPath(); ctx.moveTo(-13,0); ctx.lineTo(13,0); ctx.lineTo(0,20); ctx.closePath(); ctx.fill();
+    ctx.restore();
+    return;
+  }
   const label=d.label.replace(/&mdash;/g,'\u2014').replace(/&amp;/g,'&').toUpperCase();
   let name, hint;
   if(d.menu){ name=label; hint='STRIKE to travel'; }
+  else if(d.jammed){ name='EXIT'; hint='STRIKE to leave'; }
   else if(d.target===null){ name=label; hint='locked for now'; }
   else if(d.locked && !inventory.has(d.key)){ name=label; hint='LOCKED \u2014 need a key'; }
   else if(d.target==='home'){ name='EXIT'; hint='STRIKE to leave'; }
@@ -833,7 +850,7 @@ function drawMarker(cx, cy, name, hint){
   ctx.restore();
 }
 
-let tvVideo=null, tvHot=false;
+let tvVideo=null, tvHot=false, tvSoundEngaged=false;
 let wakeLock=null;
 async function requestWakeLock(){
   try{
@@ -862,7 +879,7 @@ document.addEventListener('visibilitychange',()=>{
   // The screen PICTURE already autoplays muted on entry. A sound screen (house TV / Restore)
   // gets its in-world audio switched on here, on the first gesture — iOS forbids cold unmuted autoplay.
   try{ const sc=curScreen(); if(sc && tvVideo && !paused){
-        if(sc.sound && !musicMuted && tvVideo.muted) tvVideo.muted=false;
+        if(sc.sound && !musicMuted && tvVideo.muted){ tvVideo.muted=false; tvSoundEngaged=true; }
         if(tvVideo.paused && !tvVideo.ended) tvVideo.play().catch(()=>{});
       } }catch(_){}
 }, {passive:true, capture:true}));
@@ -905,13 +922,14 @@ function screenLoad(playNow){
   const sc=curScreen(); if(!sc){ tvPause(); return; }
   const v=tvVidFor(sc.files[sc.idx]);
   if(tvVideo && tvVideo!==v){ try{ tvVideo.pause(); }catch(_){} }   // pause the previous channel
-  tvVideo=v; v.muted=true;                                        // START MUTED so the PICTURE autoplays instantly (muted autoplay always works on iOS). For sound screens (house TV / Restore) the first user gesture unmutes it — see the gesture listener. iOS will not allow a cold unmuted autoplay, so this is the reliable path.
+  tvVideo=v; v.muted=(sc.sound && !musicMuted && tvSoundEngaged) ? false : true;   // start MUTED so the PICTURE autoplays instantly on iOS; once the in-world sound has been engaged this visit (first gesture), channel-skips stay UNMUTED so audio is continuous.
   if(sc.playlist && v.readyState>=1 && (v.ended || v.currentTime>0.1)){ try{ v.currentTime=0; }catch(_){} }  // restart a FINISHED part, but never seek a still-loading element (that stalled part 1 on entry)
   if(playNow && !paused){ v.play().catch(()=>{}); requestWakeLock(); }
 }
 function tvEnter(){
   const sc=curScreen();
   if(!sc){ tvPause(); return; }
+  tvSoundEngaged=false;                      // each visit: picture autoplays muted, first gesture engages sound, then skips stay unmuted
   if(sc.playlist){ sc.idx=0; _plSkips=0; }   // the cinema always (re)starts at PART 1
   screenLoad(true);                  // load + PLAY the current channel first (gives it bandwidth priority)
   if(tvVideo){                       // then warm the other channels once the current one has data
@@ -1388,7 +1406,10 @@ function spawnHitFx(x,y,kind){
   }
 }
 function updateVfx(){
-  for(const f of vfx){ f.t++; if(f.type==='fire'){ f.x+=f.vx||0; f.y+=f.vy||0; f.vy=(f.vy||0)+0.04; } }
+  for(const f of vfx){ f.t++;
+    if(f.type==='fire'){ f.x+=f.vx||0; f.y+=f.vy||0; f.vy=(f.vy||0)+0.04; }
+    else if(f.type==='bubble'){ f.x+=(f.vx||0)+Math.sin(f.t*0.2)*0.2; f.y+=f.vy||0; f.vy=(f.vy||0)*0.99; }
+  }
   vfx=vfx.filter(f=>f.t<f.life);
 }
 function drawBullets(){
@@ -1442,6 +1463,12 @@ function drawVfx(){
       g.addColorStop(0.45,'rgba(255,150,30,'+(0.75*(1-p))+')');
       g.addColorStop(1,'rgba(190,40,0,0)');
       ctx.fillStyle=g; ctx.beginPath(); ctx.arc(sx,sy,Math.max(1,r),0,7); ctx.fill(); ctx.restore();
+    } else if(f.type==='bubble'){
+      ctx.save(); ctx.globalAlpha=0.55*(1-p);
+      const r=Math.max(1,(f.r||2)*ZOOM);
+      ctx.fillStyle='rgba(160,215,255,0.30)'; ctx.strokeStyle='rgba(210,238,255,0.85)'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.arc(sx,sy,r,0,7); ctx.fill(); ctx.stroke();
+      ctx.restore();
     } else if(f.type==='electric'){
       ctx.save(); ctx.globalCompositeOperation='lighter';
       ctx.strokeStyle='rgba(150,230,255,'+(1-p)+')'; ctx.shadowColor='#7fe8ff'; ctx.shadowBlur=8; ctx.lineWidth=2;
@@ -2057,12 +2084,31 @@ function update(){
   const walkMul = SECTIONS[sectionIndex].walkMul || 1;
   player.vx = attacking ? 0 : (moving ? player.face*(running?RUNSPEED:SPEED)*walkMul : 0);
 
-  if(keys.jump&&player.onGround&&!attacking){player.vy=JUMP;player.onGround=false;sfxJump();}
-
-  player.vy+=GRAV;player.x+=player.vx;player.y+=player.vy;
-  player.x=Math.max(0,Math.min(BGW-PW,player.x));
-  const g=groundAt(player.x+PW/2);
-  if(player.y+PH>=g){player.y=g-PH;player.vy=0;player.onGround=true;}
+  const inWater = !!SECTIONS[sectionIndex].water;
+  if(inWater){
+    // SWIM: JUMP is an upward stroke (no ground needed); gentle buoyant sink, capped + drag.
+    if(keys.jump && !attacking && (player.swimCd||0)<=0){ player.vy=SWIM; player.swimCd=12; sfxJump(); }
+    if(player.swimCd>0) player.swimCd--;
+    player.vy += GRAV*0.10;            // weak gravity underwater
+    player.vy *= 0.94;                 // water drag
+    if(player.vy>1.7) player.vy=1.7;   // slow terminal sink
+    player.x += player.vx*0.7;         // a touch slower side-to-side in water
+    player.y += player.vy;
+    player.x=Math.max(0,Math.min(BGW-PW,player.x));
+    if(player.y<0){ player.y=0; if(player.vy<0) player.vy=0; }
+    const gw=groundAt(player.x+PW/2);
+    if(player.y+PH>=gw){ player.y=gw-PH; if(player.vy>0) player.vy=0; player.onGround=true; } else player.onGround=false;
+    if(player.ct%6===0){            // rising bubbles trailing the swimmer
+      vfx.push({type:'bubble', x:player.x+PW*0.25+Math.random()*PW*0.5, y:player.y+PH*0.35+Math.random()*PH*0.4,
+                t:0, life:42+Math.floor(Math.random()*28), r:1.4+Math.random()*2.6, vx:(Math.random()-0.5)*0.3, vy:-(0.5+Math.random()*0.8)});
+    }
+  } else {
+    if(keys.jump&&player.onGround&&!attacking){player.vy=JUMP;player.onGround=false;sfxJump();}
+    player.vy+=GRAV;player.x+=player.vx;player.y+=player.vy;
+    player.x=Math.max(0,Math.min(BGW-PW,player.x));
+    const g=groundAt(player.x+PW/2);
+    if(player.y+PH>=g){player.y=g-PH;player.vy=0;player.onGround=true;}
+  }
 
   player.ct++;
   if(player.shootPoseT>0) player.shootPoseT--;
@@ -2145,6 +2191,24 @@ function drawBg(){
   const bgKey=sec.bgKey;
   if(imgOk(loaded[bgKey])){ const bs=BGSCALE; try{ ctx.drawImage(loaded[bgKey],camX*bs,SRCY*bs,SRCW*bs,SRCH*bs,0,0,VW,VH); }catch(e){ drawNoBg(); } } else drawNoBg();
 }
+function drawWater(){
+  if(!SECTIONS[sectionIndex].water) return;
+  ctx.save();
+  const g=ctx.createLinearGradient(0,0,0,VH);          // blue depth tint, darker toward the bottom
+  g.addColorStop(0,'rgba(34,96,150,0.28)');
+  g.addColorStop(1,'rgba(6,28,58,0.55)');
+  ctx.fillStyle=g; ctx.fillRect(0,0,VW,VH);
+  ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=0.05;   // slow shimmering caustic lines
+  const t=performance.now()/1000;
+  ctx.strokeStyle='#cdecff'; ctx.lineWidth=2;
+  for(let i=0;i<6;i++){
+    const baseY=(i/6)*VH + ((t*18)%(VH/6));
+    ctx.beginPath();
+    for(let x=0;x<=VW;x+=40){ const yy=baseY+Math.sin(x/90+t*1.4+i)*8; if(x===0) ctx.moveTo(x,yy); else ctx.lineTo(x,yy); }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
 function draw(){
   const dsec=SECTIONS[sectionIndex];
   if(dsec.flip){
@@ -2195,6 +2259,7 @@ function draw(){
   drawEnemyBullets();
   drawVfx();
   drawBlood();
+  drawWater();        // water levels (The Shitter): blue depth tint + drifting caustics over the scene
   drawDoors();
   drawTVMarker();
   drawJukeMarker();
