@@ -634,7 +634,7 @@ const GRAFFITI = {
   in_cottagers: [
     {img:'graffiti_eyes',  fw:239, fh:293, at:760,  h:150, yOff:-330, range:160,
      clips:{idle:{start:0,count:1,fps:1,loop:true}, react:{start:0,count:7,fps:11,loop:false}}},
-    {img:'graffiti_eyes2', fw:331, fh:365, at:1360, h:150, yOff:-330, range:160,
+    {img:'graffiti_eyes2', fw:165, fh:182, at:1360, h:150, yOff:-330, range:160,
      clips:{idle:{start:0,count:1,fps:1,loop:true}, react:{start:0,count:15,fps:12,loop:false}}},
   ],
 };
