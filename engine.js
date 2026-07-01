@@ -1694,6 +1694,34 @@ document.querySelectorAll('.helperbtn').forEach(btn=>{
   const fire=e=>{ e.preventDefault(); actx(); summonHelper(idx); };
   btn.addEventListener('touchstart',fire,{passive:false}); btn.addEventListener('mousedown',fire);
 });
+/* ── XBOX / PC GAMEPAD ──────────────────────────────────────
+   Standard-mapping layout: left stick / d-pad = move, A = jump, B = strike,
+   X = cycle weapon, Y = summon helper 1, RB = summon helper 2, Start = pause.
+   Polled once per rendered frame from loop() (see FRAME-RATE INDEPENDENCE above). */
+let _gpPrevBtns={};
+function pollGamepad(){
+  if(!navigator.getGamepads) return;
+  let gp=null;
+  for(const p of navigator.getGamepads()){ if(p){ gp=p; break; } }
+  if(!gp) return;
+  const AX_DEAD=0.35;
+  const lx=(gp.axes&&gp.axes[0])||0;
+  const dpadLeft = !!(gp.buttons[14]&&gp.buttons[14].pressed);
+  const dpadRight= !!(gp.buttons[15]&&gp.buttons[15].pressed);
+  const stickLeft = lx<-AX_DEAD, stickRight = lx>AX_DEAD;
+  if(stickLeft||dpadLeft||stickRight||dpadRight){ keys.left=stickLeft||dpadLeft; keys.right=stickRight||dpadRight; }
+  else { keys.left=false; keys.right=false; }
+  const p=(i)=>!!(gp.buttons[i]&&gp.buttons[i].pressed);
+  const A=p(0), B=p(1), X=p(2), Y=p(3), RB=p(5), START=p(9);
+  keys.jump = A;
+  if(B && !_gpPrevBtns.B){ punchDown=true; punchEdge=true; }
+  if(!B && _gpPrevBtns.B){ punchDown=false; }
+  if(X && !_gpPrevBtns.X && cur && !csActive) cycleWeapon();
+  if(Y && !_gpPrevBtns.Y && cur && !csActive) summonHelper(0);
+  if(RB && !_gpPrevBtns.RB && cur && !csActive) summonHelper(1);
+  if(START && !_gpPrevBtns.START && cur && !csActive) setPaused(!paused);
+  _gpPrevBtns={B,X,Y,RB,START};
+}
 (function(){
   const wb=document.getElementById('weaponsel'); if(!wb) return;
   const fire=e=>{ e.preventDefault(); actx(); cycleWeapon(); };
@@ -1776,6 +1804,7 @@ function setPaused(p){
   const bgm=document.getElementById('bgm');
   if(p){ bgm.pause(); tvPause(); scenePause(); pauseAllProxAudio(); releaseWakeLock(); }
   else if(cur){
+    _loopLastT=null; _loopAcc=0;                      // avoid a catch-up burst after a long pause
     requestWakeLock();                               // re-acquire the wake lock on resume
     if(!musicMuted && sectionMusic()) bgm.play().catch(()=>{});
     if(curScreen()) screenLoad(true);
@@ -2358,7 +2387,32 @@ function drawParkPlaceholder(){
   ctx.strokeStyle='#2c2f36'; ctx.lineWidth=1;
   for(let x=-(camX%48); x<VW; x+=48){ ctx.beginPath(); ctx.moveTo(x,gY); ctx.lineTo(x,VH); ctx.stroke(); }
 }
-function loop(){ if(!paused) update(); draw(); raf=requestAnimationFrame(loop); }
+/* ── FRAME-RATE INDEPENDENCE ─────────────────────────────────
+   The whole engine assumes update() runs at a fixed 60Hz (player.ct++,
+   cooldown timers, npc.t++ etc are all raw per-call counters). Rather than
+   rewriting every counter to scale by elapsed time (high-risk across 100+
+   call sites), we decouple update() from the display's native refresh rate:
+   a fixed-timestep accumulator calls update() at a real, wall-clock-timed
+   60Hz cadence regardless of whether the screen is 60Hz, 90Hz or 120Hz.
+   draw() still runs once per actual frame for smooth visuals. */
+let _loopLastT=null, _loopAcc=0;
+const FIXED_STEP=1000/60;
+function loop(ts){
+  if(ts===undefined) ts=performance.now();
+  if(_loopLastT===null) _loopLastT=ts;
+  let frameTime=ts-_loopLastT; _loopLastT=ts;
+  if(frameTime>250) frameTime=250;      // clamp huge gaps (tab backgrounded, device slept)
+  _loopAcc+=frameTime;
+  let steps=0;
+  pollGamepad();
+  while(_loopAcc>=FIXED_STEP && steps<5){
+    if(!paused) update();
+    _loopAcc-=FIXED_STEP;
+    steps++;
+  }
+  draw();
+  raf=requestAnimationFrame(loop);
+}
 
 /* ── THE VOID — endless wave arena + score + local leaderboard ─────────────
    Any section with `arena:true` becomes a survival arena: waves of enemies
