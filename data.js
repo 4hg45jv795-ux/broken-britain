@@ -207,7 +207,7 @@ const SECTIONS=[
    enemies:[ ]},
   {id:'dundee',  name:'Welcome to Dundee', bgKey:'dundee', BGW:560, srcY:65, flatGround:270, chain:true, next:'glasgow', prev:'pub',
    enemies:[ ]},
-  {id:'glasgow', name:'Glasgow &mdash; the Trongate', bgKey:'glasgow', BGW:2672, srcY:90, flatGround:296, chain:true, next:'street', prev:'dundee',
+  {id:'glasgow', name:'Glasgow &mdash; the Trongate', bgKey:'glasgow', BGW:2672, srcY:90, flatGround:296, chain:true, next:'street', prev:'dundee', weather:'rain',
    /* THE TOILET KEY lives here now, near the END of the Trongate (x:2500 of 2672) — walk over it
       to pick it up; it then unlocks the Winchester toilet door. Nudge at/h to taste. */
    items:[ {id:'toiletkey', at:2500, h:34, label:'the Winchester toilet key'} ],
@@ -331,7 +331,11 @@ const SECTIONS=[
      DUNDEE). The JUKEBOX (see JUKEBOX below) is the Wurlitzer at the far right (x:1994) —
      STRIKE near it to flip through its track slots, like the house TV but for music. */
   {id:'in_winchester', name:'Inside &mdash; The Winchester', bgKey:'room_winchester', BGW:2172, zoom:1.0, srcY:27, flatGround:360, charScale:2.2, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
-   doors:[ {x:880, w:110, label:'The Toilet', target:'in_toilet', locked:true, key:'toiletkey'} ]},
+   doors:[ {x:880, w:110, label:'The Toilet', target:'in_toilet', locked:true, key:'toiletkey'},
+           /* Middle of the bar (BGW is 2172, so x:1086 is dead centre) — STRIKE opens your
+              Ko-fi page in a new tab. PLACEHOLDER URL below — swap it for your real Ko-fi
+              link (find-and-replace the one line). Nudge x if it doesn't sit where you want. */
+           {x:1086, w:100, label:'Buy Me A Pint \u2764', url:'https://ko-fi.com/YOURNAME'} ]},
 
   /* ── THE WINCHESTER TOILET (the gents). Reached from the locked door inside the
      Winchester. Placeholder dark room until room toilet.jpeg exists; EXIT door goes
@@ -423,9 +427,6 @@ const SECTIONS=[
      in on you from both directions as you walk, not just from ahead. */
   {id:'lvl_europe', name:'Europe', bgKey:'room_europe', BGW:2172, zoom:1.6, srcY:123, flatGround:330, charScale:0.81, interior:true, walkMul:1.5, exitLeft:'home', respawn:true, helpers:true, endlessSpawn:true,
    enemies:[ {at:60,kind:23,hp:70,scaleMul:0.625},{at:280,kind:23,hp:70,scaleMul:0.625},{at:500,kind:23,hp:70,scaleMul:0.625},{at:720,kind:23,hp:70,scaleMul:0.625},{at:940,kind:23,hp:70,scaleMul:0.625},{at:1160,kind:23,hp:70,scaleMul:0.625},{at:1380,kind:23,hp:70,scaleMul:0.625},{at:1600,kind:23,hp:70,scaleMul:0.625},{at:1820,kind:23,hp:70,scaleMul:0.625},{at:2040,kind:23,hp:70,scaleMul:0.625} ],
-   npcs:[ {img:'gardenman', fw:229, fh:427, at:1086, h:75, yOff:0, face:1,
-           clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:300, paceTo:1850, paceSpd:0.7,
-           mp3:'Gardenman.mp3', range:240} ],
    doors:[]},
 
   /* ── AMERICA (easyJet destination) ──────────────────────────────────────────
@@ -438,7 +439,10 @@ const SECTIONS=[
      every time you re-enter. */
   {id:'lvl_america', name:'America', bgKey:'room_america', BGW:2172, zoom:1.6, srcY:138, flatGround:345, charScale:0.81, interior:true, walkMul:1.5, exitLeft:'home', respawn:true, helpers:true,
    enemies:[ {at:500,kind:21,hp:80,scaleMul:0.625},{at:1000,kind:22,hp:80,scaleMul:0.625},{at:1500,kind:21,hp:80,scaleMul:0.625},{at:1900,kind:22,hp:80,scaleMul:0.625},{at:750,kind:24,hp:90,scaleMul:0.625},{at:1300,kind:24,hp:90,scaleMul:0.625} ],
-   npcs:[ {img:'potus', fw:233, fh:362, at:1086, h:84, yOff:0, face:1,
+   npcs:[ {img:'gardenman', fw:229, fh:427, at:160, h:75, yOff:0, face:1,
+           clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:80, paceTo:480, paceSpd:0.7,
+           mp3:'Gardenman.mp3', range:240},
+          {img:'potus', fw:233, fh:362, at:1086, h:84, yOff:0, face:1,
            clip:{start:0,count:18,fps:9,loop:true}, mp3:'Potus.mp3', range:260},
           /* decorative dancing PAIR near the end of the level (BGW 2172). 16-frame sheet;
              frames 0-11 are the continuous pair dance (loop). Bump count to 16 to include the
@@ -602,6 +606,24 @@ const GLOWS={
     {x:1884, y:476, r:55, hue:285, sat:85, light:60, alpha:0.16},   // purple spotlight on the floor
   ],
 };
+/* ── REACTIVE GRAFFITI (decorative wall art that reacts to the player) ──────
+   Same single-row sprite-sheet convention as everything else in this game:
+   `idle` is what plays normally (usually just 1 frame, or a slow idle loop);
+   `react` plays ONCE — triggered either by the player simply walking within
+   `range` of it, OR by a STRIKE while in range — then it settles back to idle.
+   Fully decorative: no collision, can't be hit, doesn't block movement.
+     {img, fw, fh, at, h, [yOff], range, clips:{idle:{...}, react:{...}}}
+   EMPTY for now — nothing draws until an entry + matching art is added (same
+   "every asset is optional" rule as the rest of the game). To wire one in:
+   send the sprite sheet (idle frame(s) + a short reaction clip, e.g. eyes
+   rolling or the tag morphing into something ruder), tell me which room and
+   roughly where on the wall, and I'll add the ASSETS line + an entry here. */
+const GRAFFITI = {
+  // in_crackadilly: [
+  //   {img:'graffiti1', fw:180, fh:220, at:1200, h:140, range:110,
+  //    clips:{idle:{start:0,count:1,fps:1,loop:true}, react:{start:1,count:6,fps:10,loop:false}}}
+  // ],
+};
 /* ── ROOM SCREENS (looping .mp4s with sound, painted onto wall screens) ──
    Each room id below maps to a screen rectangle (measured in THAT room's
    background-image pixels, same space as the room jpeg) plus the video
@@ -710,7 +732,7 @@ const WEAPONS={
   // which also remains a buyable weapon below.
   // 8 NAMELESS neon weapons (rename freely — the key/sprite stay the same).
   weapon01: {name:'Viper', auto:false, cooldown:12, type:'bullet', pellets:1, spread:0.03, speed:14, range:660, dmg:30, knock:8,  sprite:'weapon01', spriteH:26, shake:false},
-  weapon02: {name:'Hornet', auto:true,  cooldown:10, type:'bullet', pellets:1, spread:0.04, speed:13, range:640, dmg:26, knock:7,  sprite:'weapon02', spriteH:26, shake:false},
+  weapon02: {name:'Hornet', auto:true,  cooldown:20, type:'bullet', pellets:1, spread:0.04, speed:13, range:640, dmg:26, knock:7,  sprite:'weapon02', spriteH:26, shake:false},
   weapon03: {name:'Ravager', auto:false, cooldown:16, type:'bullet', pellets:1, spread:0.02, speed:12, range:660, dmg:44, knock:11, sprite:'weapon03', spriteH:28, shake:false},
   weapon04: {name:'Sledgehammer', auto:false, cooldown:22, type:'bullet', pellets:1, spread:0.00, speed:11, range:680, dmg:55, knock:18, sprite:'weapon04', spriteH:30, shake:true },
   weapon05: {name:'Arc Lance', auto:false, cooldown:14, type:'bullet', pellets:1, spread:0.03, speed:13, range:650, dmg:38, knock:10, sprite:'weapon05', spriteH:26, shake:false, hitfx:'electric'},
