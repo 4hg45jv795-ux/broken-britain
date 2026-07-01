@@ -243,6 +243,10 @@ const ENEMY_KINDS=[
   //      0-5 walk, 6-9 stagger/fall/die. Melee/contact. Lives in America. Nudge scale/hp to taste.
   {img:'bigman2', fw:444, fh:417, scale:1.4, color:'#efefef', hair:'#1c1c1c', mp3:'Bigman2.mp3',
    clips:{walk:{start:0,count:6,fps:9,loop:true}, die:{start:6,count:4,fps:9,loop:false}}},
+  // 23 = PINKSHIRT (pinkshirt.png). Slim bloke, pink shirt + dark trousers; staggers back and falls.
+  //      10 frames -> 0-5 walk, 6-9 stagger/fall/die. Melee/contact. Lives in EUROPE (lvl_europe).
+  {img:'pinkshirt', fw:353, fh:363, scale:1.35, color:'#d9a7b0', hair:'#141414', mp3:'Pinkshirt.mp3',
+   clips:{walk:{start:0,count:6,fps:9,loop:true}, die:{start:6,count:4,fps:9,loop:false}}},
 ];
 const EH=78;
 let enemies=[];
@@ -2366,7 +2370,61 @@ function drawParkPlaceholder(){
   ctx.strokeStyle='#2c2f36'; ctx.lineWidth=1;
   for(let x=-(camX%48); x<VW; x+=48){ ctx.beginPath(); ctx.moveTo(x,gY); ctx.lineTo(x,VH); ctx.stroke(); }
 }
-function loop(){ if(!paused) update(); draw(); raf=requestAnimationFrame(loop); }
+/* ── XBOX / PC GAMEPAD ────────────────────────────────────────────────────
+   Standard-mapping controller support (Xbox/PS/generic) via the Gamepad API.
+   Left stick or D-pad = move, A = jump, B or Right-Trigger = strike/shoot,
+   X or Y = cycle weapon, Start = pause. It drives the very same input flags
+   the touch buttons and keyboard use, so nothing else in the game changes.
+   Polled once per rendered frame from loop(). Helpers stay on the touch bar. */
+const _gpPrev={};
+function pollGamepad(){
+  let pads=null;
+  try{ pads = navigator.getGamepads ? navigator.getGamepads() : null; }catch(_){ return; }
+  if(!pads) return;
+  let gp=null; for(const p of pads){ if(p && p.connected!==false){ gp=p; break; } }
+  if(!gp) return;
+  const B=gp.buttons||[], ax=gp.axes||[];
+  const down=i=>!!(B[i] && (B[i].pressed || B[i].value>0.5));
+  const edge=i=>{ const d=down(i), was=!!_gpPrev[i]; _gpPrev[i]=d; return d && !was; };
+  const DZ=0.35;
+  const lx=ax[0]||0, ly=ax[1]||0;
+  const wantLeft  = lx<-DZ || down(14);        // 14 = D-pad left
+  const wantRight = lx> DZ || down(15);        // 15 = D-pad right
+  keys.left  = wantLeft  && !wantRight;
+  keys.right = wantRight && !wantLeft;
+  keys.jump  = down(0) || down(12) || ly<-0.55; // A, D-pad up, or stick up
+  // strike / shoot: mirror the punch-key edge logic exactly (B or Right-Trigger)
+  const strike = down(1) || down(7);
+  if(strike && !_gpPrev._strike){ if(!punchDown){ punchDown=true; punchEdge=true; } }
+  else if(!strike && _gpPrev._strike){ punchDown=false; }
+  _gpPrev._strike=strike;
+  if((edge(2)||edge(3)) && cur && !csActive){ cycleWeapon(); }  // X / Y = cycle weapon
+  if(edge(9)){ setPaused(!paused); }                            // Start = pause
+}
+
+/* ── FRAME-RATE-INDEPENDENT MAIN LOOP ─────────────────────────────────────
+   The simulation (update) is tuned for 60Hz. On 120Hz/144Hz screens (many
+   Android tablets/phones) running update() once per animation frame makes the
+   whole game run 2x+ too fast. This fixed-timestep loop advances the logic in
+   fixed 1/60s steps off a real wall-clock accumulator, so movement, gravity
+   and timers run at the SAME speed on every device, while draw() still runs
+   once per rendered frame for smooth visuals. */
+let _loopLast=0, _loopAcc=0;
+const FIXED_STEP=1000/60;
+function loop(ts){
+  raf=requestAnimationFrame(loop);
+  if(ts===undefined){ _loopLast=0; return; }   // first kick (loop() called with no timestamp)
+  if(_loopLast===0) _loopLast=ts;
+  let dt=ts-_loopLast; _loopLast=ts;
+  if(dt>250) dt=250;                            // backgrounded/stalled: don't fast-forward a huge burst
+  pollGamepad();
+  if(!paused){
+    _loopAcc+=dt;
+    let steps=0;
+    while(_loopAcc>=FIXED_STEP && steps<5){ update(); _loopAcc-=FIXED_STEP; steps++; }  // cap catch-up
+  } else { _loopAcc=0; }
+  draw();
+}
 
 /* ── THE VOID — endless wave arena + score + local leaderboard ─────────────
    Any section with `arena:true` becomes a survival arena: waves of enemies
