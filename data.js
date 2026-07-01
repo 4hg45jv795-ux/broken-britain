@@ -421,7 +421,7 @@ const SECTIONS=[
      time you re-enter. Many more enemies spread across the FULL level width
      (including right near the start and right near the far end) so they close
      in on you from both directions as you walk, not just from ahead. */
-  {id:'lvl_europe', name:'Europe', bgKey:'room_europe', BGW:2172, zoom:1.6, srcY:123, flatGround:330, charScale:0.81, interior:true, walkMul:1.5, exitLeft:'home', respawn:true, helpers:true,
+  {id:'lvl_europe', name:'Europe', bgKey:'room_europe', BGW:2172, zoom:1.6, srcY:123, flatGround:330, charScale:0.81, interior:true, walkMul:1.5, exitLeft:'home', respawn:true, helpers:true, endlessSpawn:true,
    enemies:[ {at:60,kind:23,hp:70,scaleMul:0.625},{at:280,kind:23,hp:70,scaleMul:0.625},{at:500,kind:23,hp:70,scaleMul:0.625},{at:720,kind:23,hp:70,scaleMul:0.625},{at:940,kind:23,hp:70,scaleMul:0.625},{at:1160,kind:23,hp:70,scaleMul:0.625},{at:1380,kind:23,hp:70,scaleMul:0.625},{at:1600,kind:23,hp:70,scaleMul:0.625},{at:1820,kind:23,hp:70,scaleMul:0.625},{at:2040,kind:23,hp:70,scaleMul:0.625} ],
    npcs:[ {img:'gardenman', fw:229, fh:427, at:1086, h:75, yOff:0, face:1,
            clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:300, paceTo:1850, paceSpd:0.7,
@@ -444,7 +444,7 @@ const SECTIONS=[
              frames 0-11 are the continuous pair dance (loop). Bump count to 16 to include the
              solo/finish poses. Not an enemy — background only, no collision. Nudge at/h/face. */
           {img:'devildance', fw:374, fh:283, at:1980, h:109, yOff:0, face:1,
-           clip:{start:0,count:12,fps:8,loop:true}} ],
+           clip:{start:0,count:12,fps:5,loop:true}} ],
    doors:[]},
 
   /* ── SLAMMIN' VINYL ROOMS (entered from the club lobby; EXIT door -> lobby) ──
