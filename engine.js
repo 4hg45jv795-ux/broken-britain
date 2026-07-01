@@ -247,6 +247,10 @@ const ENEMY_KINDS=[
   //      10 frames -> 0-5 walk, 6-9 stagger/fall/die. Melee/contact. Lives in EUROPE (lvl_europe).
   {img:'pinkshirt', fw:353, fh:363, scale:1.35, color:'#d9a7b0', hair:'#141414', mp3:'Pinkshirt.mp3',
    clips:{walk:{start:0,count:6,fps:9,loop:true}, die:{start:6,count:4,fps:9,loop:false}}},
+  // 24 = BIGMAN3 (bigman3.png). Big shirtless bloke in brown shorts; staggers back then falls flat.
+  //      10 frames -> 0-5 walk, 6-9 stagger/fall/die. Melee/contact. Lives in AMERICA (lvl_america).
+  {img:'bigman3', fw:484, fh:438, scale:1.5, color:'#7a4a2a', hair:'#241712', mp3:'Bigman3.mp3',
+   clips:{walk:{start:0,count:6,fps:9,loop:true}, die:{start:6,count:4,fps:9,loop:false}}},
 ];
 const EH=78;
 let enemies=[];
