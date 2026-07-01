@@ -115,6 +115,8 @@ const ASSETS = [
   {key:'hawking',  type:'img', src:'hawking.png', optional:true},   // Judgement Day wheelchair enemy (kind 19)
   {key:'piggybackguy', type:'img', src:'piggybackguy.png', optional:true}, // Special Guest room NPC — carried sedan-chair group (paces the floor)
   {key:'bigbrain',     type:'img', src:'bigbrain.png', optional:true},     // Crackadilly Gardens enemy (kind 20) — has its own dying animation
+  {key:'bigman',       type:'img', src:'bigman.png',  optional:true},     // America enemy (kind 21) — grey hoodie, walk + collapse
+  {key:'bigman2',      type:'img', src:'bigman2.png', optional:true},     // America enemy (kind 22) — white tee, walk + stagger/fall
   {key:'hologram', type:'img', src:'hologram.png', optional:true},  // Library blue AI hologram NPC (centre)
   {key:'dancer',   type:'img', src:'dancer.png', optional:true},    // dancing NPC (now in the Hip-Hop room)
   {key:'couple',   type:'img', src:'couple.png', optional:true},    // Void dancing-couple NPCs
@@ -208,7 +210,7 @@ const SECTIONS=[
    items:[ {id:'toiletkey', at:2500, h:34, label:'the Winchester toilet key'} ],
    enemies:[ {at:230,kind:6,hp:1,static:true},{at:760,kind:5},{at:1080,kind:0},{at:1380,kind:5},{at:1700,kind:1},{at:2000,kind:5},{at:2480,kind:5} ]},
   {id:'street', name:'Southside &mdash; the street', bgKey:'bg',  BGW:4047, srcY:120, flatGround:null, chain:true, next:null, prev:'glasgow',
-   enemies:[ {at:1200,kind:0},{at:1700,kind:1},{at:2300,kind:0},{at:3300,kind:1},{at:3700,kind:0},{at:2000,kind:12},{at:2800,kind:12},{at:600,kind:0},{at:3900,kind:0},{at:1500,kind:20,hp:60},{at:3000,kind:20,hp:60},{at:1900,kind:14,hp:50},{at:3100,kind:14,hp:50},{at:2600,kind:10,hp:60} ]},
+   enemies:[ {at:1200,kind:0},{at:1700,kind:1},{at:2300,kind:0},{at:3300,kind:1},{at:3700,kind:0},{at:2000,kind:12},{at:2800,kind:12},{at:600,kind:0},{at:3900,kind:0},{at:900,kind:6},{at:2200,kind:6},{at:3500,kind:6},{at:1500,kind:20,hp:60},{at:3000,kind:20,hp:60},{at:1900,kind:14,hp:50},{at:3100,kind:14,hp:50},{at:2600,kind:10,hp:60} ]},
 
   /* ── MORTAL KOMBAT (entered from the hub Portal -> travel menu) ──
      Standalone fight arena: the UMK3 "Blue Portal" bridge. Background
@@ -418,7 +420,8 @@ const SECTIONS=[
      Placeholder walkable level — a dancing figure struts in place (proximity MP3
      slot Potus.mp3 fades in as you approach). Add 'room america.jpeg' (asset key
      room_america) for art; run off the LEFT edge to return to the hub. */
-  {id:'lvl_america', name:'America', bgKey:'room_america', BGW:2172, srcY:0, flatGround:300, charScale:1.3, interior:true, exitLeft:'home', enemies:[],
+  {id:'lvl_america', name:'America', bgKey:'room_america', BGW:2172, srcY:0, flatGround:300, charScale:1.3, interior:true, exitLeft:'home',
+   enemies:[ {at:500,kind:21,hp:80},{at:1000,kind:22,hp:80},{at:1500,kind:21,hp:80},{at:1900,kind:22,hp:80} ],
    npcs:[ {img:'potus', fw:233, fh:362, at:1086, h:135, yOff:0, face:1,
            clip:{start:0,count:18,fps:9,loop:true}, mp3:'Potus.mp3', range:260} ],
    doors:[]},
