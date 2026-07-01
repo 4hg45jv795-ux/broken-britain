@@ -421,9 +421,9 @@ const SECTIONS=[
      time you re-enter. Many more enemies spread across the FULL level width
      (including right near the start and right near the far end) so they close
      in on you from both directions as you walk, not just from ahead. */
-  {id:'lvl_europe', name:'Europe', bgKey:'room_europe', BGW:2172, zoom:1.6, srcY:123, flatGround:330, charScale:0.81, interior:true, walkMul:1.5, exitLeft:'home', respawn:true,
-   enemies:[ {at:60,kind:23,hp:70},{at:280,kind:23,hp:70},{at:500,kind:23,hp:70},{at:720,kind:23,hp:70},{at:940,kind:23,hp:70},{at:1160,kind:23,hp:70},{at:1380,kind:23,hp:70},{at:1600,kind:23,hp:70},{at:1820,kind:23,hp:70},{at:2040,kind:23,hp:70} ],
-   npcs:[ {img:'gardenman', fw:229, fh:427, at:1086, h:120, yOff:0, face:1,
+  {id:'lvl_europe', name:'Europe', bgKey:'room_europe', BGW:2172, zoom:1.6, srcY:123, flatGround:330, charScale:0.81, interior:true, walkMul:1.5, exitLeft:'home', respawn:true, helpers:true,
+   enemies:[ {at:60,kind:23,hp:70,scaleMul:0.625},{at:280,kind:23,hp:70,scaleMul:0.625},{at:500,kind:23,hp:70,scaleMul:0.625},{at:720,kind:23,hp:70,scaleMul:0.625},{at:940,kind:23,hp:70,scaleMul:0.625},{at:1160,kind:23,hp:70,scaleMul:0.625},{at:1380,kind:23,hp:70,scaleMul:0.625},{at:1600,kind:23,hp:70,scaleMul:0.625},{at:1820,kind:23,hp:70,scaleMul:0.625},{at:2040,kind:23,hp:70,scaleMul:0.625} ],
+   npcs:[ {img:'gardenman', fw:229, fh:427, at:1086, h:75, yOff:0, face:1,
            clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:300, paceTo:1850, paceSpd:0.7,
            mp3:'Gardenman.mp3', range:240} ],
    doors:[]},
@@ -436,14 +436,14 @@ const SECTIONS=[
      charScale 1.3->0.81 to cancel that out for the player so he stays normal-sized.
      srcY re-tuned to keep the pavement in view. respawn:true — enemies come back
      every time you re-enter. */
-  {id:'lvl_america', name:'America', bgKey:'room_america', BGW:2172, zoom:1.6, srcY:138, flatGround:345, charScale:0.81, interior:true, walkMul:1.5, exitLeft:'home', respawn:true,
-   enemies:[ {at:500,kind:21,hp:80},{at:1000,kind:22,hp:80},{at:1500,kind:21,hp:80},{at:1900,kind:22,hp:80},{at:750,kind:24,hp:90},{at:1300,kind:24,hp:90} ],
-   npcs:[ {img:'potus', fw:233, fh:362, at:1086, h:135, yOff:0, face:1,
+  {id:'lvl_america', name:'America', bgKey:'room_america', BGW:2172, zoom:1.6, srcY:138, flatGround:345, charScale:0.81, interior:true, walkMul:1.5, exitLeft:'home', respawn:true, helpers:true,
+   enemies:[ {at:500,kind:21,hp:80,scaleMul:0.625},{at:1000,kind:22,hp:80,scaleMul:0.625},{at:1500,kind:21,hp:80,scaleMul:0.625},{at:1900,kind:22,hp:80,scaleMul:0.625},{at:750,kind:24,hp:90,scaleMul:0.625},{at:1300,kind:24,hp:90,scaleMul:0.625} ],
+   npcs:[ {img:'potus', fw:233, fh:362, at:1086, h:84, yOff:0, face:1,
            clip:{start:0,count:18,fps:9,loop:true}, mp3:'Potus.mp3', range:260},
           /* decorative dancing PAIR near the end of the level (BGW 2172). 16-frame sheet;
              frames 0-11 are the continuous pair dance (loop). Bump count to 16 to include the
              solo/finish poses. Not an enemy — background only, no collision. Nudge at/h/face. */
-          {img:'devildance', fw:374, fh:283, at:1980, h:175, yOff:0, face:1,
+          {img:'devildance', fw:374, fh:283, at:1980, h:109, yOff:0, face:1,
            clip:{start:0,count:12,fps:8,loop:true}} ],
    doors:[]},
 
