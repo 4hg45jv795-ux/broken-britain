@@ -415,7 +415,7 @@ const SECTIONS=[
      to return to the hub. Nudge BGW / flatGround / gardenman pace once art is in.
      flatGround nudged 300->330 so the player's feet land on the painted pavement
      instead of floating above it. */
-  {id:'lvl_europe', name:'Europe', bgKey:'room_europe', BGW:2172, zoom:1.0, srcY:0, flatGround:330, charScale:1.3, interior:true, walkMul:1.5, exitLeft:'home',
+  {id:'lvl_europe', name:'Europe', bgKey:'room_europe', BGW:2172, zoom:1.3, srcY:75, flatGround:330, charScale:1.3, interior:true, walkMul:1.5, exitLeft:'home',
    enemies:[ {at:550,kind:23,hp:70},{at:1050,kind:23,hp:70},{at:1600,kind:23,hp:70} ],
    npcs:[ {img:'gardenman', fw:229, fh:427, at:1086, h:120, yOff:0, face:1,
            clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:300, paceTo:1850, paceSpd:0.7,
@@ -428,7 +428,7 @@ const SECTIONS=[
      room_america) for art; run off the LEFT edge to return to the hub.
      flatGround nudged 300->330 so the player's feet land on the painted pavement
      instead of floating above it. */
-  {id:'lvl_america', name:'America', bgKey:'room_america', BGW:2172, zoom:1.0, srcY:0, flatGround:330, charScale:1.3, interior:true, walkMul:1.5, exitLeft:'home',
+  {id:'lvl_america', name:'America', bgKey:'room_america', BGW:2172, zoom:1.3, srcY:75, flatGround:345, charScale:1.3, interior:true, walkMul:1.5, exitLeft:'home',
    enemies:[ {at:500,kind:21,hp:80},{at:1000,kind:22,hp:80},{at:1500,kind:21,hp:80},{at:1900,kind:22,hp:80},{at:750,kind:24,hp:90},{at:1300,kind:24,hp:90} ],
    npcs:[ {img:'potus', fw:233, fh:362, at:1086, h:135, yOff:0, face:1,
            clip:{start:0,count:18,fps:9,loop:true}, mp3:'Potus.mp3', range:260},
