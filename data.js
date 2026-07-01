@@ -118,6 +118,7 @@ const ASSETS = [
   {key:'bigman',       type:'img', src:'bigman.png',  optional:true},     // America enemy (kind 21) — grey hoodie, walk + collapse
   {key:'bigman2',      type:'img', src:'bigman2.png', optional:true},     // America enemy (kind 22) — white tee, walk + stagger/fall
   {key:'pinkshirt',    type:'img', src:'pinkshirt.png', optional:true},   // Europe enemy (kind 23) — pink shirt, walk + stagger/fall
+  {key:'bigman3',      type:'img', src:'bigman3.png', optional:true},     // America enemy (kind 24) — shirtless, brown shorts, walk + stagger/fall
   {key:'hologram', type:'img', src:'hologram.png', optional:true},  // Library blue AI hologram NPC (centre)
   {key:'dancer',   type:'img', src:'dancer.png', optional:true},    // dancing NPC (now in the Hip-Hop room)
   {key:'couple',   type:'img', src:'couple.png', optional:true},    // Void dancing-couple NPCs
@@ -411,7 +412,7 @@ const SECTIONS=[
      A simple walkable level — gardenman paces here for now. Placeholder backdrop
      until 'room europe.jpeg' (asset key room_europe) exists. Run off the LEFT edge
      to return to the hub. Nudge BGW / flatGround / gardenman pace once art is in. */
-  {id:'lvl_europe', name:'Europe', bgKey:'room_europe', BGW:2172, srcY:0, flatGround:300, charScale:1.3, interior:true, exitLeft:'home',
+  {id:'lvl_europe', name:'Europe', bgKey:'room_europe', BGW:2172, zoom:1.0, srcY:0, flatGround:300, charScale:1.3, interior:true, walkMul:1.5, exitLeft:'home',
    enemies:[ {at:550,kind:23,hp:70},{at:1050,kind:23,hp:70},{at:1600,kind:23,hp:70} ],
    npcs:[ {img:'gardenman', fw:229, fh:427, at:1086, h:120, yOff:0, face:1,
            clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:300, paceTo:1850, paceSpd:0.7,
@@ -422,8 +423,8 @@ const SECTIONS=[
      Placeholder walkable level — a dancing figure struts in place (proximity MP3
      slot Potus.mp3 fades in as you approach). Add 'room america.jpeg' (asset key
      room_america) for art; run off the LEFT edge to return to the hub. */
-  {id:'lvl_america', name:'America', bgKey:'room_america', BGW:2172, srcY:0, flatGround:300, charScale:1.3, interior:true, exitLeft:'home',
-   enemies:[ {at:500,kind:21,hp:80},{at:1000,kind:22,hp:80},{at:1500,kind:21,hp:80},{at:1900,kind:22,hp:80} ],
+  {id:'lvl_america', name:'America', bgKey:'room_america', BGW:2172, zoom:1.0, srcY:0, flatGround:300, charScale:1.3, interior:true, walkMul:1.5, exitLeft:'home',
+   enemies:[ {at:500,kind:21,hp:80},{at:1000,kind:22,hp:80},{at:1500,kind:21,hp:80},{at:1900,kind:22,hp:80},{at:750,kind:24,hp:90},{at:1300,kind:24,hp:90} ],
    npcs:[ {img:'potus', fw:233, fh:362, at:1086, h:135, yOff:0, face:1,
            clip:{start:0,count:18,fps:9,loop:true}, mp3:'Potus.mp3', range:260} ],
    doors:[]},
