@@ -337,7 +337,7 @@ const SECTIONS=[
            /* Middle of the bar (BGW is 2172, so x:1086 is dead centre) — STRIKE opens your
               Ko-fi page in a new tab. PLACEHOLDER URL below — swap it for your real Ko-fi
               link (find-and-replace the one line). Nudge x if it doesn't sit where you want. */
-           {x:1086, w:100, label:'Buy Me A Pint \u2764', url:'https://ko-fi.com/fdc'} ]},
+           {x:1500, w:100, label:'Buy Me A Pint \u2764', url:'https://ko-fi.com/fdc'} ]},
 
   /* ── THE WINCHESTER TOILET (the gents). Reached from the locked door inside the
      Winchester. Placeholder dark room until room toilet.jpeg exists; EXIT door goes
@@ -441,10 +441,7 @@ const SECTIONS=[
      every time you re-enter. */
   {id:'lvl_america', name:'America', bgKey:'room_america', BGW:2172, zoom:1.6, srcY:138, flatGround:345, charScale:0.81, interior:true, walkMul:1.5, exitLeft:'home', respawn:true, helpers:true,
    enemies:[ {at:500,kind:21,hp:80,scaleMul:0.625},{at:1000,kind:22,hp:80,scaleMul:0.625},{at:1500,kind:21,hp:80,scaleMul:0.625},{at:1900,kind:22,hp:80,scaleMul:0.625},{at:750,kind:24,hp:90,scaleMul:0.625},{at:1300,kind:24,hp:90,scaleMul:0.625} ],
-   npcs:[ {img:'gardenman', fw:229, fh:427, at:160, h:75, yOff:0, face:1,
-           clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:80, paceTo:480, paceSpd:0.7,
-           mp3:'Gardenman.mp3', range:240},
-          {img:'potus', fw:233, fh:362, at:1086, h:84, yOff:0, face:1,
+   npcs:[ {img:'potus', fw:233, fh:362, at:1086, h:84, yOff:0, face:1,
            clip:{start:0,count:18,fps:9,loop:true}, mp3:'Potus.mp3', range:260},
           /* decorative dancing PAIR near the end of the level (BGW 2172). 16-frame sheet;
              frames 0-11 are the continuous pair dance (loop). Bump count to 16 to include the
@@ -622,18 +619,17 @@ const GLOWS={
    roughly where on the wall, and I'll add the ASSETS line + an entry here. */
 const GRAFFITI = {
   /* ── COTTAGERS COVE: two reactive eyeball tags flanking "CHARLIE VIETCH WAS HERE" ──
-     LEFT  (x:760)  = graffiti_eyes.png  — blue dripping eyeball, 7 frames (fw:239 fh:293):
-                      0-2 open · 3 blink · 4 closed · 5 opening · 6 open. Idles OPEN (frame 0).
-     RIGHT (x:1360) = graffiti_eyes2.png — grinning purple eyeball, 15 frames (fw:331 fh:365):
-                      the eye rolls away and grins/sneers, then rolls back. Idles on frame 0.
+     LEFT  (x:760)  = graffiti_eyes2.png — grinning purple eyeball, 15 frames (fw:165 fh:182).
+     RIGHT (x:1360) = graffiti_eyes2.png — same grinning eyeball.
+                      The eye rolls away and grins/sneers, then rolls back. Idles on frame 0.
      Both: walk near (or STRIKE near) plays the react cycle ONCE, then settles back to idle.
      Cottagers Cove is zoom:0.72, srcY:160, flatGround:620 — so the floor line is y≈620 in room
      px. yOff:-330 lifts each tag UP onto the brick wall above the towpath. If you STILL can't
      see them: (a) make sure BOTH pngs are deployed next to index.html, and (b) nudge yOff toward
      0 to bring them DOWN, or more negative to push them UP. h is on-screen height before zoom. */
   in_cottagers: [
-    {img:'graffiti_eyes',  fw:239, fh:293, at:760,  h:150, yOff:-330, range:160,
-     clips:{idle:{start:0,count:1,fps:1,loop:true}, react:{start:0,count:7,fps:11,loop:false}}},
+    {img:'graffiti_eyes2', fw:165, fh:182, at:760,  h:150, yOff:-330, range:160,
+     clips:{idle:{start:0,count:1,fps:1,loop:true}, react:{start:0,count:15,fps:12,loop:false}}},
     {img:'graffiti_eyes2', fw:165, fh:182, at:1360, h:150, yOff:-330, range:160,
      clips:{idle:{start:0,count:1,fps:1,loop:true}, react:{start:0,count:15,fps:12,loop:false}}},
   ],
