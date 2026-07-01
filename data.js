@@ -119,6 +119,7 @@ const ASSETS = [
   {key:'bigman2',      type:'img', src:'bigman2.png', optional:true},     // America enemy (kind 22) — white tee, walk + stagger/fall
   {key:'pinkshirt',    type:'img', src:'pinkshirt.png', optional:true},   // Europe enemy (kind 23) — pink shirt, walk + stagger/fall
   {key:'bigman3',      type:'img', src:'bigman3.png', optional:true},     // America enemy (kind 24) — shirtless, brown shorts, walk + stagger/fall
+  {key:'devildance',   type:'img', src:'devildance.png', optional:true},  // America decorative dancer near the end — 16-frame pair; NPC loops frames 0-11
   {key:'hologram', type:'img', src:'hologram.png', optional:true},  // Library blue AI hologram NPC (centre)
   {key:'dancer',   type:'img', src:'dancer.png', optional:true},    // dancing NPC (now in the Hip-Hop room)
   {key:'couple',   type:'img', src:'couple.png', optional:true},    // Void dancing-couple NPCs
@@ -426,7 +427,12 @@ const SECTIONS=[
   {id:'lvl_america', name:'America', bgKey:'room_america', BGW:2172, zoom:1.0, srcY:0, flatGround:300, charScale:1.3, interior:true, walkMul:1.5, exitLeft:'home',
    enemies:[ {at:500,kind:21,hp:80},{at:1000,kind:22,hp:80},{at:1500,kind:21,hp:80},{at:1900,kind:22,hp:80},{at:750,kind:24,hp:90},{at:1300,kind:24,hp:90} ],
    npcs:[ {img:'potus', fw:233, fh:362, at:1086, h:135, yOff:0, face:1,
-           clip:{start:0,count:18,fps:9,loop:true}, mp3:'Potus.mp3', range:260} ],
+           clip:{start:0,count:18,fps:9,loop:true}, mp3:'Potus.mp3', range:260},
+          /* decorative dancing PAIR near the end of the level (BGW 2172). 16-frame sheet;
+             frames 0-11 are the continuous pair dance (loop). Bump count to 16 to include the
+             solo/finish poses. Not an enemy — background only, no collision. Nudge at/h/face. */
+          {img:'devildance', fw:374, fh:283, at:1980, h:175, yOff:0, face:1,
+           clip:{start:0,count:12,fps:8,loop:true}} ],
    doors:[]},
 
   /* ── SLAMMIN' VINYL ROOMS (entered from the club lobby; EXIT door -> lobby) ──
