@@ -117,6 +117,7 @@ const ASSETS = [
   {key:'bigbrain',     type:'img', src:'bigbrain.png', optional:true},     // Crackadilly Gardens enemy (kind 20) — has its own dying animation
   {key:'bigman',       type:'img', src:'bigman.png',  optional:true},     // America enemy (kind 21) — grey hoodie, walk + collapse
   {key:'bigman2',      type:'img', src:'bigman2.png', optional:true},     // America enemy (kind 22) — white tee, walk + stagger/fall
+  {key:'pinkshirt',    type:'img', src:'pinkshirt.png', optional:true},   // Europe enemy (kind 23) — pink shirt, walk + stagger/fall
   {key:'hologram', type:'img', src:'hologram.png', optional:true},  // Library blue AI hologram NPC (centre)
   {key:'dancer',   type:'img', src:'dancer.png', optional:true},    // dancing NPC (now in the Hip-Hop room)
   {key:'couple',   type:'img', src:'couple.png', optional:true},    // Void dancing-couple NPCs
@@ -210,7 +211,7 @@ const SECTIONS=[
    items:[ {id:'toiletkey', at:2500, h:34, label:'the Winchester toilet key'} ],
    enemies:[ {at:230,kind:6,hp:1,static:true},{at:760,kind:5},{at:1080,kind:0},{at:1380,kind:5},{at:1700,kind:1},{at:2000,kind:5},{at:2480,kind:5} ]},
   {id:'street', name:'Southside &mdash; the street', bgKey:'bg',  BGW:4047, srcY:120, flatGround:null, chain:true, next:null, prev:'glasgow',
-   enemies:[ {at:1200,kind:0},{at:1700,kind:1},{at:2300,kind:0},{at:3300,kind:1},{at:3700,kind:0},{at:2000,kind:12},{at:2800,kind:12},{at:600,kind:0},{at:3900,kind:0},{at:900,kind:6},{at:2200,kind:6},{at:3500,kind:6},{at:1500,kind:20,hp:60},{at:3000,kind:20,hp:60},{at:1900,kind:14,hp:50},{at:3100,kind:14,hp:50},{at:2600,kind:10,hp:60} ]},
+   enemies:[ {at:1200,kind:0},{at:1700,kind:1},{at:2300,kind:0},{at:3300,kind:1},{at:3700,kind:0},{at:2000,kind:12},{at:2800,kind:12},{at:600,kind:0},{at:3900,kind:0},{at:1500,kind:20,hp:60},{at:3000,kind:20,hp:60},{at:1900,kind:14,hp:50},{at:3100,kind:14,hp:50},{at:2600,kind:10,hp:60} ]},
 
   /* ── MORTAL KOMBAT (entered from the hub Portal -> travel menu) ──
      Standalone fight arena: the UMK3 "Blue Portal" bridge. Background
@@ -410,7 +411,8 @@ const SECTIONS=[
      A simple walkable level — gardenman paces here for now. Placeholder backdrop
      until 'room europe.jpeg' (asset key room_europe) exists. Run off the LEFT edge
      to return to the hub. Nudge BGW / flatGround / gardenman pace once art is in. */
-  {id:'lvl_europe', name:'Europe', bgKey:'room_europe', BGW:2172, srcY:0, flatGround:300, charScale:1.3, interior:true, exitLeft:'home', enemies:[],
+  {id:'lvl_europe', name:'Europe', bgKey:'room_europe', BGW:2172, srcY:0, flatGround:300, charScale:1.3, interior:true, exitLeft:'home',
+   enemies:[ {at:550,kind:23,hp:70},{at:1050,kind:23,hp:70},{at:1600,kind:23,hp:70} ],
    npcs:[ {img:'gardenman', fw:229, fh:427, at:1086, h:120, yOff:0, face:1,
            clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:300, paceTo:1850, paceSpd:0.7,
            mp3:'Gardenman.mp3', range:240} ],
