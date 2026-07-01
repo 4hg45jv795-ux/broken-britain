@@ -145,7 +145,7 @@ const VW=800,VH=360;
 let ZOOM=1.5,SRCW=VW/ZOOM,SRCH=VH/ZOOM;   // recomputed per-section in loadSectionConfig (see section.zoom)
 const PH=80; let PW=Math.round(PH*FW/FH);
 let cur=null,raf=null,camX=0;
-const player={x:120,y:200,vx:0,vy:0,face:1,onGround:true,clip:'idle',ct:0,hp:100,max:100,dead:false,deadT:0,attackId:0,hurtCool:0,armour:0};
+const player={x:120,y:200,vx:0,vy:0,face:1,onGround:true,clip:'idle',ct:0,hp:100,max:100,dead:false,deadT:0,attackId:0,hurtCool:0,armour:0,invincibleT:0};
 const keys={left:false,right:false,jump:false};
 let punchDown=false,punchEdge=false,runHold=0;
 function setClip(name){ if(player.clip!==name){player.clip=name;player.ct=0;} }
@@ -266,7 +266,7 @@ function pushEnemy(kind,at,id,opts){
 function spawnEnemiesForSection(){
   if(SECTIONS[sectionIndex].arena){ arenaEnter(); return; }   // arena sections run their own wave spawner
   arenaActive=false;                                          // any normal section leaves the arena
-  enemies=[]; enemyBullets=[];
+  enemies=[]; enemyBullets=[]; drops=[];
   const sec=SECTIONS[sectionIndex];
   if(sec.respawn){ (sec.enemies||[]).forEach((e,i)=>killedEnemies.delete(sectionIndex+'-e'+i)); }  // respawn sections (e.g. Cottagers Cove): enemies are back every visit
   sec.enemies.forEach((e,i)=>{ const id=sectionIndex+'-e'+i; if(!killedEnemies.has(id)) pushEnemy(e.kind, e.at, id, e); });
@@ -278,8 +278,22 @@ function spawnParkAliens(){
 }
 const ESPEED=1.05, EAGGRO=560, EHIT_RANGE=42, EDMG=8;
 function enemyClipDone(e){ const c=ENEMY_KINDS[e.kind].clips.die; return e.ct>=Math.ceil(c.count*60/c.fps); }
+/* ── ARENA DROPS: wave-game reward pickups ────────────────────────────────
+   Only in arenas (isArena() — the Void / Underworld / Judgement Day / Boss
+   Mode). ~16% of kills drop something: mostly a plate of food (heals 40 HP),
+   occasionally a star (10 seconds of invincibility — no damage taken at all).
+   No art needed — drawn as simple canvas shapes, same fallback style as the
+   toilet key / cash stack. */
+let drops=[];
+function maybeDropPickup(e){
+  if(!isArena()) return;
+  if(Math.random()>=0.16) return;
+  const kind = Math.random()<0.78 ? 'food' : 'star';
+  drops.push({kind, x:e.x+e.w/2, taken:false, t:Math.random()*10});
+}
 function killEnemy(e,ko){ if(e.state==='die'||e.state==='dead')return; e.state='die'; e.ct=0; (ko?sfxKO:sfxHit)();
   const reward=e.static?25:10; addMoney(reward); addFloater(e.x+e.w/2, e.y, '+\u00A3'+reward); arenaAddKillScore();
+  maybeDropPickup(e);
   const sec=SECTIONS[sectionIndex];
   if(sec.endlessSpawn && !player.dead){                 // e.g. Europe: kill one, another takes its place
     let at = 200 + Math.random()*(BGW-400);
@@ -288,6 +302,62 @@ function killEnemy(e,ko){ if(e.state==='die'||e.state==='dead')return; e.state='
     const k=ENEMY_KINDS[e.kind];
     const scaleMul = e.h/(EH*(k.scale||1));            // match the size of the enemy that just died, not full kind-scale
     pushEnemy(e.kind, at, null, {hp:e.max||40, scaleMul});
+  }
+}
+function updateDrops(){
+  if(player.dead) return;
+  for(const d of drops){
+    if(d.taken) continue;
+    const gy=groundAt(d.x);
+    const near = Math.abs((player.x+PW/2)-d.x) < PW/2+30 && Math.abs((player.y+PH)-gy) < 70;
+    if(!near) continue;
+    d.taken=true;
+    if(d.kind==='food'){
+      player.hp=Math.min(player.max, player.hp+40);
+      document.getElementById('hpbar').style.width=(player.hp/player.max*100)+'%';
+      addFloater(d.x, gy-40, '+HEALTH');
+      flashBanner('Found some scran &mdash; health up!');
+      [0,4,7].forEach((s,i)=>setTimeout(()=>blip(440*Math.pow(2,s/12),0,0.12,'triangle',0.14),i*70));
+    } else {
+      player.invincibleT=600;                            // 10 seconds at 60fps
+      addFloater(d.x, gy-40, 'INVINCIBLE!');
+      flashBanner('INVINCIBLE &mdash; 10 seconds!');
+      sfxSummon();
+    }
+  }
+  drops=drops.filter(d=>!d.taken);
+}
+function drawDropFallback(kind, cx, top, hh){
+  ctx.save(); ctx.translate(cx, top+hh/2); const s=hh/34; ctx.scale(s,s);
+  if(kind==='food'){
+    ctx.shadowColor='rgba(255,200,80,0.85)'; ctx.shadowBlur=8;
+    ctx.fillStyle='#d8d8d8'; ctx.beginPath(); ctx.ellipse(0,4,15,6,0,0,7); ctx.fill();       // plate
+    ctx.fillStyle='#b5651d'; ctx.beginPath(); ctx.ellipse(-3,-1,7,5,0.3,0,7); ctx.fill();     // food
+    ctx.fillStyle='#8a4513'; ctx.beginPath(); ctx.ellipse(4,1,5,4,0,0,7); ctx.fill();
+    ctx.fillStyle='#5a8a3a'; ctx.beginPath(); ctx.ellipse(-7,3,3,2,0,0,7); ctx.fill();        // veg garnish
+  } else {
+    ctx.shadowColor='rgba(255,230,60,0.95)'; ctx.shadowBlur=13;
+    ctx.fillStyle='#ffe23c'; ctx.strokeStyle='#a87d00'; ctx.lineWidth=1.4;
+    ctx.beginPath();
+    for(let i=0;i<5;i++){
+      const a=-Math.PI/2 + i*(2*Math.PI/5), a2=a+Math.PI/5;
+      const xo=Math.cos(a)*13, yo=Math.sin(a)*13, xi=Math.cos(a2)*5.4, yi=Math.sin(a2)*5.4;
+      if(i===0) ctx.moveTo(xo,yo); else ctx.lineTo(xo,yo);
+      ctx.lineTo(xi,yi);
+    }
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawDrops(){
+  for(const d of drops){
+    if(d.taken) continue;
+    const gy=groundAt(d.x);
+    const bob=Math.sin(performance.now()/300 + d.t)*4;
+    const h=30*ZOOM;
+    const sx=(d.x-camX)*ZOOM, sy=(gy-30-SRCY)*ZOOM+bob;
+    if(sx<-60||sx>VW+60) continue;
+    drawDropFallback(d.kind, sx, sy, h);
   }
 }
 function updateEnemies(){
@@ -434,6 +504,71 @@ function drawScenery(){
     ctx.restore();
   }
 }
+
+/* ── REACTIVE GRAFFITI: decorative wall art that reacts to the player ────────
+   Data-driven per room via GRAFFITI (data.js) — same idle/react clip pattern
+   documented there. Reacts either when the player simply walks within range,
+   or gets an immediate re-trigger from a STRIKE while in range. */
+let graffiti=[];
+function curGraffitiList(){ return (typeof GRAFFITI!=='undefined' && GRAFFITI[SECTIONS[sectionIndex].id]) || null; }
+function spawnGraffiti(){
+  graffiti=[];
+  const list=curGraffitiList(); if(!list) return;
+  for(const d of list) graffiti.push({def:d, ct:0, mode:'idle', wasNear:false});
+}
+function updateGraffiti(){
+  if(!graffiti.length) return;
+  for(const g of graffiti){
+    const d=g.def;
+    const near = Math.abs((player.x+PW/2)-d.at) < (d.range||110);
+    if(g.mode==='idle'){
+      const struck = near && punchEdge;                 // a STRIKE while nearby re-triggers it
+      if((near && !g.wasNear) || struck){ g.mode='react'; g.ct=0; }
+    } else {
+      g.ct++;
+      const c=d.clips.react, dur=Math.ceil(c.count*60/c.fps);
+      if(g.ct>=dur){ g.mode='idle'; g.ct=0; }
+    }
+    g.wasNear=near;
+  }
+}
+function drawGraffiti(){
+  for(const g of graffiti){
+    const d=g.def, im=loaded[d.img]; if(!imgOk(im)) continue;
+    const h=d.h||120, w=Math.round(h*d.fw/d.fh);
+    const top=groundAt(d.at)+(d.yOff||0)-h;
+    const sx=(d.at-w/2-camX)*ZOOM, sy=(top-SRCY)*ZOOM, dw=w*ZOOM, dh=h*ZOOM;
+    if(sx<-dw*2||sx>VW+dw*2) continue;
+    const c=(g.mode==='react')?d.clips.react:d.clips.idle;
+    let f=Math.floor(g.ct*c.fps/60); f=c.loop?(f%c.count):Math.min(f,c.count-1);
+    try{ ctx.drawImage(im,(c.start+f)*d.fw,0,d.fw,d.fh,sx,sy,dw,dh); }catch(_){}
+  }
+}
+
+/* ── WEATHER: rain + wind overlay, data-driven via section.weather:'rain' ──
+   Screen-space particle overlay (not world-anchored) so it always covers the
+   whole view regardless of camera position. Gusty diagonal drift for "windy". */
+let rain=[];
+function sectionWeather(){ return SECTIONS[sectionIndex].weather||null; }
+function initRain(n){ rain=[]; for(let i=0;i<n;i++) rain.push({x:Math.random()*VW, y:Math.random()*VH, len:14+Math.random()*11, spd:9+Math.random()*5}); }
+function updateRain(){
+  if(sectionWeather()!=='rain'){ if(rain.length) rain=[]; return; }
+  if(!rain.length) initRain(110);
+  const gust=3.6+1.8*Math.sin(performance.now()/850);      // fluctuating sideways wind
+  for(const r of rain){
+    r.x+=gust; r.y+=r.spd;
+    if(r.y>VH || r.x>VW+20){ r.x=Math.random()*VW-60; r.y=-10-Math.random()*50; }
+  }
+}
+function drawRain(){
+  if(sectionWeather()!=='rain'||!rain.length) return;
+  ctx.save();
+  ctx.fillStyle='rgba(18,26,38,0.14)'; ctx.fillRect(0,0,VW,VH);   // overcast tint
+  ctx.strokeStyle='rgba(195,215,235,0.38)'; ctx.lineWidth=1.4; ctx.lineCap='round';
+  for(const r of rain){ ctx.beginPath(); ctx.moveTo(r.x,r.y); ctx.lineTo(r.x-5,r.y+r.len); ctx.stroke(); }
+  ctx.restore();
+}
+
 
 /* ── COLLECTIBLE ITEMS (keys etc.) ─────────────────────────────────────────
    Per-section in data.js as items:[{id, at, h, label}]. Walk over one to pick
@@ -716,6 +851,7 @@ function roundRect(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w
 /* ── PLAYER HP / DEATH ───────────────────────────────────── */
 function damagePlayer(d){
   if(player.dead||player.hurtCool>0) return;
+  if(player.invincibleT>0){ player.hurtCool=10; return; }   // invincible: no HP lost, no knockback flicker either
   if(player.armour>0){                              // vest soaks the hit, no HP lost
     player.armour--; player.hurtCool=18; sfxHurt(); updateArmourHUD();
     if(player.armour===0) flashBanner('Armour gone');
@@ -821,6 +957,8 @@ function enterSection(opts){
   spawnEnemiesForSection();
   spawnScenery();
   spawnItems();
+  spawnGraffiti();
+  rain=[];                                          // re-seeded lazily by updateRain() for whichever room it's needed in
   refreshHelperBtns();
   updateHelperBarVisibility();
   playSectionTrack();   // plays this room's track, or silence for screen rooms / trackless interiors
@@ -846,6 +984,7 @@ function updateDoors(){
 }
 function useDoor(d){
   if(transitioning||!d) return;
+  if(d.url){ window.open(d.url,'_blank','noopener'); return; }   // e.g. the Winchester's "Buy me a pint" -> Ko-fi
   if(d.jammed){                                       // the toilet's wall door won't open — sends you to the pan instead
     flashBanner('The door won&rsquo;t open &mdash; jump in the shitter!'); blip(200,110,0.12,'square',0.16);
     toiletPanArmed=true; return;
@@ -895,7 +1034,8 @@ function drawDoors(){
   }
   const label=d.label.replace(/&mdash;/g,'\u2014').replace(/&amp;/g,'&').toUpperCase();
   let name, hint;
-  if(d.menu){ name=label; hint='STRIKE to travel'; }
+  if(d.url){ name=label; hint='STRIKE to open link'; }
+  else if(d.menu){ name=label; hint='STRIKE to travel'; }
   else if(d.jammed){ name='EXIT'; hint='STRIKE to leave'; }
   else if(d.target===null){ name=label; hint='locked for now'; }
   else if(d.locked && !inventory.has(d.key)){ name=label; hint='LOCKED \u2014 need a key'; }
@@ -1776,12 +1916,12 @@ function start(m){
   document.getElementById('game').style.display='block';
   document.getElementById('who').firstChild.textContent=m.name+' ';
   player.face=1;player.clip='idle';player.ct=0;runHold=0;player.shootPoseT=0;
-  player.hp=player.max;player.dead=false;player.deadT=0;player.hurtCool=0;
+  player.hp=player.max;player.dead=false;player.deadT=0;player.hurtCool=0;player.invincibleT=0;
   document.getElementById('hpbar').style.width='100%';
   bannerShown=false;csActive=false;csDone=false;
   photographerMet=false; npc.active=false;
   money=1000; owned.clear(); updateMoneyHUD(); closeShop(); floaters=[];
-  weaponList=[]; weaponSel=-1; shootCool=0; bullets=[]; vfx=[];
+  weaponList=[]; weaponSel=-1; shootCool=0; bullets=[]; vfx=[]; drops=[];
   owned.add('pistol'); addWeaponToLoadout('pistol');   // everyone starts with the free sidearm so SHOOT works from the off
   player.armour=0; updateArmourHUD(); refreshWeaponBtn();
   hubReturnX=200;
@@ -2116,9 +2256,12 @@ function updateProxAudio(){
 function update(){
   if(csActive||transitioning||shopOpen||travelOpen)return;
   if(player.hurtCool>0) player.hurtCool--;
+  if(player.invincibleT>0) player.invincibleT--;
   updateDoors();
   updateTV();
   updateJukebox();
+  updateGraffiti();
+  updateRain();
 
   if(player.dead){
     player.ct++; player.vy+=GRAV; player.y+=player.vy;
@@ -2206,6 +2349,7 @@ function update(){
   updateMkNpcs();
   updateScenery();
   updateItems();
+  updateDrops();
   updateUfo();
   updateWanderer();
   updatePickup();
@@ -2295,6 +2439,7 @@ function draw(){
     ctx.save(); ctx.translate(Math.round((Math.random()*2-1)*m), Math.round((Math.random()*2-1)*m)); _shaking=true; shakeT--; }
   drawBg();
   drawScenery();   // decorative background NPCs (dancers/couples) — drawn behind everything
+  drawGraffiti();  // reactive wall art
   drawRaveSmoke(); // DnB / Hip-Hop room: coloured haze behind the action
   drawJukeGlow();  // Winchester: soft pulsing halo around the jukebox
   drawGlows();     // ambient candle / neon / lamp glows across rooms (GLOWS table)
@@ -2305,6 +2450,7 @@ function draw(){
   drawWanderer();
   drawPickup();
   drawItems();
+  drawDrops();
   for(const e of enemies) drawEnemy(e);
   drawNPC();
   drawHubNpcs();
@@ -2316,6 +2462,14 @@ function draw(){
   const fx=frameIndex();
   const cs=(cur&&cur.scale)||1; const dw=PW*ZOOM*CSCALE*cs,dh=PH*ZOOM*CSCALE*cs;
   const sx=(player.x-camX)*ZOOM-(dw-PW*ZOOM)/2,sy=(player.y+PH-SRCY)*ZOOM-dh;
+  if(player.invincibleT>0){
+    ctx.save(); ctx.globalCompositeOperation='lighter';
+    const t=performance.now()/300, r=(38+7*Math.sin(t))*ZOOM;
+    const g=ctx.createRadialGradient(sx+dw/2,sy+dh/2,0,sx+dw/2,sy+dh/2,Math.max(1,r));
+    g.addColorStop(0,'rgba(255,230,120,0.55)'); g.addColorStop(1,'rgba(255,230,120,0)');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(sx+dw/2,sy+dh/2,Math.max(1,r),0,7); ctx.fill();
+    ctx.restore();
+  }
   if(imgOk(loaded[cur.id])){
     ctx.save();
     if(player.face<0){ctx.translate(sx+dw,sy);ctx.scale(-1,1);}else{ctx.translate(sx,sy);}
@@ -2331,6 +2485,7 @@ function draw(){
   drawVfx();
   drawBlood();
   drawWater();        // water levels (The Shitter): blue depth tint + drifting caustics over the scene
+  drawRain();         // Glasgow: rain + wind overlay
   drawDoors();
   drawTVMarker();
   drawJukeMarker();
@@ -2459,7 +2614,7 @@ function arenaPool(){
 }
 function arenaEnter(){
   arenaActive=true; arenaWave=0; arenaScore=0; arenaGrace=0; arenaScored=false;
-  enemies=[]; bullets=[]; vfx=[]; enemyBullets=[];
+  enemies=[]; bullets=[]; vfx=[]; enemyBullets=[]; drops=[];
   arenaNextWave();
 }
 function arenaNextWave(){
