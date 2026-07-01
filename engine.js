@@ -279,7 +279,15 @@ function spawnParkAliens(){
 const ESPEED=1.05, EAGGRO=560, EHIT_RANGE=42, EDMG=8;
 function enemyClipDone(e){ const c=ENEMY_KINDS[e.kind].clips.die; return e.ct>=Math.ceil(c.count*60/c.fps); }
 function killEnemy(e,ko){ if(e.state==='die'||e.state==='dead')return; e.state='die'; e.ct=0; (ko?sfxKO:sfxHit)();
-  const reward=e.static?25:10; addMoney(reward); addFloater(e.x+e.w/2, e.y, '+\u00A3'+reward); arenaAddKillScore(); }
+  const reward=e.static?25:10; addMoney(reward); addFloater(e.x+e.w/2, e.y, '+\u00A3'+reward); arenaAddKillScore();
+  const sec=SECTIONS[sectionIndex];
+  if(sec.endlessSpawn && !player.dead){                 // e.g. Europe: kill one, another takes its place
+    let at = 200 + Math.random()*(BGW-400);
+    if(Math.abs(at-player.x)<260) at += (at<player.x?-1:1)*320;   // never pop in right on top of you
+    at=Math.max(40,Math.min(BGW-60,at));
+    pushEnemy(e.kind, at, null, {hp:e.max||40});
+  }
+}
 function updateEnemies(){
   const aggro = isArena()? 1e9 : EAGGRO;   // The Void: enemies chase the player from ANY distance
   for(const e of enemies){
