@@ -168,6 +168,7 @@ const ASSETS = [
   {key:'priest',   type:'img', src:'priest.png', optional:true},
   {key:'burgerking', type:'img', src:'burgerking.png', optional:true},
   {key:'captain',  type:'img', src:'captain.png', optional:true},
+  {key:'graffiti_eyes', type:'img', src:'graffiti_eyes.png', optional:true},  // Cottagers Cove reactive wall eyes (7-frame dripping-eyeball blink loop)
 ];
 /* ── SECTIONS / LEVELS ───────────────────────────────────── */
 const SECTIONS=[
@@ -335,7 +336,7 @@ const SECTIONS=[
            /* Middle of the bar (BGW is 2172, so x:1086 is dead centre) — STRIKE opens your
               Ko-fi page in a new tab. PLACEHOLDER URL below — swap it for your real Ko-fi
               link (find-and-replace the one line). Nudge x if it doesn't sit where you want. */
-           {x:1086, w:100, label:'Buy Me A Pint \u2764', url:'https://ko-fi.com/YOURNAME'} ]},
+           {x:1086, w:100, label:'Buy Me A Pint \u2764', url:'https://ko-fi.com/fdc'} ]},
 
   /* ── THE WINCHESTER TOILET (the gents). Reached from the locked door inside the
      Winchester. Placeholder dark room until room toilet.jpeg exists; EXIT door goes
@@ -619,10 +620,21 @@ const GLOWS={
    rolling or the tag morphing into something ruder), tell me which room and
    roughly where on the wall, and I'll add the ASSETS line + an entry here. */
 const GRAFFITI = {
-  // in_crackadilly: [
-  //   {img:'graffiti1', fw:180, fh:220, at:1200, h:140, range:110,
-  //    clips:{idle:{start:0,count:1,fps:1,loop:true}, react:{start:1,count:6,fps:10,loop:false}}}
-  // ],
+  /* ── COTTAGERS COVE: two dripping-eyeball tags flanking "CHARLIE VIETCH WAS HERE" ──
+     Sheet graffiti_eyes.png = single row, 7 frames (fw:239 fh:293): a blue dripping
+     eyeball, 0-2 open (looking about) · 3 blink · 4 closed · 5 opening · 6 open.
+     idle sits OPEN on frame 0; walk near (or STRIKE near) plays the full blink
+     cycle once, so the eye "reacts" as you pass. The two are offset (left starts
+     open on frame 0, right idles open on frame 6) so they don't blink in sync.
+     `at` = world x on the 2172-wide wall; the Charlie tag is ~centre (x≈1050), so
+     LEFT eye at 760, RIGHT eye at 1360. yOff lifts them UP onto the brick wall.
+     Nudge at/yOff/h to taste (h is on-screen height BEFORE the room zoom). */
+  in_cottagers: [
+    {img:'graffiti_eyes', fw:239, fh:293, at:760,  h:110, yOff:-300, range:150,
+     clips:{idle:{start:0,count:1,fps:1,loop:true}, react:{start:0,count:7,fps:11,loop:false}}},
+    {img:'graffiti_eyes', fw:239, fh:293, at:1360, h:110, yOff:-300, range:150,
+     clips:{idle:{start:6,count:1,fps:1,loop:true}, react:{start:0,count:7,fps:11,loop:false}}},
+  ],
 };
 /* ── ROOM SCREENS (looping .mp4s with sound, painted onto wall screens) ──
    Each room id below maps to a screen rectangle (measured in THAT room's
