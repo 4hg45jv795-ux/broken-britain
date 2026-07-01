@@ -168,7 +168,8 @@ const ASSETS = [
   {key:'priest',   type:'img', src:'priest.png', optional:true},
   {key:'burgerking', type:'img', src:'burgerking.png', optional:true},
   {key:'captain',  type:'img', src:'captain.png', optional:true},
-  {key:'graffiti_eyes', type:'img', src:'graffiti_eyes.png', optional:true},  // Cottagers Cove reactive wall eyes (7-frame dripping-eyeball blink loop)
+  {key:'graffiti_eyes', type:'img', src:'graffiti_eyes.png', optional:true},  // Cottagers Cove reactive wall eyes (7-frame dripping-eyeball blink loop) — LEFT of the Charlie tag
+  {key:'graffiti_eyes2', type:'img', src:'graffiti_eyes2.png', optional:true}, // Cottagers Cove grinning eyeball (15-frame roll+grin) — RIGHT of the Charlie tag
 ];
 /* ── SECTIONS / LEVELS ───────────────────────────────────── */
 const SECTIONS=[
@@ -620,20 +621,21 @@ const GLOWS={
    rolling or the tag morphing into something ruder), tell me which room and
    roughly where on the wall, and I'll add the ASSETS line + an entry here. */
 const GRAFFITI = {
-  /* ── COTTAGERS COVE: two dripping-eyeball tags flanking "CHARLIE VIETCH WAS HERE" ──
-     Sheet graffiti_eyes.png = single row, 7 frames (fw:239 fh:293): a blue dripping
-     eyeball, 0-2 open (looking about) · 3 blink · 4 closed · 5 opening · 6 open.
-     idle sits OPEN on frame 0; walk near (or STRIKE near) plays the full blink
-     cycle once, so the eye "reacts" as you pass. The two are offset (left starts
-     open on frame 0, right idles open on frame 6) so they don't blink in sync.
-     `at` = world x on the 2172-wide wall; the Charlie tag is ~centre (x≈1050), so
-     LEFT eye at 760, RIGHT eye at 1360. yOff lifts them UP onto the brick wall.
-     Nudge at/yOff/h to taste (h is on-screen height BEFORE the room zoom). */
+  /* ── COTTAGERS COVE: two reactive eyeball tags flanking "CHARLIE VIETCH WAS HERE" ──
+     LEFT  (x:760)  = graffiti_eyes.png  — blue dripping eyeball, 7 frames (fw:239 fh:293):
+                      0-2 open · 3 blink · 4 closed · 5 opening · 6 open. Idles OPEN (frame 0).
+     RIGHT (x:1360) = graffiti_eyes2.png — grinning purple eyeball, 15 frames (fw:331 fh:365):
+                      the eye rolls away and grins/sneers, then rolls back. Idles on frame 0.
+     Both: walk near (or STRIKE near) plays the react cycle ONCE, then settles back to idle.
+     Cottagers Cove is zoom:0.72, srcY:160, flatGround:620 — so the floor line is y≈620 in room
+     px. yOff:-330 lifts each tag UP onto the brick wall above the towpath. If you STILL can't
+     see them: (a) make sure BOTH pngs are deployed next to index.html, and (b) nudge yOff toward
+     0 to bring them DOWN, or more negative to push them UP. h is on-screen height before zoom. */
   in_cottagers: [
-    {img:'graffiti_eyes', fw:239, fh:293, at:760,  h:110, yOff:-300, range:150,
+    {img:'graffiti_eyes',  fw:239, fh:293, at:760,  h:150, yOff:-330, range:160,
      clips:{idle:{start:0,count:1,fps:1,loop:true}, react:{start:0,count:7,fps:11,loop:false}}},
-    {img:'graffiti_eyes', fw:239, fh:293, at:1360, h:110, yOff:-300, range:150,
-     clips:{idle:{start:6,count:1,fps:1,loop:true}, react:{start:0,count:7,fps:11,loop:false}}},
+    {img:'graffiti_eyes2', fw:331, fh:365, at:1360, h:150, yOff:-330, range:160,
+     clips:{idle:{start:0,count:1,fps:1,loop:true}, react:{start:0,count:15,fps:12,loop:false}}},
   ],
 };
 /* ── ROOM SCREENS (looping .mp4s with sound, painted onto wall screens) ──
