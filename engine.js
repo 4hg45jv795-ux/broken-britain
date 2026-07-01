@@ -285,7 +285,9 @@ function killEnemy(e,ko){ if(e.state==='die'||e.state==='dead')return; e.state='
     let at = 200 + Math.random()*(BGW-400);
     if(Math.abs(at-player.x)<260) at += (at<player.x?-1:1)*320;   // never pop in right on top of you
     at=Math.max(40,Math.min(BGW-60,at));
-    pushEnemy(e.kind, at, null, {hp:e.max||40});
+    const k=ENEMY_KINDS[e.kind];
+    const scaleMul = e.h/(EH*(k.scale||1));            // match the size of the enemy that just died, not full kind-scale
+    pushEnemy(e.kind, at, null, {hp:e.max||40, scaleMul});
   }
 }
 function updateEnemies(){
