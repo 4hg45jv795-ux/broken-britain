@@ -1214,6 +1214,7 @@ function jukeNext(){
   blip(540,820,0.05,'square',0.12); blip(300,300,0.04,'square',0.08);
   flashBanner('Jukebox &mdash; Track '+(jb.idx+1));
   playSectionTrack();                              // re-evaluates music; picks the new jukebox track
+  requestWakeLock();                               // keep the screen awake while listening (same as the TV screens)
 }
 function drawJukeMarker(){
   if(!jukeHot) return;
