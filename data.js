@@ -469,7 +469,12 @@ const SECTIONS=[
       Green dancer sits in the MIDDLE, flanked by the original dancer (left) and the TV guy (right). */
    npcs:[ {img:'dancer',  fw:163, fh:310, at:220, h:135, yOff:0, face:1,  clip:{start:8,count:6,fps:9,loop:true}, mp3:'Dancer.mp3', range:180},
           {img:'dgreen',  fw:156, fh:231, at:355, h:104, yOff:0, face:1,  clip:{start:0,count:6,fps:9,loop:true}},
-          {img:'tvguy',   fw:231, fh:369, at:490, h:128, yOff:0, face:-1, clip:{start:0,count:18,fps:7,loop:true}} ],
+          {img:'tvguy',   fw:231, fh:369, at:490, h:128, yOff:0, face:-1, clip:{start:0,count:18,fps:7,loop:true}},
+          /* bigman3 as a DECORATIVE background walker (NOT an enemy here). Smaller (h:80) and
+             raised up the scene (yOff:-55) so he reads as further back = depth. Paces the width
+             of the room. Uses his walk frames 0-5. Nudge h/yOff/paceFrom-To/paceSpd to taste. */
+          {img:'bigman3', fw:484, fh:438, at:300, h:80, yOff:-55, face:1,
+           clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:80, paceTo:520, paceSpd:0.6} ],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
   {id:'in_special', name:'Room 3 &mdash; Special Guest', bgKey:'room_special', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
    /* Decorative NPC: the carried sedan-chair group strolls back and forth along the floor on
@@ -699,7 +704,7 @@ const SCENE_VIDEOS = {
    PLACEHOLDER entries below — swap them for your real PDFs (and upload the files). */
 const PDF_MENUS={
   library:{ title:'The Library \u2014 Reading Desk', files:[
-    {label:'Document One',   file:'doc1.pdf'},
+    {label:"Foxe's Book of Martyrs", file:'pdf1.pdf'},
     {label:'Document Two',   file:'doc2.pdf'},
     {label:'Document Three', file:'doc3.pdf'},
   ]},
