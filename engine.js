@@ -984,7 +984,9 @@ function updateDoors(){
 }
 function useDoor(d){
   if(transitioning||!d) return;
-  if(d.url){ window.open(d.url,'_blank','noopener'); return; }   // e.g. the Winchester's "Buy me a pint" -> Ko-fi
+  if(d.url){ try{ window.open(d.url,'_blank','noopener'); }catch(_){}
+             setTimeout(()=>{ try{ location.href=d.url; }catch(_){} }, 60);   // mobile blocks deferred popups, so fall back to navigating this tab
+             return; }
   if(d.jammed){                                       // the toilet's wall door won't open — sends you to the pan instead
     flashBanner('The door won&rsquo;t open &mdash; jump in the shitter!'); blip(200,110,0.12,'square',0.16);
     toiletPanArmed=true; return;
@@ -992,6 +994,7 @@ function useDoor(d){
   if(d.locked && !inventory.has(d.key)){          // locked door: needs the matching item in your inventory
     flashBanner('It&rsquo;s locked &mdash; you need a key'); blip(200,110,0.12,'square',0.16); return;
   }
+  if(d.pdfMenu){ openPdfMenu(d.pdfMenu); return; }     // Library reading desk: opens the PDF read/download menu
   if(d.menu){                                         // travel point (portal / departures): open its menu
     const sec=SECTIONS[sectionIndex];
     if(sec.hub) hubReturnX=d.x;                        // pop back to this spot when returning to the hub
@@ -1035,6 +1038,7 @@ function drawDoors(){
   const label=d.label.replace(/&mdash;/g,'\u2014').replace(/&amp;/g,'&').toUpperCase();
   let name, hint;
   if(d.url){ name=label; hint='STRIKE to open link'; }
+  else if(d.pdfMenu){ name=label; hint='STRIKE to browse'; }
   else if(d.menu){ name=label; hint='STRIKE to travel'; }
   else if(d.jammed){ name='EXIT'; hint='STRIKE to leave'; }
   else if(d.target===null){ name=label; hint='locked for now'; }
@@ -1398,6 +1402,34 @@ function openTravel(menuId){
   document.getElementById('travel').classList.add('on');
 }
 function closeTravel(){ travelOpen=false; document.getElementById('travel').classList.remove('on'); }
+/* ── PDF LIBRARY MENU ──────────────────────────────────────────────────────
+   Reuses the same on-screen overlay as the travel menu (#travel), but lists
+   PDF documents from the PDF_MENUS table (data.js) with a READ button (opens
+   the PDF in a new tab / this tab on mobile) and a DOWNLOAD button (saves it).
+   PDFs must be deployed next to index.html (same rule as every other asset).  */
+function openPdfMenu(menuId){
+  const m=(typeof PDF_MENUS!=='undefined') ? PDF_MENUS[menuId] : null; if(!m) return;
+  travelOpen=true;
+  document.getElementById('travel-title').textContent=m.title||'Library';
+  const list=document.getElementById('travel-list'); list.innerHTML='';
+  (m.files||[]).forEach(doc=>{
+    const row=document.createElement('button'); row.className='trow'; row.style.cursor='default';
+    const nm=document.createElement('span'); nm.className='tname'; nm.textContent=doc.label;
+    const box=document.createElement('span'); box.style.display='flex'; box.style.gap='8px';
+    const read=document.createElement('span'); read.className='ttag'; read.textContent='READ';
+    read.style.cursor='pointer';
+    read.onclick=(e)=>{ e.stopPropagation(); try{ window.open(doc.file,'_blank','noopener'); }catch(_){}
+                        setTimeout(()=>{ try{ location.href=doc.file; }catch(_){} },60); };
+    const dl=document.createElement('span'); dl.className='ttag'; dl.textContent='DOWNLOAD';
+    dl.style.cursor='pointer'; dl.style.background='#5aa0e0';
+    dl.onclick=(e)=>{ e.stopPropagation(); const a=document.createElement('a');
+                      a.href=doc.file; a.download=doc.file.split('/').pop(); document.body.appendChild(a); a.click(); a.remove(); };
+    box.appendChild(read); box.appendChild(dl);
+    row.appendChild(nm); row.appendChild(box);
+    list.appendChild(row);
+  });
+  document.getElementById('travel').classList.add('on');
+}
 function travelTo(target, label){
   closeTravel();
   if(transitioning) return;
