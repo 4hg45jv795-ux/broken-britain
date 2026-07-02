@@ -322,7 +322,9 @@ const SECTIONS=[
       is drawn. Nudge fw/fh/h once art is in. */
    npcs:[ {img:'hologram', fw:240, fh:360, at:1086, h:170, face:1,
            clip:{start:0, count:6, fps:8, loop:true}} ],
-   doors:[]},
+   /* Reading desk in the CENTRE of the library (x:1086, on the hologram). STRIKE opens
+      the PDF menu (READ / DOWNLOAD each file). Files listed in PDF_MENUS.library below. */
+   doors:[ {x:1086, w:120, label:'The Reading Desk', pdfMenu:'library'} ]},
   /* WINCHESTER swapped to the wide pub panorama (room winchester.jpeg now 2172x387).
      zoom:1.0 shows an 800px-wide slice. Character made BIGGER (charScale 2.2) and the view
      panned down (srcY:27) with flatGround:360 so he walks the front floorboards IN FRONT of
@@ -337,7 +339,7 @@ const SECTIONS=[
            /* Middle of the bar (BGW is 2172, so x:1086 is dead centre) — STRIKE opens your
               Ko-fi page in a new tab. PLACEHOLDER URL below — swap it for your real Ko-fi
               link (find-and-replace the one line). Nudge x if it doesn't sit where you want. */
-           {x:1500, w:100, label:'Buy Me A Pint \u2764', url:'https://ko-fi.com/fdc'} ]},
+           {x:1500, w:100, label:'Buy Me A Pint', url:'https://ko-fi.com/fdc'} ]},
 
   /* ── THE WINCHESTER TOILET (the gents). Reached from the locked door inside the
      Winchester. Placeholder dark room until room toilet.jpeg exists; EXIT door goes
@@ -628,9 +630,7 @@ const GRAFFITI = {
      see them: (a) make sure BOTH pngs are deployed next to index.html, and (b) nudge yOff toward
      0 to bring them DOWN, or more negative to push them UP. h is on-screen height before zoom. */
   in_cottagers: [
-    {img:'graffiti_eyes2', fw:165, fh:182, at:760,  h:150, yOff:-330, range:160,
-     clips:{idle:{start:0,count:1,fps:1,loop:true}, react:{start:0,count:15,fps:12,loop:false}}},
-    {img:'graffiti_eyes2', fw:165, fh:182, at:1360, h:150, yOff:-330, range:160,
+    {img:'graffiti_eyes2', fw:165, fh:182, at:1360, h:150, yOff:-270, range:160,
      clips:{idle:{start:0,count:1,fps:1,loop:true}, react:{start:0,count:15,fps:12,loop:false}}},
   ],
 };
@@ -691,6 +691,19 @@ const SCENE_VIDEOS = {
    Each menu = a title and a list of destinations. `target` is the section id
    to travel to; if that section doesn't exist yet you land on the 'empty'
    placeholder. Add/replace destinations here as new levels are built.       */
+/* ── PDF LIBRARY MENUS ─────────────────────────────────────────────────────
+   Lists of PDF documents shown by the Library reading-desk door (pdfMenu:'library').
+   Each file gets a READ button (opens it) and a DOWNLOAD button (saves it). Upload
+   the PDFs next to index.html with the EXACT names below (case-sensitive, no spaces
+   — use underscores). Add/rename/remove entries freely; edit the `file` and `label`.
+   PLACEHOLDER entries below — swap them for your real PDFs (and upload the files). */
+const PDF_MENUS={
+  library:{ title:'The Library \u2014 Reading Desk', files:[
+    {label:'Document One',   file:'doc1.pdf'},
+    {label:'Document Two',   file:'doc2.pdf'},
+    {label:'Document Three', file:'doc3.pdf'},
+  ]},
+};
 const TRAVEL_MENUS={
   portal: { title:'The Portal \u2014 Wave Survival Maps', dests:[
     {label:'The Void', target:'blacklevel'},
