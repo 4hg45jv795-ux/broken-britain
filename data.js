@@ -170,6 +170,7 @@ const ASSETS = [
   {key:'captain',  type:'img', src:'captain.png', optional:true},
   {key:'policedance', type:'img', src:'policedance.png', optional:true},  // dancing policewomen pair outside the police station (hub) — 6-frame loop
   {key:'vigilante', type:'img', src:'vigilante.png', optional:true},  // walking vigilante NPC on the hub (first half) — 9 frames: 0-5 walk, 6-8 shoot pose
+  {key:'commuter', type:'img', src:'commuter.png', optional:true},  // walking briefcase-and-shotgun NPC on the hub — 10 frames: 0-5 walk (side), 6-9 shoot (side, unused for now)
   {key:'graffiti_eyes', type:'img', src:'graffiti_eyes.png', optional:true},  // Cottagers Cove reactive wall eyes (7-frame dripping-eyeball blink loop) — LEFT of the Charlie tag
   {key:'graffiti_eyes2', type:'img', src:'graffiti_eyes2.png', optional:true}, // Cottagers Cove grinning eyeball (15-frame roll+grin) — RIGHT of the Charlie tag
 ];
@@ -205,7 +206,13 @@ const SECTIONS=[
              (not an enemy). Uses walk frames 0-5 (frames 6-8 are a shoot pose, unused here).
              Nudge paceFrom/paceTo/paceSpd/h to taste. */
           {img:'vigilante', fw:167, fh:282, at:700, h:85, yOff:0, face:1,
-           clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:100, paceTo:1400, paceSpd:0.9} ]},
+           clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:100, paceTo:1400, paceSpd:0.9},
+          /* Walking COMMUTER (briefcase + shotgun) — paces the SECOND HALF of the hub so he doesn't
+             overlap the vigilante. Decorative NPC (not an enemy). Sheet has 10 frames: walk 0-5 (used
+             here) and shoot 6-9 (unused for now — wire them in later when he gets the ability to fire).
+             Nudge at/paceFrom/paceTo/paceSpd/h to taste (positions are hub x; see the doors list above). */
+          {img:'commuter', fw:95, fh:139, at:1900, h:88, yOff:0, face:1,
+           clip:{start:0,count:6,fps:8,loop:true}, pace:true, paceFrom:1550, paceTo:2650, paceSpd:0.8} ]},
   /* ── THE STREETS chain. SOUTHAMPTON is now the FIRST level (entered from the
      Portal / Train Station "The Streets"); the old Southside "street" level is now
      the LAST stop before the chain loops back to the hub. The photographer's first
