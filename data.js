@@ -169,6 +169,7 @@ const ASSETS = [
   {key:'burgerking', type:'img', src:'burgerking.png', optional:true},
   {key:'captain',  type:'img', src:'captain.png', optional:true},
   {key:'policedance', type:'img', src:'policedance.png', optional:true},  // dancing policewomen pair outside the police station (hub) — 6-frame loop
+  {key:'vigilante', type:'img', src:'vigilante.png', optional:true},  // walking vigilante NPC on the hub (first half) — 9 frames: 0-5 walk, 6-8 shoot pose
   {key:'graffiti_eyes', type:'img', src:'graffiti_eyes.png', optional:true},  // Cottagers Cove reactive wall eyes (7-frame dripping-eyeball blink loop) — LEFT of the Charlie tag
   {key:'graffiti_eyes2', type:'img', src:'graffiti_eyes2.png', optional:true}, // Cottagers Cove grinning eyeball (15-frame roll+grin) — RIGHT of the Charlie tag
 ];
@@ -199,7 +200,12 @@ const SECTIONS=[
       NPC (not an enemy): 6-frame dance loop, policedance.png. `at` sits them just
       outside the door; nudge at/h to line up with the painted station. */
    npcs:[ {img:'policedance', fw:219, fh:319, at:2280, h:130, yOff:0, face:1,
-           clip:{start:0,count:6,fps:7,loop:true}} ]},
+           clip:{start:0,count:6,fps:7,loop:true}},
+          /* Walking VIGILANTE — paces the FIRST HALF of the hub (x 100..1400). Decorative NPC
+             (not an enemy). Uses walk frames 0-5 (frames 6-8 are a shoot pose, unused here).
+             Nudge paceFrom/paceTo/paceSpd/h to taste. */
+          {img:'vigilante', fw:167, fh:282, at:700, h:135, yOff:0, face:1,
+           clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:100, paceTo:1400, paceSpd:0.9} ]},
   /* ── THE STREETS chain. SOUTHAMPTON is now the FIRST level (entered from the
      Portal / Train Station "The Streets"); the old Southside "street" level is now
      the LAST stop before the chain loops back to the hub. The photographer's first
