@@ -171,6 +171,7 @@ const ASSETS = [
   {key:'policedance', type:'img', src:'policedance.png', optional:true},  // dancing policewomen pair outside the police station (hub) — 6-frame loop
   {key:'vigilante', type:'img', src:'vigilante.png', optional:true},  // walking vigilante NPC on the hub (first half) — 9 frames: 0-5 walk, 6-8 shoot pose
   {key:'commuter', type:'img', src:'commuter.png', optional:true},  // walking briefcase-and-shotgun NPC on the hub — 10 frames: 0-5 walk (side), 6-9 shoot (side, unused for now)
+  {key:'piper', type:'img', src:'piper.png', optional:true},  // walking plaid-shirt drifter NPC on the hub — 9 frames: 0-5 walk, 6-8 shoot (unused for now; frame 8 has the muzzle flash)
   {key:'graffiti_eyes', type:'img', src:'graffiti_eyes.png', optional:true},  // Cottagers Cove reactive wall eyes (7-frame dripping-eyeball blink loop) — LEFT of the Charlie tag
   {key:'graffiti_eyes2', type:'img', src:'graffiti_eyes2.png', optional:true}, // Cottagers Cove grinning eyeball (15-frame roll+grin) — RIGHT of the Charlie tag
 ];
@@ -205,14 +206,25 @@ const SECTIONS=[
           /* Walking VIGILANTE — paces the FIRST HALF of the hub (x 100..1400). Decorative NPC
              (not an enemy). Uses walk frames 0-5 (frames 6-8 are a shoot pose, unused here).
              Nudge paceFrom/paceTo/paceSpd/h to taste. */
-          {img:'vigilante', fw:167, fh:282, at:700, h:85, yOff:0, face:1,
-           clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:100, paceTo:1400, paceSpd:0.9},
-          /* Walking COMMUTER (briefcase + shotgun) — paces the SECOND HALF of the hub so he doesn't
-             overlap the vigilante. Decorative NPC (not an enemy). Sheet has 10 frames: walk 0-5 (used
-             here) and shoot 6-9 (unused for now — wire them in later when he gets the ability to fire).
-             Nudge at/paceFrom/paceTo/paceSpd/h to taste (positions are hub x; see the doors list above). */
-          {img:'commuter', fw:95, fh:139, at:1900, h:88, yOff:0, face:1,
-           clip:{start:0,count:6,fps:8,loop:true}, pace:true, paceFrom:1550, paceTo:2650, paceSpd:0.8} ]},
+          /* FOUR WALKERS, FOUR LANES — spaced so none of them meet or cross paths
+             (hub is 2868 wide; ~100px buffer between each lane):
+               vigilante  100..950    (left third — My House, Church, Gun Store, Restore)
+               piper      1050..1850  (middle — easyJet, Train Station, Portal, Library)
+               captain    1890..2130  (Winchester door — set in HUB_NPCS below, home:2010 range:120)
+               commuter   2180..2750  (right end — Police, Slammin' Vinyl, Crackadilly) */
+          {img:'vigilante', fw:167, fh:282, at:500, h:85, yOff:0, face:1,
+           clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:100, paceTo:950, paceSpd:0.9},
+          /* Walking PIPER (plaid shirt, shades, shotgun) — middle lane. Decorative NPC (not an
+             enemy). Sheet has 9 frames: walk 0-5 (used here) and shoot 6-8 (unused for now —
+             frame 8 carries the muzzle flash, ready for when he gets the ability to fire). */
+          {img:'piper', fw:169, fh:242, at:1450, h:88, yOff:0, face:1,
+           clip:{start:0,count:6,fps:8,loop:true}, pace:true, paceFrom:1050, paceTo:1850, paceSpd:0.85},
+          /* Walking COMMUTER (briefcase + shotgun) — right lane. Decorative NPC (not an enemy).
+             Sheet has 10 frames: walk 0-5 (used here) and shoot 6-9 (unused for now — wire them
+             in later when he gets the ability to fire). NOTE: lane starts at 2180 so he stays
+             clear of the CAPTAIN, who patrols the Winchester door (2010±120 = 1890..2130). */
+          {img:'commuter', fw:95, fh:139, at:2450, h:88, yOff:0, face:1,
+           clip:{start:0,count:6,fps:8,loop:true}, pace:true, paceFrom:2180, paceTo:2750, paceSpd:0.8} ]},
   /* ── THE STREETS chain. SOUTHAMPTON is now the FIRST level (entered from the
      Portal / Train Station "The Streets"); the old Southside "street" level is now
      the LAST stop before the chain loops back to the hub. The photographer's first
