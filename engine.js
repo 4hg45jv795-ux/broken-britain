@@ -1413,6 +1413,14 @@ function openPdfMenu(menuId){
   travelOpen=true;
   document.getElementById('travel-title').textContent=m.title||'Library';
   const list=document.getElementById('travel-list'); list.innerHTML='';
+  // Explicit BACK button at the top so there's always an obvious way out of the menu.
+  const back=document.createElement('button'); back.className='trow'; back.style.cursor='pointer';
+  back.style.background='#7a1f25'; back.style.justifyContent='center';
+  const bl=document.createElement('span'); bl.className='tname'; bl.style.color='#fff';
+  bl.textContent='\u2190  Back to game';
+  back.appendChild(bl);
+  back.onclick=(e)=>{ e.stopPropagation(); closeTravel(); };
+  list.appendChild(back);
   (m.files||[]).forEach(doc=>{
     const row=document.createElement('button'); row.className='trow'; row.style.cursor='default';
     const nm=document.createElement('span'); nm.className='tname'; nm.textContent=doc.label;
