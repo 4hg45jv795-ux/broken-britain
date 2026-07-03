@@ -963,6 +963,7 @@ function enterSection(opts){
   updateHelperBarVisibility();
   playSectionTrack();   // plays this room's track, or silence for screen rooms / trackless interiors
   initPickup();
+  SEA.on=false; if(SECTIONS[sectionIndex].sea) seaEnter();   // THE SEA shooting gallery
   tvEnter();                                       // start this room's wall screen (or stop if none)
   sceneEnter();                                    // start this level's full-scene wall+floor videos (or stop)
 }
@@ -1929,6 +1930,14 @@ function cinemaFullscreen(){
   const rq=v.requestFullscreen||v.webkitRequestFullscreen||v.mozRequestFullScreen||v.msRequestFullscreen; // desktop / Android
   if(rq){ v.controls=true; try{ rq.call(v); }catch(_){} }
 }
+cv.addEventListener('pointerdown', e=>{                 // THE SEA: tap = aim + fire, drag = aim
+  if(!SECTIONS[sectionIndex].sea||paused||csActive) return;
+  e.preventDefault(); seaPointer(e.clientX,e.clientY,true);
+});
+cv.addEventListener('pointermove', e=>{
+  if(!SECTIONS[sectionIndex].sea||paused||csActive) return;
+  if(e.buttons||e.pressure>0) seaPointer(e.clientX,e.clientY,false);
+});
 cv.addEventListener('pointerup', e=>{
   const sc=curScreen(); if(!sc||!(sc.playlist||sc.switchable)||paused||csActive) return;   // the cinema OR the house TV
   const b=cv.getBoundingClientRect(); if(!b.width||!b.height) return;
@@ -2293,9 +2302,219 @@ function updateProxAudio(){
   if(typeof bgm!=='undefined' && bgm){ const norm=Math.min(1,_duck/0.8); bgm.volume = 0.35*(1-0.92*norm); }
 }
 
+/* ══ THE SEA — first-person scope SHOOTING GALLERY ═══════════════════════════
+   A self-contained mini-game (NOT the platformer). Any section with `sea:true`
+   runs seaUpdate()/seaDraw() instead of the normal loop (branched at the top of
+   update() and draw()). You swing a scope RETICLE around — DRAG on screen to aim
+   and TAP to fire, or use the pad (◀▶ pan, JUMP raise, STRIKE fire) — and pick
+   off MOVING TARGETS out at sea: seagulls, bobbing buoys, drifting bottles and the
+   odd launched clay pigeon. Pure arcade shooter; targets are inanimate/animal only.
+   Everything is drawn procedurally so it needs no art; backdrop = the section's
+   bgKey (room_sea.jpeg). To use your own target art later, swap the seaDrawTarget
+   branches for drawImage on an uploaded sprite. ◀ LEAVE (top-left) returns to hub. */
+const SEA = { on:false, rx:VW/2, ry:VH*0.5, tx:VW/2, ty:VH*0.5, aimX:VW/2, aimY:VH*0.5,
+  cool:0, kick:0, score:0, shots:0, hits:0, t:0, targets:[], puffs:[], spawnT:0, aiming:false,
+  leaveBtn:{x:8,y:8,w:104,h:30} };
+function seaHorizonY(){ return VH*0.52; }              // waterline in the backdrop (~y187)
+function seaEnter(){
+  SEA.on=true; SEA.rx=SEA.tx=SEA.aimX=VW/2; SEA.ry=SEA.ty=SEA.aimY=VH*0.5;
+  SEA.cool=0; SEA.kick=0; SEA.score=0; SEA.shots=0; SEA.hits=0; SEA.t=0;
+  SEA.targets=[]; SEA.puffs=[]; SEA.spawnT=0; SEA.aiming=false;
+  for(let i=0;i<5;i++) seaSpawn(true);
+}
+function seaSpawn(anywhere){
+  const horizon=seaHorizonY();
+  const roll=['gull','gull','buoy','bottle','buoy'];   // weighted mix
+  let k = (Math.random()<0.14) ? 'clay' : roll[(Math.random()*roll.length)|0];
+  const dir=Math.random()<0.5?1:-1;
+  const t={kind:k, dir, dead:false, bob:Math.random()*6.28};
+  if(k==='gull'){
+    t.y=18+Math.random()*(horizon-46); t.spd=0.9+Math.random()*1.2; t.r=15; t.pts=15;
+    t.scale=0.7+Math.random()*0.2;
+  } else if(k==='clay'){
+    t.y=horizon-6; t.spd=2.2+Math.random()*1.2; t.r=12; t.pts=25;
+    t.vy=-(2.6+Math.random()*1.1); t.g=0.055; t.scale=0.9;
+  } else {                                              // buoy / bottle bob on the water
+    t.y=horizon+10+Math.random()*(VH-horizon-32); t.spd=0.35+Math.random()*0.55;
+    t.r = k==='buoy'?16:13; t.pts=10;
+    t.scale = 0.78 + (t.y-horizon)/(VH-horizon)*0.5;    // nearer the bottom = closer = bigger
+  }
+  t.x = anywhere ? (40+Math.random()*(VW-80)) : (dir>0 ? -30 : VW+30);
+  SEA.targets.push(t);
+}
+function seaFireAt(ax,ay){
+  if(SEA.cool>0) return;
+  SEA.cool=10; SEA.shots++; SEA.kick=7;
+  addShake(2,4); noiseBurst(0.13,0.22,220); blip(140,60,0.12,'square',0.14);   // shotgun boom + kick
+  let best=null, bd=1e9;
+  for(const t of SEA.targets){ if(t.dead) continue;
+    const hr=(t.r+8)*t.scale, d=Math.hypot(t.x-ax,t.y-ay);
+    if(d<hr && d<bd){ bd=d; best=t; }
+  }
+  if(best){
+    best.dead=true; SEA.hits++; SEA.score+=best.pts;
+    SEA.puffs.push({x:best.x,y:best.y,ct:0,pts:best.pts,splash:best.y>seaHorizonY()&&best.kind!=='gull'});
+    blip(880,1500,0.07,'square',0.12); blip(560,1000,0.10,'triangle',0.10);     // hit chime
+  } else {
+    SEA.puffs.push({x:ax,y:ay,ct:0,miss:true,splash:ay>seaHorizonY()});
+  }
+}
+function seaFire(){ seaFireAt(SEA.aimX,SEA.aimY); }
+function seaPointer(clientX,clientY,fire){
+  const b=cv.getBoundingClientRect(); if(!b.width||!b.height) return;
+  const px=Math.max(0,Math.min(VW,(clientX-b.left)/b.width*VW));
+  const py=Math.max(0,Math.min(VH,(clientY-b.top)/b.height*VH));
+  if(fire){ const L=SEA.leaveBtn;                       // ◀ LEAVE hit-test
+    if(px>=L.x&&px<=L.x+L.w&&py>=L.y&&py<=L.y+L.h){ gotoId('home',{x:1290,face:1}); return; } }
+  SEA.tx=px; SEA.ty=py; SEA.rx=px; SEA.ry=py; SEA.aiming=true;   // snap to finger for responsive aim
+  if(fire) seaFire();
+}
+function seaUpdate(){
+  SEA.t++;
+  if(SEA.cool>0) SEA.cool--;
+  if(SEA.kick>0.4) SEA.kick*=0.78; else SEA.kick=0;
+  const PAN=4.4;                                         // pad fallback aiming (touch uses the pointer handler)
+  if(!SEA.aiming){
+    if(keys.left)  SEA.rx=Math.max(0,SEA.rx-PAN);
+    if(keys.right) SEA.rx=Math.min(VW,SEA.rx+PAN);
+    if(keys.jump)  SEA.ry=Math.max(0,SEA.ry-PAN);
+    else if(SEA.ry<VH*0.5) SEA.ry=Math.min(VH*0.5,SEA.ry+0.7);  // eases back toward the horizon
+  }
+  SEA.aiming=false;                                      // pointermove re-asserts this each frame
+  SEA.aimX=SEA.rx+Math.sin(SEA.t*0.05)*2.0;              // subtle scope breathing (aim + drawn reticle match)
+  SEA.aimY=SEA.ry+Math.sin(SEA.t*0.037)*1.5;
+  if(punchEdge){ punchEdge=false; seaFire(); }           // STRIKE fires
+  const horizon=seaHorizonY();
+  for(const t of SEA.targets){
+    if(t.dead) continue;
+    t.x += t.dir*t.spd; t.bob += 0.06;
+    if(t.kind==='clay'){ t.vy+=t.g; t.y+=t.vy; if(t.y>horizon+34) t.dead=true; }
+    else if(t.kind==='gull') t.y += Math.sin(t.bob)*0.35;
+    else t.y += Math.sin(t.bob)*0.5;                     // bob on the swell
+    if(t.x<-50 || t.x>VW+50) t.dead=true;
+  }
+  SEA.targets=SEA.targets.filter(t=>!t.dead);
+  for(const p of SEA.puffs) p.ct++;
+  SEA.puffs=SEA.puffs.filter(p=>p.ct<24);
+  SEA.spawnT--;
+  if(SEA.targets.length<6 && SEA.spawnT<=0){ seaSpawn(false); SEA.spawnT=18+Math.random()*40; }
+}
+/* ── drawing ── */
+function seaDrawTarget(t){
+  const s=t.scale, x=t.x, y=t.y;
+  ctx.save(); ctx.translate(x,y); ctx.scale(t.dir,1);   // face travel direction
+  if(t.kind==='gull'){
+    ctx.strokeStyle='rgba(30,34,40,0.92)'; ctx.lineWidth=3*s; ctx.lineCap='round';
+    const w=13*s, f=Math.sin(t.bob*2)*4*s;               // flapping
+    ctx.beginPath(); ctx.moveTo(-w,f); ctx.quadraticCurveTo(-w*0.4,-6*s-f,0,0);
+    ctx.quadraticCurveTo(w*0.4,-6*s-f,w,f); ctx.stroke();
+    ctx.fillStyle='rgba(40,44,50,0.9)'; ctx.beginPath(); ctx.arc(0,0,2.2*s,0,7); ctx.fill();
+  } else if(t.kind==='clay'){
+    ctx.fillStyle='#c8641e'; ctx.strokeStyle='#7a3810'; ctx.lineWidth=2*s;
+    ctx.beginPath(); ctx.ellipse(0,0,11*s,4.5*s,Math.sin(t.bob)*0.5,0,7); ctx.fill(); ctx.stroke();
+  } else if(t.kind==='buoy'){
+    ctx.fillStyle='#c0392b'; ctx.beginPath();            // red conical buoy
+    ctx.moveTo(-9*s,6*s); ctx.lineTo(9*s,6*s); ctx.lineTo(0,-14*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#eef2f4'; ctx.fillRect(-8*s,-1*s,16*s,4*s);         // white band
+    ctx.fillStyle='#f2d23a'; ctx.beginPath(); ctx.arc(0,-16*s,2.6*s,0,7); ctx.fill();  // light
+  } else { // bottle
+    ctx.rotate(0.5); ctx.fillStyle='rgba(40,120,70,0.92)';
+    ctx.beginPath(); ctx.roundRect(-5*s,-6*s,10*s,16*s,3*s); ctx.fill();
+    ctx.fillRect(-2.2*s,-12*s,4.4*s,7*s);                              // neck
+    ctx.fillStyle='rgba(220,235,220,0.35)'; ctx.fillRect(-4*s,-4*s,2*s,10*s);  // glint
+  }
+  ctx.restore();
+  if(t.kind==='buoy'||t.kind==='bottle'){                              // little wake ripple
+    ctx.strokeStyle='rgba(255,255,255,0.25)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.ellipse(x,y+8*s,12*s,3*s,0,0,7); ctx.stroke();
+  }
+}
+function seaDrawPuff(p){
+  const k=p.ct/24;
+  if(p.splash){
+    ctx.strokeStyle=`rgba(230,244,255,${(1-k)*0.9})`; ctx.lineWidth=2;
+    const rr=6+k*22; ctx.beginPath(); ctx.ellipse(p.x,p.y,rr,rr*0.4,0,0,7); ctx.stroke();
+    for(let i=0;i<5;i++){ const a=i/5*6.28; const d=k*18;
+      ctx.fillStyle=`rgba(230,244,255,${(1-k)*0.8})`;
+      ctx.fillRect(p.x+Math.cos(a)*d, p.y-Math.abs(Math.sin(a))*d - k*10, 2,2); }
+  } else {
+    ctx.fillStyle=`rgba(255,${p.miss?200:120},60,${(1-k)*0.8})`;
+    const rr=4+k*16; ctx.beginPath(); ctx.arc(p.x,p.y,rr,0,7); ctx.fill();
+  }
+  if(p.pts){ ctx.fillStyle=`rgba(255,240,150,${1-k})`; ctx.font='bold 13px system-ui,sans-serif';
+    ctx.textAlign='center'; ctx.fillText('+'+p.pts, p.x, p.y-14-k*16); ctx.textAlign='left'; }
+}
+function seaDrawScope(){
+  const cx=VW/2, cy=VH/2, R=VH*0.60;
+  const g=ctx.createRadialGradient(cx,cy,R*0.55,cx,cy,R*1.15);
+  g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(0.72,'rgba(0,0,0,0.05)');
+  g.addColorStop(1,'rgba(0,0,0,0.92)');
+  ctx.fillStyle=g; ctx.fillRect(0,0,VW,VH);
+  ctx.strokeStyle='rgba(10,12,14,0.9)'; ctx.lineWidth=6;
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,7); ctx.stroke();
+  ctx.strokeStyle='rgba(120,130,140,0.35)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(cx,cy,R-4,0,7); ctx.stroke();
+}
+function seaDrawReticle(x,y){
+  ctx.save();
+  ctx.strokeStyle='rgba(60,255,120,0.95)'; ctx.fillStyle='rgba(60,255,120,0.95)';
+  ctx.lineWidth=1.5; ctx.shadowColor='rgba(60,255,120,0.7)'; ctx.shadowBlur=6;
+  ctx.beginPath(); ctx.arc(x,y,13,0,7); ctx.stroke();
+  const g=5, L=11;
+  ctx.beginPath();
+  ctx.moveTo(x-g-L,y); ctx.lineTo(x-g,y); ctx.moveTo(x+g,y); ctx.lineTo(x+g+L,y);
+  ctx.moveTo(x,y-g-L); ctx.lineTo(x,y-g); ctx.moveTo(x,y+g); ctx.lineTo(x,y+g+L);
+  ctx.stroke();
+  ctx.beginPath(); ctx.arc(x,y,1.6,0,7); ctx.fill();
+  ctx.restore();
+}
+function seaDrawHud(){
+  ctx.save();
+  // LEAVE button
+  const L=SEA.leaveBtn;
+  ctx.fillStyle='rgba(12,16,22,0.72)'; ctx.strokeStyle='rgba(200,210,220,0.5)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.roundRect(L.x,L.y,L.w,L.h,7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#eef2f6'; ctx.font='bold 15px system-ui,sans-serif'; ctx.textBaseline='middle';
+  ctx.fillText('\u25C0 LEAVE', L.x+12, L.y+L.h/2+1);
+  // score / accuracy (top-right)
+  ctx.textAlign='right'; ctx.font='bold 18px system-ui,sans-serif';
+  ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillText('SCORE '+SEA.score, VW-9, 19);
+  ctx.fillStyle='#ffe98a'; ctx.fillText('SCORE '+SEA.score, VW-10, 18);
+  ctx.font='12px system-ui,sans-serif'; ctx.fillStyle='rgba(235,240,245,0.85)';
+  ctx.fillText('HITS '+SEA.hits+' / '+SEA.shots, VW-10, 36);
+  ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+  if(SEA.t<210){ ctx.globalAlpha=Math.max(0,1-(SEA.t-150)/60);
+    ctx.fillStyle='#eef2f6'; ctx.font='13px system-ui,sans-serif'; ctx.textAlign='center';
+    ctx.fillText('Drag to aim \u2022 tap to fire  (or \u25C0\u25B6 / JUMP / STRIKE)', VW/2, VH-16);
+    ctx.textAlign='left'; ctx.globalAlpha=1; }
+  ctx.restore();
+}
+function seaDraw(){
+  ctx.clearRect(0,0,VW,VH); ctx.imageSmoothingEnabled=true;
+  const kx=(Math.random()*2-1)*SEA.kick, ky=(Math.random()*2-1)*SEA.kick;
+  ctx.save(); ctx.translate(kx,ky);                      // recoil kick shakes the VIEW, not the HUD
+  const bg=loaded[SECTIONS[sectionIndex].bgKey];
+  if(imgOk(bg)){ ctx.drawImage(bg,-4,-4,VW+8,VH+8); }
+  else {                                                 // fallback sea if the photo isn't uploaded
+    const horizon=seaHorizonY();
+    const sky=ctx.createLinearGradient(0,0,0,horizon);
+    sky.addColorStop(0,'#2a4a6e'); sky.addColorStop(1,'#e9a659'); ctx.fillStyle=sky; ctx.fillRect(0,0,VW,horizon);
+    const sea=ctx.createLinearGradient(0,horizon,0,VH);
+    sea.addColorStop(0,'#37617f'); sea.addColorStop(1,'#1d3448'); ctx.fillStyle=sea; ctx.fillRect(0,horizon,VW,VH-horizon);
+    ctx.fillStyle='rgba(255,210,120,0.5)'; ctx.beginPath(); ctx.arc(VW*0.62,horizon-8,16,0,7); ctx.fill();
+  }
+  for(const t of SEA.targets) if(!t.dead) seaDrawTarget(t);
+  for(const p of SEA.puffs) seaDrawPuff(p);
+  seaDrawScope();
+  ctx.restore();
+  seaDrawReticle(SEA.aimX,SEA.aimY);
+  seaDrawHud();
+}
+
 /* ── UPDATE / DRAW / LOOP ────────────────────────────────── */
 function update(){
   if(csActive||transitioning||shopOpen||travelOpen)return;
+  if(SECTIONS[sectionIndex].sea){ seaUpdate(); return; }   // THE SEA shooting gallery
   if(player.hurtCool>0) player.hurtCool--;
   if(player.invincibleT>0) player.invincibleT--;
   updateDoors();
@@ -2466,6 +2685,7 @@ function drawWater(){
   ctx.restore();
 }
 function draw(){
+  if(SECTIONS[sectionIndex].sea){ seaDraw(); return; }      // THE SEA shooting gallery
   const dsec=SECTIONS[sectionIndex];
   if(dsec.flip){
     const cfg=curSceneCfg(); const panelW=(cfg&&cfg.tileW)||SRCW;
