@@ -718,7 +718,7 @@ const SCENE_VIDEOS = {
 const PDF_MENUS={
   library:{ title:'The Library \u2014 Reading Desk', files:[
     {label:"Foxe's Book of Martyrs", file:'pdf1.pdf'},
-    {label:'Document Two',   file:'doc2.pdf'},
+    {label:'The Turner Diaries', file:'doc2.pdf'},
     {label:'Document Three', file:'doc3.pdf'},
   ]},
 };
