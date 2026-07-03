@@ -168,6 +168,7 @@ const ASSETS = [
   {key:'priest',   type:'img', src:'priest.png', optional:true},
   {key:'burgerking', type:'img', src:'burgerking.png', optional:true},
   {key:'captain',  type:'img', src:'captain.png', optional:true},
+  {key:'policedance', type:'img', src:'policedance.png', optional:true},  // dancing policewomen pair outside the police station (hub) — 6-frame loop
   {key:'graffiti_eyes', type:'img', src:'graffiti_eyes.png', optional:true},  // Cottagers Cove reactive wall eyes (7-frame dripping-eyeball blink loop) — LEFT of the Charlie tag
   {key:'graffiti_eyes2', type:'img', src:'graffiti_eyes2.png', optional:true}, // Cottagers Cove grinning eyeball (15-frame roll+grin) — RIGHT of the Charlie tag
 ];
@@ -193,7 +194,12 @@ const SECTIONS=[
      {x:2280, w:100, label:'Police Station',    target:'in_police'},
      {x:2490, w:110, label:"Slammin' Vinyl",    target:'in_nightclub'},
      {x:2700, w:120, label:'Crackadilly Gardens',  target:'in_crackadilly'}
-   ]},
+   ],
+   /* Two policewomen dancing outside the POLICE STATION (door at x:2280). Decorative
+      NPC (not an enemy): 6-frame dance loop, policedance.png. `at` sits them just
+      outside the door; nudge at/h to line up with the painted station. */
+   npcs:[ {img:'policedance', fw:219, fh:319, at:2280, h:130, yOff:0, face:1,
+           clip:{start:0,count:6,fps:7,loop:true}} ]},
   /* ── THE STREETS chain. SOUTHAMPTON is now the FIRST level (entered from the
      Portal / Train Station "The Streets"); the old Southside "street" level is now
      the LAST stop before the chain loops back to the hub. The photographer's first
