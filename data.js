@@ -199,12 +199,12 @@ const SECTIONS=[
    /* Two policewomen dancing outside the POLICE STATION (door at x:2280). Decorative
       NPC (not an enemy): 6-frame dance loop, policedance.png. `at` sits them just
       outside the door; nudge at/h to line up with the painted station. */
-   npcs:[ {img:'policedance', fw:219, fh:319, at:2430, h:95, yOff:0, face:1,
+   npcs:[ {img:'policedance', fw:219, fh:319, at:2180, h:95, yOff:0, face:1,
            clip:{start:0,count:6,fps:7,loop:true}},
           /* Walking VIGILANTE — paces the FIRST HALF of the hub (x 100..1400). Decorative NPC
              (not an enemy). Uses walk frames 0-5 (frames 6-8 are a shoot pose, unused here).
              Nudge paceFrom/paceTo/paceSpd/h to taste. */
-          {img:'vigilante', fw:167, fh:282, at:700, h:95, yOff:0, face:1,
+          {img:'vigilante', fw:167, fh:282, at:700, h:85, yOff:0, face:1,
            clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:100, paceTo:1400, paceSpd:0.9} ]},
   /* ── THE STREETS chain. SOUTHAMPTON is now the FIRST level (entered from the
      Portal / Train Station "The Streets"); the old Southside "street" level is now
