@@ -77,6 +77,7 @@ const ASSETS = [
   {key:'room_cinema',       type:'img', src:'room cinema.jpeg', optional:true},
   {key:'room_easyjet',      type:'img', src:'room easyjet.jpeg', optional:true},
   {key:'room_trainstation', type:'img', src:'room trainstation.jpeg', optional:true},
+  {key:'room_sea', type:'img', src:'room_sea.jpeg', optional:true},  // The Sea shooting-gallery backdrop (scope view over the cliffs/sea)
   {key:'room_library',      type:'img', src:'room library.jpeg', optional:true},
   {key:'room_winchester',   type:'img', src:'room winchester.jpeg', optional:true},
   /* ── NEW ROOM BACKGROUNDS (same "room NAME.jpeg" convention as above) ── */
@@ -201,30 +202,36 @@ const SECTIONS=[
    /* Two policewomen dancing outside the POLICE STATION (door at x:2280). Decorative
       NPC (not an enemy): 6-frame dance loop, policedance.png. `at` sits them just
       outside the door; nudge at/h to line up with the painted station. */
-   npcs:[ {img:'policedance', fw:219, fh:319, at:2280, h:95, yOff:0, face:1,
-           clip:{start:0,count:6,fps:7,loop:true}},
-          /* Walking VIGILANTE — paces the FIRST HALF of the hub (x 100..1400). Decorative NPC
-             (not an enemy). Uses walk frames 0-5 (frames 6-8 are a shoot pose, unused here).
-             Nudge paceFrom/paceTo/paceSpd/h to taste. */
-          /* FOUR WALKERS, FOUR LANES — spaced so none of them meet or cross paths
-             (hub is 2868 wide; ~100px buffer between each lane):
-               vigilante  100..950    (left third — My House, Church, Gun Store, Restore)
-               piper      1050..1850  (middle — easyJet, Train Station, Portal, Library)
-               captain    1890..2130  (Winchester door — set in HUB_NPCS below, home:2010 range:120)
-               commuter   2180..2750  (right end — Police, Slammin' Vinyl, Crackadilly) */
-          {img:'vigilante', fw:167, fh:282, at:500, h:85, yOff:0, face:1,
-           clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:100, paceTo:950, paceSpd:0.9},
-          /* Walking PIPER (plaid shirt, shades, shotgun) — middle lane. Decorative NPC (not an
-             enemy). Sheet has 9 frames: walk 0-5 (used here) and shoot 6-8 (unused for now —
-             frame 8 carries the muzzle flash, ready for when he gets the ability to fire). */
-          {img:'piper', fw:169, fh:242, at:1450, h:88, yOff:0, face:1,
-           clip:{start:0,count:6,fps:8,loop:true}, pace:true, paceFrom:1050, paceTo:1850, paceSpd:0.85},
-          /* Walking COMMUTER (briefcase + shotgun) — right lane. Decorative NPC (not an enemy).
-             Sheet has 10 frames: walk 0-5 (used here) and shoot 6-9 (unused for now — wire them
-             in later when he gets the ability to fire). NOTE: lane starts at 2180 so he stays
-             clear of the CAPTAIN, who patrols the Winchester door (2010±120 = 1890..2130). */
-          {img:'commuter', fw:95, fh:139, at:2450, h:88, yOff:0, face:1,
-           clip:{start:0,count:6,fps:8,loop:true}, pace:true, paceFrom:2180, paceTo:2750, paceSpd:0.8} ]},
+   npcs:[
+          /* ── HUB CROWD ──────────────────────────────────────────────────────
+             FOUR WALKERS + the stationary POLICE DANCERS, spaced into non-crossing
+             lanes so nobody ever meets or walks through anyone else (hub is 2868 wide):
+               vigilante   100..820   (My House, Church, Gun Store, Restore)
+               piper        920..1780 (Cinema, easyJet, Train Station, Portal, Library)
+               captain     1880..2150 (patrolling outside the Winchester @2040)
+               [POLICE DANCERS — stationary at 2280]
+               commuter    2410..2770 (Slammin' Vinyl, Crackadilly)
+             Each has an mp3 PROXIMITY slot: it fades up as you approach and is silent past
+             `range` (or if the file isn't uploaded). Nudge at/paceFrom/paceTo/paceSpd/h/range. */
+          {img:'policedance', fw:219, fh:319, at:2280, h:95, yOff:0, face:1,
+           clip:{start:0,count:6,fps:7,loop:true}, mp3:'Policedance.mp3', range:200},
+          {img:'vigilante', fw:167, fh:282, at:460, h:85, yOff:0, face:1,
+           clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:100, paceTo:820, paceSpd:0.9,
+           mp3:'Vigilante.mp3', range:190},
+          /* PIPER (plaid shirt, shades, shotgun) — 9-frame sheet: walk 0-5 (used), shoot 6-8
+             (unused for now; frame 8 carries the muzzle flash, ready for when he can fire). */
+          {img:'piper', fw:164, fh:242, at:1350, h:88, yOff:0, face:1,
+           clip:{start:0,count:6,fps:8,loop:true}, pace:true, paceFrom:920, paceTo:1780, paceSpd:0.85,
+           mp3:'Piper.mp3', range:190},
+          /* CAPTAIN — moved here out of HUB_NPCS so he shares the same lane-spacing + proximity
+             audio as the others. Patrols right outside the Winchester (2040). 6-frame walk strip. */
+          {img:'captain', fw:110, fh:221, at:2015, h:84, yOff:0, face:1,
+           clip:{start:0,count:6,fps:8,loop:true}, pace:true, paceFrom:1880, paceTo:2150, paceSpd:0.7,
+           mp3:'Captain.mp3', range:190},
+          /* COMMUTER (briefcase + shotgun) — 10-frame sheet: walk 0-5 (used), shoot 6-9 (unused). */
+          {img:'commuter', fw:95, fh:139, at:2590, h:88, yOff:0, face:1,
+           clip:{start:0,count:6,fps:8,loop:true}, pace:true, paceFrom:2410, paceTo:2770, paceSpd:0.8,
+           mp3:'Commuter.mp3', range:190} ]},
   /* ── THE STREETS chain. SOUTHAMPTON is now the FIRST level (entered from the
      Portal / Train Station "The Streets"); the old Southside "street" level is now
      the LAST stop before the chain loops back to the hub. The photographer's first
@@ -341,6 +348,12 @@ const SECTIONS=[
    doors:[ {x:290, w:74, label:'Departures', menu:'easyjet'} ]},
   {id:'in_trainstation', name:'Inside &mdash; DigiTown Station', bgKey:'room_trainstation', BGW:580, srcY:46, flatGround:281, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
    doors:[ {x:290, w:74, label:'Departures', menu:'trainstation'} ]},
+  /* ── THE SEA — first-person scope SHOOTING GALLERY (reached from the Train
+     Station departures board). `sea:true` makes the engine run the shooting-gallery
+     mode instead of the platformer (see "THE SEA" block in engine.js). Drag to aim,
+     tap / STRIKE to fire; shoot the moving seagulls, buoys, bottles and clay pigeons.
+     Backdrop = room_sea.jpeg. There's an on-screen ◀ LEAVE button back to the hub.   */
+  {id:'the_sea', name:'The Sea', bgKey:'room_sea', BGW:800, sea:true, interior:true, enemies:[], doors:[]},
   /* LIBRARY swapped to the wide Alexandria panorama (room library.jpeg now 2172x375).
      zoom:1.0 shows an 800px-wide slice; walk RIGHT to explore, walk off the far LEFT to
      leave (exitLeft:'home'). Nudge flatGround/srcY/charScale to taste. */
@@ -480,7 +493,7 @@ const SECTIONS=[
              frames 0-11 are the continuous pair dance (loop). Bump count to 16 to include the
              solo/finish poses. Not an enemy — background only, no collision. Nudge at/h/face. */
           {img:'devildance', fw:374, fh:283, at:1980, h:109, yOff:0, face:1,
-           clip:{start:0,count:12,fps:5,loop:true}} ],
+           clip:{start:0,count:12,fps:5,loop:true}, mp3:'Devildance.mp3', range:200} ],
    doors:[]},
 
   /* ── SLAMMIN' VINYL ROOMS (entered from the club lobby; EXIT door -> lobby) ──
@@ -489,8 +502,8 @@ const SECTIONS=[
      room until the art exists; nudge BGW/srcY/flatGround/charScale once it does. */
   {id:'in_dnb', name:'Room 1 &mdash; Drum &amp; Bass', bgKey:'room_dnb', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
    /* two background dancing couples (NOT enemies) just looping a dance on the floor */
-   npcs:[ {img:'dnbcouple1', fw:328, fh:310, at:175, h:130, yOff:0, face:1,  clip:{start:0,count:15,fps:6,loop:true}},
-          {img:'dnbcouple2', fw:260, fh:272, at:410, h:130, yOff:0, face:-1, clip:{start:0,count:15,fps:8,loop:true}} ],
+   npcs:[ {img:'dnbcouple1', fw:328, fh:310, at:175, h:130, yOff:0, face:1,  clip:{start:0,count:15,fps:6,loop:true}, mp3:'Dnbcouple1.mp3', range:180},
+          {img:'dnbcouple2', fw:260, fh:272, at:410, h:130, yOff:0, face:-1, clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dnbcouple2.mp3', range:180} ],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
   /* HIP-HOP room: the original dancer + the green dancer + the "TV guy" (orange-shirt
      bloke hugging a safe, tvguy.png) boogieing on the spot. The purple dancer was removed.
@@ -503,16 +516,16 @@ const SECTIONS=[
              raised up the scene (yOff:-55) so he reads as further back = depth. Paces a shorter
              range now (80..400) so he doesn't wander as far right. Walk frames 0-5. */
           {img:'bigman3', fw:484, fh:438, at:200, h:80, yOff:-55, face:1,
-           clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:80, paceTo:400, paceSpd:0.6},
+           clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:80, paceTo:400, paceSpd:0.6, mp3:'Bigman3.mp3', range:180},
           {img:'dancer',  fw:163, fh:310, at:220, h:135, yOff:0, face:1,  clip:{start:8,count:6,fps:9,loop:true}, mp3:'Dancer.mp3', range:180},
-          {img:'dgreen',  fw:156, fh:231, at:355, h:104, yOff:0, face:1,  clip:{start:0,count:6,fps:9,loop:true}},
-          {img:'tvguy',   fw:231, fh:369, at:490, h:128, yOff:0, face:-1, clip:{start:0,count:18,fps:7,loop:true}} ],
+          {img:'dgreen',  fw:156, fh:231, at:355, h:104, yOff:0, face:1,  clip:{start:0,count:6,fps:9,loop:true}, mp3:'Dgreen.mp3', range:180},
+          {img:'tvguy',   fw:231, fh:369, at:490, h:128, yOff:0, face:-1, clip:{start:0,count:18,fps:7,loop:true}, mp3:'Tvguy.mp3', range:180} ],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
   {id:'in_special', name:'Room 3 &mdash; Special Guest', bgKey:'room_special', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
    /* Decorative NPC: the carried sedan-chair group strolls back and forth along the floor on
       the player's path (normal size, ground level). Nudge h / paceFrom-To / paceSpd / face. */
    npcs:[ {img:'piggybackguy', fw:151, fh:287, at:240, h:130, yOff:0, face:1,
-           clip:{start:0,count:11,fps:8,loop:true}, pace:true, paceFrom:130, paceTo:420, paceSpd:0.45} ],
+           clip:{start:0,count:11,fps:8,loop:true}, pace:true, paceFrom:130, paceTo:420, paceSpd:0.45, mp3:'Piggybackguy.mp3', range:190} ],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
 
   /* ── COTTAGERS COVE (the underpass at the far end of Crackadilly Gardens) ──
@@ -554,7 +567,7 @@ const TRACKS={ select:'Character selection screen.mp3', home:'Home.mp3', street:
   in_dnb:'Dnb.mp3', in_hiphop:'Hiphop.mp3', in_special:'Specialguest.mp3', in_cottagers:'Cottagerscove.mp3',
   /* ── BLACK LEVEL + HOLODECK MUSIC (the MP4s are silent; these are the sound) ── */
   blacklevel:'Void.mp3', holodeck:'Holodeck.mp3', judgement:'Judgement.mp3', bossmode:'Bossmode.mp3',
-  lvl_europe:'Europe.mp3', lvl_america:'America.mp3', in_shitter:'Shitter.mp3' };
+  lvl_europe:'Europe.mp3', lvl_america:'America.mp3', in_shitter:'Shitter.mp3', the_sea:'Sea.mp3' };
 /* ── THE WINCHESTER JUKEBOX ────────────────────────────────────────────────
    Works exactly like the house TV, but for MUSIC. Stand near the jukebox in the
    Winchester and STRIKE to flip to the next track; the chosen .mp3 becomes the
@@ -765,6 +778,7 @@ const TRAVEL_MENUS={
     {label:'Dundee',                 target:'dundee'},
     {label:'Glasgow',                target:'glasgow'},
     {label:'Southside (the Street)', target:'street'},
+    {label:'The Sea &mdash; Rifle Range', target:'the_sea'},   // first-person scope shooting gallery
   ]},
 };
 const SHOP=[
@@ -805,8 +819,8 @@ const WEAPONS={
    dropping entries here (each needs a single-row walk strip png).        */
 const HUB_NPCS=[
   // home = the hub x he hangs around; range = how far he paces each way from it.
-  // The Winchester door is at x:2040, so the captain patrols right outside it.
-  {key:'captain', fw:110, fh:221, frames:6,  h:84, home:2010, range:120},
+  // (The CAPTAIN moved into the hub `npcs:` array so he shares lane-spacing + proximity
+  //  audio with the other walkers. This table is left here for future single-row walkers.)
 ];
 /* ── CHURCH PRIEST (paces the stage at the back-centre of the church) ──
    Lives only inside the in_church room. He walks left/right within a
