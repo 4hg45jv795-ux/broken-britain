@@ -877,8 +877,9 @@ const MK_NPCS=[
 const PROX_AUDIO=[
   {section:'in_church',  src:'Priest.mp3',     range:180, getX:()=>priestNpc?priestNpc.x:null},
   {section:'in_special', src:'Burgerking.mp3', range:180, getX:()=>bkNpc?bkNpc.x:null},
-  {section:'home',       src:'Captain.mp3',    range:180,
-     getX:()=>{ const c=hubNpcs.find(n=>n.def&&n.def.key==='captain'); return c?c.x:null; }},
+  /* (the CAPTAIN's entry moved out of here — his Captain.mp3 now plays from his
+     mp3 slot on the hub npcs list, like the other walkers. Keeping an entry here
+     too would fight that slot over the same audio element and silence it.) */
   /* ── POLICE STATION proximity sounds (FIXED spots, measured in room pixels) ──
      A different looping mp3 fades in as you stand in front of each cell, the
      pool table and the staff-room seating. The four cells sit close together,
