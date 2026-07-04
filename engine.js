@@ -2249,6 +2249,7 @@ function tryStartSelectMusic(){
 document.addEventListener('pointerdown', tryStartSelectMusic);
 
 const _proxEls={};
+const _npcSrcSeen={};   // every npc mp3 that has started, so we can silence it in other rooms
 function _proxEl(src){
   if(!_proxEls[src]){ const a=new Audio(src); a.loop=true; a.volume=0; a.preload='auto'; _proxEls[src]=a; }
   return _proxEls[src];
@@ -2287,11 +2288,15 @@ function updateProxAudio(){
   const _npcVol={};
   if(live){
     for(const s of scenery){ const d=s.def; if(!d.mp3) continue;
+      _npcSrcSeen[d.mp3]=1;
       const w=(d.h||120)*d.fw/d.fh; const dd=Math.abs((player.x+PW/2)-(s.x+w/2)); const rng=d.range||180;
       const v=dd<rng ? (0.25+0.55*(1-dd/rng)) : 0;
       if(!(d.mp3 in _npcVol) || v>_npcVol[d.mp3]) _npcVol[d.mp3]=v;
     }
-  } else { for(const s of scenery){ if(s.def.mp3) _npcVol[s.def.mp3]=0; } }
+  } else { for(const s of scenery){ if(s.def.mp3){ _npcSrcSeen[s.def.mp3]=1; _npcVol[s.def.mp3]=0; } } }
+  // any npc mp3 that has EVER played but whose owner isn't in THIS room: force it silent
+  // (fixes hub walker audio carrying on inside the Winchester etc.)
+  for(const src in _npcSrcSeen){ if(!(src in _npcVol)) _npcVol[src]=0; }
   for(const src in _npcVol){
     const a=_proxEl(src); const vol=_npcVol[src];
     if(vol>0){ a.muted=musicMuted; a.volume=Math.max(0,Math.min(0.8,vol)); if(a.paused) a.play().catch(()=>{}); }
