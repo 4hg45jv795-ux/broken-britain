@@ -1897,6 +1897,56 @@ document.querySelectorAll('.btn').forEach(b=>{
   b.addEventListener('touchcancel',off,{passive:false});
   b.addEventListener('mousedown',on);b.addEventListener('mouseup',off);b.addEventListener('mouseleave',off);
 });
+/* ── VIRTUAL JOYSTICK ────────────────────────────────────────────────────────
+   Replaces the ◀ ▶ direction buttons everywhere. Drag the knob: in the game it
+   walks left/right (push UP past 60% to jump too); on The Sea it steers the
+   reticle in full 2D. JUMP / STRIKE buttons are unchanged. Built entirely from
+   JS so index.html needs no edits: the old ◀ ▶ buttons are hidden and the stick
+   is dropped into their place (or bottom-left if they aren't found). */
+const JOY={x:0,y:0,active:false};
+(function(){
+  const st=document.createElement('style');
+  st.textContent=`
+    #joy{position:relative;width:112px;height:112px;border-radius:50%;touch-action:none;
+      background:radial-gradient(circle at 50% 46%, #000 0%, #22262cdd 55%, #0a0d11ee 100%);
+      border:3px solid #d7dde4;box-shadow:0 3px 14px #000a, inset 0 0 24px #000c;
+      pointer-events:auto;flex:0 0 auto;}
+    #joyknob{position:absolute;left:50%;top:50%;width:52px;height:52px;border-radius:50%;
+      transform:translate(-50%,-50%);
+      background:radial-gradient(circle at 38% 32%, #4a525c, #14181d 70%);
+      border:2px solid #aeb6bf;box-shadow:0 4px 10px #000b;}
+  `;
+  document.head.appendChild(st);
+  const base=document.createElement('div'); base.id='joy';
+  const knob=document.createElement('div'); knob.id='joyknob'; base.appendChild(knob);
+  const lb=document.querySelector('[data-k="left"]'), rb=document.querySelector('[data-k="right"]');
+  if(lb&&lb.parentElement){ lb.style.display='none'; if(rb) rb.style.display='none';
+    lb.parentElement.insertBefore(base, lb); }
+  else { base.style.position='fixed'; base.style.left='16px'; base.style.bottom='16px'; base.style.zIndex=40;
+    document.body.appendChild(base); }
+  const R=42;                                            // knob travel radius (px)
+  function setFrom(e){
+    const b=base.getBoundingClientRect();
+    let dx=e.clientX-(b.left+b.width/2), dy=e.clientY-(b.top+b.height/2);
+    const d=Math.hypot(dx,dy)||1, cl=Math.min(d,R)/d; dx*=cl; dy*=cl;
+    knob.style.transform=`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+    JOY.x=dx/R; JOY.y=dy/R; JOY.active=true;
+    keys.left = JOY.x < -0.28;                           // platformer walking
+    keys.right= JOY.x >  0.28;
+    if(JOY.y < -0.6) keys.jump=true; else if(JOY._j) keys.jump=false;   // push up = jump
+    JOY._j = JOY.y < -0.6;
+  }
+  function reset(){
+    JOY.x=0; JOY.y=0; JOY.active=false;
+    keys.left=false; keys.right=false; if(JOY._j){ keys.jump=false; JOY._j=false; }
+    knob.style.transform='translate(-50%,-50%)';
+  }
+  base.addEventListener('pointerdown',e=>{ e.preventDefault(); actx(); base.setPointerCapture(e.pointerId); setFrom(e); });
+  base.addEventListener('pointermove',e=>{ if(JOY.active){ e.preventDefault(); setFrom(e); } });
+  base.addEventListener('pointerup',reset);
+  base.addEventListener('pointercancel',reset);
+})();
+
 document.querySelectorAll('.helperbtn').forEach(btn=>{
   const idx=+btn.dataset.h;
   const fire=e=>{ e.preventDefault(); actx(); summonHelper(idx); };
@@ -2324,8 +2374,7 @@ function updateProxAudio(){
 const SEA = { on:false, rx:VW/2, ry:VH*0.5, tx:VW/2, ty:VH*0.5, aimX:VW/2, aimY:VH*0.5,
   cool:0, kick:0, flash:0, score:0, shots:0, hits:0, t:0, targets:[], puffs:[], spawnT:0, aiming:false,
   firing:false, holdUp:false, holdDn:false,
-  leaveBtn:{x:8,y:8,w:104,h:30},
-  upBtn:{x:VW-54,y:VH*0.5-66,w:46,h:46}, dnBtn:{x:VW-54,y:VH*0.5-10,w:46,h:46} };
+  leaveBtn:{x:8,y:8,w:104,h:30} };
 function seaHorizonY(){ return VH*0.52; }              // waterline in the backdrop (~y187)
 function seaEnter(){
   SEA.on=true; SEA.rx=SEA.tx=SEA.aimX=VW/2; SEA.ry=SEA.ty=SEA.aimY=VH*0.5;
@@ -2376,9 +2425,7 @@ function seaPointer(clientX,clientY,fire){
   const inBtn=(B)=>px>=B.x&&px<=B.x+B.w&&py>=B.y&&py<=B.y+B.h;
   if(fire){
     if(inBtn(SEA.leaveBtn)){ gotoId('home',{x:1290,face:1}); return; }   // ◀ LEAVE
-    if(inBtn(SEA.upBtn)){ SEA.holdUp=true; return; }                     // ▲▼ vertical aim (hold)
-    if(inBtn(SEA.dnBtn)){ SEA.holdDn=true; return; }
-  } else if(SEA.holdUp||SEA.holdDn) return;              // finger started on a button: don't drag-aim
+  }
   SEA.tx=px; SEA.ty=py; SEA.rx=px; SEA.ry=py; SEA.aiming=true;   // snap to finger for responsive aim
   if(fire) SEA.firing=true;                              // MACHINE GUN: hold to keep firing
 }
@@ -2387,12 +2434,14 @@ function seaUpdate(){
   if(SEA.cool>0) SEA.cool--;
   if(SEA.flash>0) SEA.flash--;
   if(SEA.kick>0.4) SEA.kick*=0.78; else SEA.kick=0;
-  const PAN=4.4;
-  if(!SEA.aiming){                                       // pad ◀▶ pans; on-screen ▲▼ buttons (and JUMP) aim up/down
+  const PAN=4.4, JSPD=6.2;
+  if(JOY.active){                                        // JOYSTICK: analog 2D aim
+    SEA.rx=Math.max(0,Math.min(VW,SEA.rx+JOY.x*JSPD));
+    SEA.ry=Math.max(0,Math.min(VH,SEA.ry+JOY.y*JSPD));
+  } else if(!SEA.aiming){                                // keyboard fallback
     if(keys.left)  SEA.rx=Math.max(0,SEA.rx-PAN);
     if(keys.right) SEA.rx=Math.min(VW,SEA.rx+PAN);
-    if(SEA.holdUp||keys.jump) SEA.ry=Math.max(0,SEA.ry-PAN);
-    if(SEA.holdDn)            SEA.ry=Math.min(VH,SEA.ry+PAN);
+    if(keys.jump)  SEA.ry=Math.max(0,SEA.ry-PAN);
   }
   SEA.aiming=false;                                      // pointermove re-asserts this each frame
   SEA.aimX=SEA.rx+Math.sin(SEA.t*0.05)*2.0;              // subtle scope breathing (aim + drawn reticle match)
@@ -2512,14 +2561,6 @@ function seaDrawHud(){
   ctx.beginPath(); ctx.roundRect(L.x,L.y,L.w,L.h,7); ctx.fill(); ctx.stroke();
   ctx.fillStyle='#eef2f6'; ctx.font='bold 15px system-ui,sans-serif'; ctx.textBaseline='middle';
   ctx.fillText('\u25C0 LEAVE', L.x+12, L.y+L.h/2+1);
-  // ▲▼ vertical aim buttons (right edge) — hold to tilt the gun up/down
-  for(const [B,sym,held] of [[SEA.upBtn,'\u25B2',SEA.holdUp],[SEA.dnBtn,'\u25BC',SEA.holdDn]]){
-    ctx.fillStyle=held?'rgba(60,255,120,0.30)':'rgba(12,16,22,0.60)';
-    ctx.strokeStyle='rgba(200,210,220,0.5)'; ctx.lineWidth=1.5;
-    ctx.beginPath(); ctx.roundRect(B.x,B.y,B.w,B.h,9); ctx.fill(); ctx.stroke();
-    ctx.fillStyle='#eef2f6'; ctx.font='bold 19px system-ui,sans-serif'; ctx.textAlign='center';
-    ctx.fillText(sym, B.x+B.w/2, B.y+B.h/2+1); ctx.textAlign='left';
-  }
   // score / accuracy (top-right)
   ctx.textAlign='right'; ctx.font='bold 18px system-ui,sans-serif';
   ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillText('SCORE '+SEA.score, VW-9, 19);
@@ -2529,7 +2570,7 @@ function seaDrawHud(){
   ctx.textAlign='left'; ctx.textBaseline='alphabetic';
   if(SEA.t<210){ ctx.globalAlpha=Math.max(0,1-(SEA.t-150)/60);
     ctx.fillStyle='#eef2f6'; ctx.font='13px system-ui,sans-serif'; ctx.textAlign='center';
-    ctx.fillText('HOLD to fire \u2022 drag or \u25C0\u25B6 + \u25B2\u25BC to aim', VW/2, VH-16);
+    ctx.fillText('JOYSTICK to aim \u2022 HOLD screen or STRIKE to fire', VW/2, VH-16);
     ctx.textAlign='left'; ctx.globalAlpha=1; }
   ctx.restore();
 }
