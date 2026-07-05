@@ -2331,6 +2331,7 @@ function seaSpawn(anywhere){
   const horizon=seaHorizonY();
   const roll=['gull','gull','buoy','bottle','buoy'];   // weighted mix
   let k = (Math.random()<0.14) ? 'clay' : roll[(Math.random()*roll.length)|0];
+  if(k!=='clay' && Math.random()<0.22) k='boat';        // empty drifting fishing boat (seaboat.png)
   const dir=Math.random()<0.5?1:-1;
   const t={kind:k, dir, dead:false, bob:Math.random()*6.28};
   if(k==='gull'){
@@ -2339,6 +2340,10 @@ function seaSpawn(anywhere){
   } else if(k==='clay'){
     t.y=horizon-6; t.spd=2.2+Math.random()*1.2; t.r=12; t.pts=25;
     t.vy=-(2.6+Math.random()*1.1); t.g=0.055; t.scale=0.9;
+  } else if(k==='boat'){                                // slow, big, worth 20
+    t.y=horizon+12+Math.random()*(VH-horizon-60); t.spd=0.45+Math.random()*0.45;
+    t.r=30; t.pts=20;
+    t.scale = 0.55 + (t.y-horizon)/(VH-horizon)*0.75;   // nearer = bigger
   } else {                                              // buoy / bottle bob on the water
     t.y=horizon+10+Math.random()*(VH-horizon-32); t.spd=0.35+Math.random()*0.55;
     t.r = k==='buoy'?16:13; t.pts=10;
@@ -2414,6 +2419,18 @@ function seaDrawTarget(t){
     ctx.beginPath(); ctx.moveTo(-w,f); ctx.quadraticCurveTo(-w*0.4,-6*s-f,0,0);
     ctx.quadraticCurveTo(w*0.4,-6*s-f,w,f); ctx.stroke();
     ctx.fillStyle='rgba(40,44,50,0.9)'; ctx.beginPath(); ctx.arc(0,0,2.2*s,0,7); ctx.fill();
+  } else if(t.kind==='boat'){
+    const img=loaded.seaboat;
+    ctx.rotate(Math.sin(t.bob)*0.045);                   // gentle roll on the swell
+    if(imgOk(img)){
+      const bw=92*s, bh=bw*img.naturalHeight/img.naturalWidth;
+      ctx.scale(-1,1);                                   // sprite's bow points LEFT; net flip = face travel dir
+      ctx.drawImage(img,-bw/2,-bh+8*s,bw,bh);            // hull sits on the waterline (y)
+    } else {                                             // fallback if seaboat.png isn't uploaded
+      ctx.fillStyle='#e8ecef'; ctx.beginPath();
+      ctx.moveTo(-26*s,0); ctx.lineTo(22*s,0); ctx.lineTo(28*s,-7*s); ctx.lineTo(-20*s,-8*s); ctx.closePath(); ctx.fill();
+      ctx.fillStyle='#2a3138'; ctx.fillRect(-10*s,-16*s,14*s,9*s);
+    }
   } else if(t.kind==='clay'){
     ctx.fillStyle='#c8641e'; ctx.strokeStyle='#7a3810'; ctx.lineWidth=2*s;
     ctx.beginPath(); ctx.ellipse(0,0,11*s,4.5*s,Math.sin(t.bob)*0.5,0,7); ctx.fill(); ctx.stroke();
@@ -2429,9 +2446,9 @@ function seaDrawTarget(t){
     ctx.fillStyle='rgba(220,235,220,0.35)'; ctx.fillRect(-4*s,-4*s,2*s,10*s);  // glint
   }
   ctx.restore();
-  if(t.kind==='buoy'||t.kind==='bottle'){                              // little wake ripple
+  if(t.kind==='buoy'||t.kind==='bottle'||t.kind==='boat'){           // little wake ripple
     ctx.strokeStyle='rgba(255,255,255,0.25)'; ctx.lineWidth=1.5;
-    ctx.beginPath(); ctx.ellipse(x,y+8*s,12*s,3*s,0,0,7); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(x,y+8*s,(t.kind==='boat'?34:12)*s,3*s,0,0,7); ctx.stroke();
   }
 }
 function seaDrawPuff(p){
