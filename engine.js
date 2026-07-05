@@ -1908,8 +1908,8 @@ const JOY={x:0,y:0,active:false};
   const st=document.createElement('style');
   st.textContent=`
     #joy{position:relative;width:112px;height:112px;border-radius:50%;touch-action:none;
-      background:radial-gradient(circle at 50% 46%, #000 0%, #22262cdd 55%, #0a0d11ee 100%);
-      border:3px solid #d7dde4;box-shadow:0 3px 14px #000a, inset 0 0 24px #000c;
+      background:transparent;
+      border:3px solid #6b7178;box-shadow:0 3px 14px #0006;
       pointer-events:auto;flex:0 0 auto;}
     #joyknob{position:absolute;left:50%;top:50%;width:52px;height:52px;border-radius:50%;
       transform:translate(-50%,-50%);
