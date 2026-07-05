@@ -2787,7 +2787,6 @@ function zomDraw(){
   const zs=[...ZOM.zombies].sort((a,b)=>b.z-a.z);        // far ones first
   for(const zb of zs) zomDrawZombie(zb);
   for(const p of SEA.puffs) seaDrawPuff(p);
-  seaDrawScope();
   seaDrawGun();
   ctx.restore();
   if(ZOM.hurtT>0){ ctx.fillStyle=`rgba(180,0,0,${0.42*ZOM.hurtT/22})`; ctx.fillRect(0,0,VW,VH); }
