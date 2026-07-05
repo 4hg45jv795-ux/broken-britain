@@ -1930,6 +1930,10 @@ function cinemaFullscreen(){
   const rq=v.requestFullscreen||v.webkitRequestFullscreen||v.mozRequestFullScreen||v.msRequestFullscreen; // desktop / Android
   if(rq){ v.controls=true; try{ rq.call(v); }catch(_){} }
 }
+const seaRelease=()=>{ SEA.firing=false; SEA.holdUp=false; SEA.holdDn=false; };
+cv.addEventListener('pointerup', seaRelease);
+cv.addEventListener('pointercancel', seaRelease);
+cv.addEventListener('pointerleave', seaRelease);
 cv.addEventListener('pointerdown', e=>{                 // THE SEA: tap = aim + fire, drag = aim
   if(!SECTIONS[sectionIndex].sea||paused||csActive) return;
   e.preventDefault(); seaPointer(e.clientX,e.clientY,true);
@@ -2318,44 +2322,39 @@ function updateProxAudio(){
    bgKey (room_sea.jpeg). To use your own target art later, swap the seaDrawTarget
    branches for drawImage on an uploaded sprite. ◀ LEAVE (top-left) returns to hub. */
 const SEA = { on:false, rx:VW/2, ry:VH*0.5, tx:VW/2, ty:VH*0.5, aimX:VW/2, aimY:VH*0.5,
-  cool:0, kick:0, score:0, shots:0, hits:0, t:0, targets:[], puffs:[], spawnT:0, aiming:false,
-  leaveBtn:{x:8,y:8,w:104,h:30} };
+  cool:0, kick:0, flash:0, score:0, shots:0, hits:0, t:0, targets:[], puffs:[], spawnT:0, aiming:false,
+  firing:false, holdUp:false, holdDn:false,
+  leaveBtn:{x:8,y:8,w:104,h:30},
+  upBtn:{x:VW-54,y:VH*0.5-66,w:46,h:46}, dnBtn:{x:VW-54,y:VH*0.5-10,w:46,h:46} };
 function seaHorizonY(){ return VH*0.52; }              // waterline in the backdrop (~y187)
 function seaEnter(){
   SEA.on=true; SEA.rx=SEA.tx=SEA.aimX=VW/2; SEA.ry=SEA.ty=SEA.aimY=VH*0.5;
-  SEA.cool=0; SEA.kick=0; SEA.score=0; SEA.shots=0; SEA.hits=0; SEA.t=0;
+  SEA.cool=0; SEA.kick=0; SEA.flash=0; SEA.score=0; SEA.shots=0; SEA.hits=0; SEA.t=0;
   SEA.targets=[]; SEA.puffs=[]; SEA.spawnT=0; SEA.aiming=false;
+  SEA.firing=false; SEA.holdUp=false; SEA.holdDn=false;
   for(let i=0;i<5;i++) seaSpawn(true);
 }
 function seaSpawn(anywhere){
   const horizon=seaHorizonY();
-  const roll=['gull','gull','buoy','bottle','buoy'];   // weighted mix
-  let k = (Math.random()<0.14) ? 'clay' : roll[(Math.random()*roll.length)|0];
-  if(k!=='clay' && Math.random()<0.22) k='boat';        // empty drifting fishing boat (seaboat.png)
+  const k = Math.random()<0.5 ? 'gull' : 'boat';        // TARGETS: seagulls + empty boats only
   const dir=Math.random()<0.5?1:-1;
   const t={kind:k, dir, dead:false, bob:Math.random()*6.28};
   if(k==='gull'){
     t.y=18+Math.random()*(horizon-46); t.spd=0.9+Math.random()*1.2; t.r=15; t.pts=15;
     t.scale=0.7+Math.random()*0.2;
-  } else if(k==='clay'){
-    t.y=horizon-6; t.spd=2.2+Math.random()*1.2; t.r=12; t.pts=25;
-    t.vy=-(2.6+Math.random()*1.1); t.g=0.055; t.scale=0.9;
-  } else if(k==='boat'){                                // slow, big, worth 20
+  } else {                                              // empty drifting fishing boat (seaboat.png)
     t.y=horizon+12+Math.random()*(VH-horizon-60); t.spd=0.45+Math.random()*0.45;
-    t.r=30; t.pts=20;
-    t.scale = 0.55 + (t.y-horizon)/(VH-horizon)*0.75;   // nearer = bigger
-  } else {                                              // buoy / bottle bob on the water
-    t.y=horizon+10+Math.random()*(VH-horizon-32); t.spd=0.35+Math.random()*0.55;
-    t.r = k==='buoy'?16:13; t.pts=10;
-    t.scale = 0.78 + (t.y-horizon)/(VH-horizon)*0.5;    // nearer the bottom = closer = bigger
+    t.r=36; t.pts=20;
+    t.scale = 0.7 + (t.y-horizon)/(VH-horizon)*0.85;    // nearer = bigger
   }
   t.x = anywhere ? (40+Math.random()*(VW-80)) : (dir>0 ? -30 : VW+30);
   SEA.targets.push(t);
 }
 function seaFireAt(ax,ay){
   if(SEA.cool>0) return;
-  SEA.cool=10; SEA.shots++; SEA.kick=7;
-  addShake(2,4); noiseBurst(0.13,0.22,220); blip(140,60,0.12,'square',0.14);   // shotgun boom + kick
+  SEA.cool=5; SEA.shots++; SEA.kick=4; SEA.flash=3;      // MACHINE GUN: ~12 rounds/sec while held
+  ax+=(Math.random()*2-1)*3; ay+=(Math.random()*2-1)*3;  // slight spray
+  addShake(1.5,3); noiseBurst(0.07,0.20,500); blip(180,70,0.06,'square',0.10);
   let best=null, bd=1e9;
   for(const t of SEA.targets){ if(t.dead) continue;
     const hr=(t.r+8)*t.scale, d=Math.hypot(t.x-ax,t.y-ay);
@@ -2374,33 +2373,38 @@ function seaPointer(clientX,clientY,fire){
   const b=cv.getBoundingClientRect(); if(!b.width||!b.height) return;
   const px=Math.max(0,Math.min(VW,(clientX-b.left)/b.width*VW));
   const py=Math.max(0,Math.min(VH,(clientY-b.top)/b.height*VH));
-  if(fire){ const L=SEA.leaveBtn;                       // ◀ LEAVE hit-test
-    if(px>=L.x&&px<=L.x+L.w&&py>=L.y&&py<=L.y+L.h){ gotoId('home',{x:1290,face:1}); return; } }
+  const inBtn=(B)=>px>=B.x&&px<=B.x+B.w&&py>=B.y&&py<=B.y+B.h;
+  if(fire){
+    if(inBtn(SEA.leaveBtn)){ gotoId('home',{x:1290,face:1}); return; }   // ◀ LEAVE
+    if(inBtn(SEA.upBtn)){ SEA.holdUp=true; return; }                     // ▲▼ vertical aim (hold)
+    if(inBtn(SEA.dnBtn)){ SEA.holdDn=true; return; }
+  } else if(SEA.holdUp||SEA.holdDn) return;              // finger started on a button: don't drag-aim
   SEA.tx=px; SEA.ty=py; SEA.rx=px; SEA.ry=py; SEA.aiming=true;   // snap to finger for responsive aim
-  if(fire) seaFire();
+  if(fire) SEA.firing=true;                              // MACHINE GUN: hold to keep firing
 }
 function seaUpdate(){
   SEA.t++;
   if(SEA.cool>0) SEA.cool--;
+  if(SEA.flash>0) SEA.flash--;
   if(SEA.kick>0.4) SEA.kick*=0.78; else SEA.kick=0;
-  const PAN=4.4;                                         // pad fallback aiming (touch uses the pointer handler)
-  if(!SEA.aiming){
+  const PAN=4.4;
+  if(!SEA.aiming){                                       // pad ◀▶ pans; on-screen ▲▼ buttons (and JUMP) aim up/down
     if(keys.left)  SEA.rx=Math.max(0,SEA.rx-PAN);
     if(keys.right) SEA.rx=Math.min(VW,SEA.rx+PAN);
-    if(keys.jump)  SEA.ry=Math.max(0,SEA.ry-PAN);
-    else if(SEA.ry<VH*0.5) SEA.ry=Math.min(VH*0.5,SEA.ry+0.7);  // eases back toward the horizon
+    if(SEA.holdUp||keys.jump) SEA.ry=Math.max(0,SEA.ry-PAN);
+    if(SEA.holdDn)            SEA.ry=Math.min(VH,SEA.ry+PAN);
   }
   SEA.aiming=false;                                      // pointermove re-asserts this each frame
   SEA.aimX=SEA.rx+Math.sin(SEA.t*0.05)*2.0;              // subtle scope breathing (aim + drawn reticle match)
   SEA.aimY=SEA.ry+Math.sin(SEA.t*0.037)*1.5;
-  if(punchEdge){ punchEdge=false; seaFire(); }           // STRIKE fires
+  if(SEA.firing||punchDown) seaFire();                   // MACHINE GUN: hold screen or STRIKE to spray
+  punchEdge=false;
   const horizon=seaHorizonY();
   for(const t of SEA.targets){
     if(t.dead) continue;
     t.x += t.dir*t.spd; t.bob += 0.06;
-    if(t.kind==='clay'){ t.vy+=t.g; t.y+=t.vy; if(t.y>horizon+34) t.dead=true; }
-    else if(t.kind==='gull') t.y += Math.sin(t.bob)*0.35;
-    else t.y += Math.sin(t.bob)*0.5;                     // bob on the swell
+    if(t.kind==='gull') t.y += Math.sin(t.bob)*0.35;
+    else t.y += Math.sin(t.bob)*0.5;                     // boats bob on the swell
     if(t.x<-50 || t.x>VW+50) t.dead=true;
   }
   SEA.targets=SEA.targets.filter(t=>!t.dead);
@@ -2423,7 +2427,7 @@ function seaDrawTarget(t){
     const img=loaded.seaboat;
     ctx.rotate(Math.sin(t.bob)*0.045);                   // gentle roll on the swell
     if(imgOk(img)){
-      const bw=92*s, bh=bw*img.naturalHeight/img.naturalWidth;
+      const bw=124*s, bh=bw*img.naturalHeight/img.naturalWidth;
       ctx.scale(-1,1);                                   // sprite's bow points LEFT; net flip = face travel dir
       ctx.drawImage(img,-bw/2,-bh+8*s,bw,bh);            // hull sits on the waterline (y)
     } else {                                             // fallback if seaboat.png isn't uploaded
@@ -2431,24 +2435,11 @@ function seaDrawTarget(t){
       ctx.moveTo(-26*s,0); ctx.lineTo(22*s,0); ctx.lineTo(28*s,-7*s); ctx.lineTo(-20*s,-8*s); ctx.closePath(); ctx.fill();
       ctx.fillStyle='#2a3138'; ctx.fillRect(-10*s,-16*s,14*s,9*s);
     }
-  } else if(t.kind==='clay'){
-    ctx.fillStyle='#c8641e'; ctx.strokeStyle='#7a3810'; ctx.lineWidth=2*s;
-    ctx.beginPath(); ctx.ellipse(0,0,11*s,4.5*s,Math.sin(t.bob)*0.5,0,7); ctx.fill(); ctx.stroke();
-  } else if(t.kind==='buoy'){
-    ctx.fillStyle='#c0392b'; ctx.beginPath();            // red conical buoy
-    ctx.moveTo(-9*s,6*s); ctx.lineTo(9*s,6*s); ctx.lineTo(0,-14*s); ctx.closePath(); ctx.fill();
-    ctx.fillStyle='#eef2f4'; ctx.fillRect(-8*s,-1*s,16*s,4*s);         // white band
-    ctx.fillStyle='#f2d23a'; ctx.beginPath(); ctx.arc(0,-16*s,2.6*s,0,7); ctx.fill();  // light
-  } else { // bottle
-    ctx.rotate(0.5); ctx.fillStyle='rgba(40,120,70,0.92)';
-    ctx.beginPath(); ctx.roundRect(-5*s,-6*s,10*s,16*s,3*s); ctx.fill();
-    ctx.fillRect(-2.2*s,-12*s,4.4*s,7*s);                              // neck
-    ctx.fillStyle='rgba(220,235,220,0.35)'; ctx.fillRect(-4*s,-4*s,2*s,10*s);  // glint
   }
   ctx.restore();
-  if(t.kind==='buoy'||t.kind==='bottle'||t.kind==='boat'){           // little wake ripple
+  if(t.kind==='boat'){                                               // wake ripple
     ctx.strokeStyle='rgba(255,255,255,0.25)'; ctx.lineWidth=1.5;
-    ctx.beginPath(); ctx.ellipse(x,y+8*s,(t.kind==='boat'?34:12)*s,3*s,0,0,7); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(x,y+8*s,42*s,3.5*s,0,0,7); ctx.stroke();
   }
 }
 function seaDrawPuff(p){
@@ -2490,6 +2481,29 @@ function seaDrawReticle(x,y){
   ctx.beginPath(); ctx.arc(x,y,1.6,0,7); ctx.fill();
   ctx.restore();
 }
+function seaDrawGun(){
+  /* chunky MACHINE GUN anchored bottom-right, barrel tracking the reticle */
+  const px=VW-118, py=VH+42;                              // pivot just off-screen
+  const ang=Math.atan2(SEA.aimY-py, SEA.aimX-px);
+  ctx.save(); ctx.translate(px,py); ctx.rotate(ang);
+  ctx.fillStyle='#14181d';                                // barrel
+  ctx.fillRect(38,-7,150,14);
+  ctx.fillStyle='#0c0f13'; ctx.fillRect(176,-9,16,18);    // muzzle brake
+  ctx.fillStyle='#1d232b';                                // handguard ribs
+  for(let i=0;i<4;i++) ctx.fillRect(58+i*26,-10,14,20);
+  ctx.fillStyle='#242c36'; ctx.beginPath(); ctx.roundRect(-16,-20,70,44,8); ctx.fill();  // receiver
+  ctx.fillStyle='#171c22'; ctx.beginPath(); ctx.roundRect(-4,16,34,26,5); ctx.fill();    // ammo box
+  ctx.fillStyle='#0f1317'; ctx.fillRect(20,-26,12,12);    // rear sight
+  if(SEA.flash>0){                                        // muzzle flash
+    const fx=196, k=SEA.flash/3;
+    ctx.fillStyle=`rgba(255,240,170,${0.85*k})`;
+    ctx.beginPath();
+    ctx.moveTo(fx,0); ctx.lineTo(fx+26*k,-11*k); ctx.lineTo(fx+40*k,0); ctx.lineTo(fx+26*k,11*k);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle=`rgba(255,200,90,${0.7*k})`; ctx.beginPath(); ctx.arc(fx+8,0,8*k,0,7); ctx.fill();
+  }
+  ctx.restore();
+}
 function seaDrawHud(){
   ctx.save();
   // LEAVE button
@@ -2498,6 +2512,14 @@ function seaDrawHud(){
   ctx.beginPath(); ctx.roundRect(L.x,L.y,L.w,L.h,7); ctx.fill(); ctx.stroke();
   ctx.fillStyle='#eef2f6'; ctx.font='bold 15px system-ui,sans-serif'; ctx.textBaseline='middle';
   ctx.fillText('\u25C0 LEAVE', L.x+12, L.y+L.h/2+1);
+  // ▲▼ vertical aim buttons (right edge) — hold to tilt the gun up/down
+  for(const [B,sym,held] of [[SEA.upBtn,'\u25B2',SEA.holdUp],[SEA.dnBtn,'\u25BC',SEA.holdDn]]){
+    ctx.fillStyle=held?'rgba(60,255,120,0.30)':'rgba(12,16,22,0.60)';
+    ctx.strokeStyle='rgba(200,210,220,0.5)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.roundRect(B.x,B.y,B.w,B.h,9); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#eef2f6'; ctx.font='bold 19px system-ui,sans-serif'; ctx.textAlign='center';
+    ctx.fillText(sym, B.x+B.w/2, B.y+B.h/2+1); ctx.textAlign='left';
+  }
   // score / accuracy (top-right)
   ctx.textAlign='right'; ctx.font='bold 18px system-ui,sans-serif';
   ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillText('SCORE '+SEA.score, VW-9, 19);
@@ -2507,7 +2529,7 @@ function seaDrawHud(){
   ctx.textAlign='left'; ctx.textBaseline='alphabetic';
   if(SEA.t<210){ ctx.globalAlpha=Math.max(0,1-(SEA.t-150)/60);
     ctx.fillStyle='#eef2f6'; ctx.font='13px system-ui,sans-serif'; ctx.textAlign='center';
-    ctx.fillText('Drag to aim \u2022 tap to fire  (or \u25C0\u25B6 / JUMP / STRIKE)', VW/2, VH-16);
+    ctx.fillText('HOLD to fire \u2022 drag or \u25C0\u25B6 + \u25B2\u25BC to aim', VW/2, VH-16);
     ctx.textAlign='left'; ctx.globalAlpha=1; }
   ctx.restore();
 }
@@ -2528,6 +2550,7 @@ function seaDraw(){
   for(const t of SEA.targets) if(!t.dead) seaDrawTarget(t);
   for(const p of SEA.puffs) seaDrawPuff(p);
   seaDrawScope();
+  seaDrawGun();
   ctx.restore();
   seaDrawReticle(SEA.aimX,SEA.aimY);
   seaDrawHud();
