@@ -964,6 +964,7 @@ function enterSection(opts){
   playSectionTrack();   // plays this room's track, or silence for screen rooms / trackless interiors
   initPickup();
   SEA.on=false; if(SECTIONS[sectionIndex].sea) seaEnter();   // THE SEA shooting gallery
+  if(SECTIONS[sectionIndex].zdef) zomEnter();                // ZOMBIES wave defence
   tvEnter();                                       // start this room's wall screen (or stop if none)
   sceneEnter();                                    // start this level's full-scene wall+floor videos (or stop)
 }
@@ -1984,12 +1985,12 @@ const seaRelease=()=>{ SEA.firing=false; SEA.holdUp=false; SEA.holdDn=false; };
 cv.addEventListener('pointerup', seaRelease);
 cv.addEventListener('pointercancel', seaRelease);
 cv.addEventListener('pointerleave', seaRelease);
-cv.addEventListener('pointerdown', e=>{                 // THE SEA: tap = aim + fire, drag = aim
-  if(!SECTIONS[sectionIndex].sea||paused||csActive) return;
+cv.addEventListener('pointerdown', e=>{                 // SEA/ZOMBIES: tap = aim + fire, drag = aim
+  const _fps=SECTIONS[sectionIndex]; if((!_fps.sea&&!_fps.zdef)||paused||csActive) return;
   e.preventDefault(); seaPointer(e.clientX,e.clientY,true);
 });
 cv.addEventListener('pointermove', e=>{
-  if(!SECTIONS[sectionIndex].sea||paused||csActive) return;
+  const _fps=SECTIONS[sectionIndex]; if((!_fps.sea&&!_fps.zdef)||paused||csActive) return;
   if(e.buttons||e.pressure>0) seaPointer(e.clientX,e.clientY,false);
 });
 cv.addEventListener('pointerup', e=>{
@@ -2424,7 +2425,8 @@ function seaPointer(clientX,clientY,fire){
   const py=Math.max(0,Math.min(VH,(clientY-b.top)/b.height*VH));
   const inBtn=(B)=>px>=B.x&&px<=B.x+B.w&&py>=B.y&&py<=B.y+B.h;
   if(fire){
-    if(inBtn(SEA.leaveBtn)){ gotoId('home',{x:1290,face:1}); return; }   // ◀ LEAVE
+    if(inBtn(SEA.leaveBtn)){                                             // ◀ LEAVE → the door you came from
+      gotoId('home',{x:SECTIONS[sectionIndex].zdef?1490:1290,face:1}); return; }
   }
   SEA.tx=px; SEA.ty=py; SEA.rx=px; SEA.ry=py; SEA.aiming=true;   // snap to finger for responsive aim
   if(fire) SEA.firing=true;                              // MACHINE GUN: hold to keep firing
@@ -2597,10 +2599,206 @@ function seaDraw(){
   seaDrawHud();
 }
 
+/* ══ ZOMBIES — first-person WAVE DEFENCE ═════════════════════════════════════
+   Runs on any section with `zdef:true` (branched in update()/draw() like the sea
+   range). Shares the SEA aim state + machine gun + scope + reticle + joystick:
+   zombies spawn small at the portal on the horizon and walk AT the camera,
+   growing as they close in. Each takes a few rounds to put down; frames 0-4 walk,
+   5 = lunge (the strike when one reaches you), 6-8 = collapse. A zombie reaching
+   the screen costs a heart — lose all 3 and it's game over (tap to go home).
+   Waves grow bigger and faster. Backdrop room_zombies.jpeg; a drawn moor + glowing
+   portal is used until it's uploaded. */
+const ZOM={ zombies:[], wave:0, kills:0, score:0, lives:3, spawnLeft:0, spawnT:0,
+  betweenT:0, over:false, overT:0, hurtT:0 };
+function zomEnter(){
+  SEA.rx=SEA.tx=SEA.aimX=VW/2; SEA.ry=SEA.ty=SEA.aimY=VH*0.5;
+  SEA.cool=0; SEA.kick=0; SEA.flash=0; SEA.t=0; SEA.aiming=false; SEA.firing=false;
+  ZOM.zombies=[]; ZOM.wave=0; ZOM.kills=0; ZOM.score=0; ZOM.lives=3;
+  ZOM.spawnLeft=0; ZOM.spawnT=0; ZOM.betweenT=80; ZOM.over=false; ZOM.overT=0; ZOM.hurtT=0;
+}
+function zomHorizonY(){ return VH*0.46; }
+function zomStartWave(){
+  ZOM.wave++; ZOM.spawnLeft=2+ZOM.wave*2; ZOM.spawnT=10;
+  flashBanner('WAVE '+ZOM.wave);
+  blip(220,440,0.25,'triangle',0.16);
+}
+function zomSpawn(){
+  const spd=(0.0016+0.00035*ZOM.wave)*(0.85+Math.random()*0.4);
+  ZOM.zombies.push({ sx:(Math.random()*2-1)*0.9, z:1, spd,
+    hp:2+(ZOM.wave>=4?1:0)+(ZOM.wave>=8?1:0), st:'walk', anim:Math.random()*5,
+    hitT:0, lungeT:0, dieT:0 });
+}
+function zomGeom(zb){                                    // screen geometry from depth z (1=portal, 0=camera)
+  const t=1-zb.z, tt=t*t;
+  const dh=26+tt*400;                                    // drawn height px
+  const dw=dh*131/237;
+  const fy=zomHorizonY()+8+tt*(VH-zomHorizonY()+50);     // feet y walks down the ground plane
+  const x=VW/2 + zb.sx*(50+tt*430);                      // lanes fan out as they approach
+  return {x, fy, dw, dh, t};
+}
+function zomFireAt(ax,ay){
+  if(SEA.cool>0) return;
+  SEA.cool=5; SEA.kick=4; SEA.flash=3;
+  ax+=(Math.random()*2-1)*3; ay+=(Math.random()*2-1)*3;
+  addShake(1.5,3); noiseBurst(0.07,0.20,500); blip(180,70,0.06,'square',0.10);
+  let best=null, bt=-1;
+  for(const zb of ZOM.zombies){
+    if(zb.st==='die') continue;
+    const g=zomGeom(zb);
+    if(ax>g.x-g.dw*0.34 && ax<g.x+g.dw*0.34 && ay>g.fy-g.dh && ay<g.fy){
+      if(g.t>bt){ bt=g.t; best=zb; }                     // hit the CLOSEST one under the reticle
+    }
+  }
+  if(best){
+    best.hp--; best.hitT=6;
+    const g=zomGeom(best);
+    SEA.puffs.push({x:ax,y:Math.max(g.fy-g.dh*0.8,ay),ct:0,miss:false,splash:false});
+    if(best.hp<=0){ best.st='die'; best.dieT=0; ZOM.kills++; ZOM.score+=10+ZOM.wave;
+      SEA.puffs.push({x:g.x,y:g.fy-g.dh*0.5,ct:0,pts:10+ZOM.wave,splash:false});
+      blip(90,36,0.22,'sawtooth',0.16);
+    } else blip(120,60,0.08,'square',0.10);
+  }
+}
+function zomUpdate(){
+  SEA.t++;
+  if(SEA.cool>0) SEA.cool--;
+  if(SEA.flash>0) SEA.flash--;
+  if(SEA.kick>0.4) SEA.kick*=0.78; else SEA.kick=0;
+  if(ZOM.hurtT>0) ZOM.hurtT--;
+  if(ZOM.over){                                          // game over: STRIKE / tap (after a beat) goes home
+    ZOM.overT++;
+    if(ZOM.overT>45 && (SEA.firing||punchDown)){ SEA.firing=false; punchDown=false; gotoId('home',{x:1490,face:1}); }
+    punchEdge=false; return;
+  }
+  const JSPD=6.2, PAN=4.4;
+  if(JOY.active){
+    SEA.rx=Math.max(0,Math.min(VW,SEA.rx+JOY.x*JSPD));
+    SEA.ry=Math.max(0,Math.min(VH,SEA.ry+JOY.y*JSPD));
+  } else if(!SEA.aiming){
+    if(keys.left)  SEA.rx=Math.max(0,SEA.rx-PAN);
+    if(keys.right) SEA.rx=Math.min(VW,SEA.rx+PAN);
+    if(keys.jump)  SEA.ry=Math.max(0,SEA.ry-PAN);
+  }
+  SEA.aiming=false;
+  SEA.aimX=SEA.rx+Math.sin(SEA.t*0.05)*2.0;
+  SEA.aimY=SEA.ry+Math.sin(SEA.t*0.037)*1.5;
+  if(SEA.firing||punchDown) zomFireAt(SEA.aimX,SEA.aimY);
+  punchEdge=false;
+  // waves
+  if(ZOM.zombies.length===0 && ZOM.spawnLeft===0){
+    if(ZOM.betweenT>0){ ZOM.betweenT--; if(ZOM.betweenT===0) zomStartWave(); }
+  }
+  if(ZOM.spawnLeft>0){ ZOM.spawnT--;
+    if(ZOM.spawnT<=0){ zomSpawn(); ZOM.spawnLeft--; ZOM.spawnT=Math.max(16,52-ZOM.wave*3); } }
+  // zombies
+  for(const zb of ZOM.zombies){
+    if(zb.st==='walk'){
+      zb.z-=zb.spd; zb.anim+=0.09+zb.spd*26; zb.hitT>0&&zb.hitT--;
+      if(zb.z<=0.06){ zb.st='lunge'; zb.lungeT=0; }
+    } else if(zb.st==='lunge'){
+      zb.lungeT++;
+      if(zb.lungeT===22){                                // the strike lands
+        ZOM.lives--; ZOM.hurtT=22; addShake(7,14); noiseBurst(0.25,0.3,140); blip(200,50,0.3,'sawtooth',0.2);
+        zb.st='die'; zb.dieT=0;                          // it spends itself in the lunge
+        if(ZOM.lives<=0){ ZOM.over=true; ZOM.overT=0; }
+      }
+    } else if(zb.st==='die'){ zb.dieT++; }
+  }
+  ZOM.zombies=ZOM.zombies.filter(zb=>!(zb.st==='die'&&zb.dieT>60));
+  if(ZOM.zombies.length===0 && ZOM.spawnLeft===0 && ZOM.betweenT===0) ZOM.betweenT=110;
+  for(const p of SEA.puffs) p.ct++;
+  SEA.puffs=SEA.puffs.filter(p=>p.ct<24);
+}
+function zomDrawBackdrop(){
+  const bg=loaded[SECTIONS[sectionIndex].bgKey], hz=zomHorizonY();
+  if(imgOk(bg)){ ctx.drawImage(bg,-4,-4,VW+8,VH+8); return; }
+  const sky=ctx.createLinearGradient(0,0,0,hz);          // fallback: night moor + glowing portal
+  sky.addColorStop(0,'#05060c'); sky.addColorStop(1,'#1a1430');
+  ctx.fillStyle=sky; ctx.fillRect(0,0,VW,hz);
+  const gnd=ctx.createLinearGradient(0,hz,0,VH);
+  gnd.addColorStop(0,'#17201a'); gnd.addColorStop(1,'#060a07');
+  ctx.fillStyle=gnd; ctx.fillRect(0,hz,VW,VH-hz);
+  const pu=1+Math.sin(SEA.t*0.06)*0.08;                  // pulsing portal
+  const pg=ctx.createRadialGradient(VW/2,hz-6,4,VW/2,hz-6,64*pu);
+  pg.addColorStop(0,'rgba(220,150,255,0.95)'); pg.addColorStop(0.5,'rgba(130,50,220,0.55)');
+  pg.addColorStop(1,'rgba(80,20,160,0)');
+  ctx.fillStyle=pg; ctx.beginPath(); ctx.ellipse(VW/2,hz-6,64*pu,34*pu,0,0,7); ctx.fill();
+  ctx.strokeStyle='rgba(230,180,255,0.8)'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.ellipse(VW/2,hz-6,46*pu,24*pu,0,0,7); ctx.stroke();
+}
+function zomDrawZombie(zb){
+  const g=zomGeom(zb), img=loaded.zombie;
+  let fr;
+  if(zb.st==='walk') fr=Math.floor(zb.anim)%5;
+  else if(zb.st==='lunge') fr=5;
+  else fr=6+Math.min(2,Math.floor(zb.dieT/9));
+  ctx.save();
+  if(zb.st==='die'&&zb.dieT>34) ctx.globalAlpha=Math.max(0,1-(zb.dieT-34)/26);
+  if(imgOk(img)){
+    if(zb.hitT>0){ ctx.filter='brightness(1.9)'; }       // white flash on hit
+    ctx.drawImage(img, fr*131,0,131,237, g.x-g.dw/2, g.fy-g.dh, g.dw, g.dh);
+    ctx.filter='none';
+  } else {                                               // fallback silhouette
+    ctx.fillStyle=zb.hitT>0?'#cfd6cc':'#39413a';
+    ctx.fillRect(g.x-g.dw*0.22, g.fy-g.dh, g.dw*0.44, g.dh);
+  }
+  ctx.restore();
+}
+function zomDrawHud(){
+  ctx.save();
+  const L=SEA.leaveBtn;
+  ctx.fillStyle='rgba(12,16,22,0.72)'; ctx.strokeStyle='rgba(200,210,220,0.5)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.roundRect(L.x,L.y,L.w,L.h,7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#eef2f6'; ctx.font='bold 15px system-ui,sans-serif'; ctx.textBaseline='middle';
+  ctx.fillText('\u25C0 LEAVE', L.x+12, L.y+L.h/2+1);
+  ctx.textAlign='center'; ctx.font='bold 17px system-ui,sans-serif';   // hearts top-centre
+  let hearts=''; for(let i=0;i<3;i++) hearts+=(i<ZOM.lives?'\u2665 ':'\u2661 ');
+  ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillText(hearts, VW/2+1, 20);
+  ctx.fillStyle='#ff5f6d'; ctx.fillText(hearts, VW/2, 19);
+  ctx.textAlign='right'; ctx.font='bold 18px system-ui,sans-serif';
+  ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillText('SCORE '+ZOM.score, VW-9, 19);
+  ctx.fillStyle='#ffe98a'; ctx.fillText('SCORE '+ZOM.score, VW-10, 18);
+  ctx.font='12px system-ui,sans-serif'; ctx.fillStyle='rgba(235,240,245,0.85)';
+  ctx.fillText('WAVE '+Math.max(1,ZOM.wave)+'  \u2022  KILLS '+ZOM.kills, VW-10, 36);
+  ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+  if(SEA.t<210&&!ZOM.over){ ctx.globalAlpha=Math.max(0,1-(SEA.t-150)/60);
+    ctx.fillStyle='#eef2f6'; ctx.font='13px system-ui,sans-serif'; ctx.textAlign='center';
+    ctx.fillText('Stop them reaching you \u2022 JOYSTICK aims \u2022 HOLD to fire', VW/2, VH-16);
+    ctx.textAlign='left'; ctx.globalAlpha=1; }
+  ctx.restore();
+}
+function zomDraw(){
+  ctx.clearRect(0,0,VW,VH); ctx.imageSmoothingEnabled=true;
+  const kx=(Math.random()*2-1)*SEA.kick, ky=(Math.random()*2-1)*SEA.kick;
+  ctx.save(); ctx.translate(kx,ky);
+  zomDrawBackdrop();
+  const zs=[...ZOM.zombies].sort((a,b)=>b.z-a.z);        // far ones first
+  for(const zb of zs) zomDrawZombie(zb);
+  for(const p of SEA.puffs) seaDrawPuff(p);
+  seaDrawScope();
+  seaDrawGun();
+  ctx.restore();
+  if(ZOM.hurtT>0){ ctx.fillStyle=`rgba(180,0,0,${0.42*ZOM.hurtT/22})`; ctx.fillRect(0,0,VW,VH); }
+  if(ZOM.over){
+    ctx.fillStyle='rgba(0,0,0,0.62)'; ctx.fillRect(0,0,VW,VH);
+    ctx.textAlign='center'; ctx.fillStyle='#ff5f6d'; ctx.font='bold 40px system-ui,sans-serif';
+    ctx.fillText('YOU DIED', VW/2, VH/2-16);
+    ctx.fillStyle='#eef2f6'; ctx.font='bold 16px system-ui,sans-serif';
+    ctx.fillText('WAVE '+ZOM.wave+'  \u2022  KILLS '+ZOM.kills+'  \u2022  SCORE '+ZOM.score, VW/2, VH/2+14);
+    if(ZOM.overT>45){ ctx.font='13px system-ui,sans-serif'; ctx.fillStyle='rgba(235,240,245,0.9)';
+      ctx.fillText('tap to return to the hub', VW/2, VH/2+40); }
+    ctx.textAlign='left';
+  } else {
+    seaDrawReticle(SEA.aimX,SEA.aimY);
+  }
+  zomDrawHud();
+}
+
 /* ── UPDATE / DRAW / LOOP ────────────────────────────────── */
 function update(){
   if(csActive||transitioning||shopOpen||travelOpen)return;
   if(SECTIONS[sectionIndex].sea){ seaUpdate(); return; }   // THE SEA shooting gallery
+  if(SECTIONS[sectionIndex].zdef){ zomUpdate(); return; }  // ZOMBIES wave defence
   if(player.hurtCool>0) player.hurtCool--;
   if(player.invincibleT>0) player.invincibleT--;
   updateDoors();
@@ -2772,6 +2970,7 @@ function drawWater(){
 }
 function draw(){
   if(SECTIONS[sectionIndex].sea){ seaDraw(); return; }      // THE SEA shooting gallery
+  if(SECTIONS[sectionIndex].zdef){ zomDraw(); return; }     // ZOMBIES wave defence
   const dsec=SECTIONS[sectionIndex];
   if(dsec.flip){
     const cfg=curSceneCfg(); const panelW=(cfg&&cfg.tileW)||SRCW;
