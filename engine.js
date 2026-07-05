@@ -2375,7 +2375,7 @@ function updateProxAudio(){
 const SEA = { on:false, rx:VW/2, ry:VH*0.5, tx:VW/2, ty:VH*0.5, aimX:VW/2, aimY:VH*0.5,
   cool:0, kick:0, flash:0, score:0, shots:0, hits:0, t:0, targets:[], puffs:[], spawnT:0, aiming:false,
   firing:false, holdUp:false, holdDn:false,
-  leaveBtn:{x:8,y:8,w:104,h:30} };
+  leaveBtn:{x:8,y:64,w:104,h:30} };   // below the DOM name/£ overlay
 function seaHorizonY(){ return VH*0.52; }              // waterline in the backdrop (~y187)
 function seaEnter(){
   SEA.on=true; SEA.rx=SEA.tx=SEA.aimX=VW/2; SEA.ry=SEA.ty=SEA.aimY=VH*0.5;
@@ -2573,14 +2573,14 @@ function seaDrawHud(){
   ctx.fillText('\u25C0 LEAVE', L.x+12, L.y+L.h/2+1);
   // score / accuracy (top-right)
   ctx.textAlign='right'; ctx.font='bold 18px system-ui,sans-serif';
-  ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillText('SCORE '+SEA.score, VW-9, 19);
-  ctx.fillStyle='#ffe98a'; ctx.fillText('SCORE '+SEA.score, VW-10, 18);
+  ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillText('SCORE '+SEA.score, VW-9, 47);
+  ctx.fillStyle='#ffe98a'; ctx.fillText('SCORE '+SEA.score, VW-10, 46);
   ctx.font='12px system-ui,sans-serif'; ctx.fillStyle='rgba(235,240,245,0.85)';
-  ctx.fillText('HITS '+SEA.hits+' / '+SEA.shots, VW-10, 36);
+  ctx.fillText('HITS '+SEA.hits+' / '+SEA.shots, VW-10, 64);
   const _nx=(SEA.challenges||[]).find(ch=>!ch.done);
   ctx.fillStyle=_nx?'rgba(140,255,170,0.9)':'rgba(255,233,138,0.9)';
   ctx.fillText(_nx?('NEXT: '+_nx.hits+' HITS \u2192 \u00A3'+_nx.pay.toLocaleString())
-                  :'ALL CHALLENGES PAID', VW-10, 52);
+                  :'ALL CHALLENGES PAID', VW-10, 80);
   ctx.textAlign='left'; ctx.textBaseline='alphabetic';
   if(SEA.t<210){ ctx.globalAlpha=Math.max(0,1-(SEA.t-150)/60);
     ctx.fillStyle='#eef2f6'; ctx.font='13px system-ui,sans-serif'; ctx.textAlign='center';
@@ -2651,7 +2651,7 @@ function zomGeom(zb){                                    // screen geometry from
   const t=1-zb.z, tt=t*t;
   const dh=26+tt*400;                                    // drawn height px
   const dw=dh*zb.k.fw/zb.k.fh;
-  const fy=zomHorizonY()+8+tt*(VH-zomHorizonY()+50);     // feet y walks down the ground plane
+  const fy=VH*0.55+tt*VH*0.75;                          // feet start on the fog bank, walk down past the camera
   const x=VW/2 + zb.sx*(50+tt*430);                      // lanes fan out as they approach
   return {x, fy, dw, dh, t};
 }
@@ -2765,13 +2765,13 @@ function zomDrawHud(){
   ctx.fillText('\u25C0 LEAVE', L.x+12, L.y+L.h/2+1);
   ctx.textAlign='center'; ctx.font='bold 17px system-ui,sans-serif';   // hearts top-centre
   let hearts=''; for(let i=0;i<3;i++) hearts+=(i<ZOM.lives?'\u2665 ':'\u2661 ');
-  ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillText(hearts, VW/2+1, 20);
-  ctx.fillStyle='#ff5f6d'; ctx.fillText(hearts, VW/2, 19);
+  ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillText(hearts, VW/2+1, 30);
+  ctx.fillStyle='#ff5f6d'; ctx.fillText(hearts, VW/2, 29);
   ctx.textAlign='right'; ctx.font='bold 18px system-ui,sans-serif';
-  ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillText('SCORE '+ZOM.score, VW-9, 19);
-  ctx.fillStyle='#ffe98a'; ctx.fillText('SCORE '+ZOM.score, VW-10, 18);
+  ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillText('SCORE '+ZOM.score, VW-9, 47);
+  ctx.fillStyle='#ffe98a'; ctx.fillText('SCORE '+ZOM.score, VW-10, 46);
   ctx.font='12px system-ui,sans-serif'; ctx.fillStyle='rgba(235,240,245,0.85)';
-  ctx.fillText('WAVE '+Math.max(1,ZOM.wave)+'  \u2022  KILLS '+ZOM.kills, VW-10, 36);
+  ctx.fillText('WAVE '+Math.max(1,ZOM.wave)+'  \u2022  KILLS '+ZOM.kills, VW-10, 64);
   ctx.textAlign='left'; ctx.textBaseline='alphabetic';
   if(SEA.t<210&&!ZOM.over){ ctx.globalAlpha=Math.max(0,1-(SEA.t-150)/60);
     ctx.fillStyle='#eef2f6'; ctx.font='13px system-ui,sans-serif'; ctx.textAlign='center';
