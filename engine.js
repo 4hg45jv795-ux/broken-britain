@@ -256,6 +256,10 @@ const EH=78;
 let enemies=[];
 const killedEnemies=new Set();          // ids of enemies killed this playthrough (don't respawn)
 function pushEnemy(kind,at,id,opts){
+  if(kind===1 && !(opts&&opts.static)){                 // CLOWNS always pile in from the LEFT edge,
+    at=40+Math.random()*260;                            // walking left→right at the player
+    opts=Object.assign({},opts,{face:1});
+  }
   const k=ENEMY_KINDS[kind]; const sc=(k.scale||1)*((opts&&opts.scaleMul)||1); const h=Math.round(EH*sc); const w=Math.round(h*k.fw/k.fh);
   const hp=(opts&&opts.hp)||40;
   const e={kind, x:at, w, h, y:0, vx:0, face:((opts&&opts.face)||-1), id:id||null, static:!!(opts&&opts.static),
@@ -716,8 +720,90 @@ const HELPERS=[
    color:'#3a3d44', skin:'#ff7a1a', stick:'#ff9b30',
    clips:{roll:{start:0,count:7,fps:14,loop:true}}},
 ];
-const HELPER_DUR=15*60, FIGHT_COOL=20*60, SWEEP_COOL=26*60;
-let helperCool=[0,0];
+const HELPER_DUR=15*60, FIGHT_COOL=20*60, SWEEP_COOL=26*60, CREW_COOL=45*60;
+let helperCool=[0,0,0];
+/* ── THE CAVALRY (helper 3): the hub walkers — vigilante, piper and the commuter
+   (the captain sits this one out) — run in and SHOOT the enemies around you for
+   10 seconds, then leg it. Summoned from the third helper button. */
+HELPERS.push({id:'crew', name:'The Cavalry', img:'piper', type:'crew', fw:164, fh:242, drawH:80,
+  color:'#3b6a3f', skin:'#e8c49a', stick:'#caa05a'});
+const CREW_DEFS=[
+  {img:'vigilante', fw:167, fh:282, h:85, off:-170, walk:{start:0,count:6,fps:10}, shoot:{start:6,count:3,fps:10}},
+  {img:'piper',     fw:164, fh:242, h:88, off:-100, walk:{start:0,count:6,fps:10}, shoot:{start:6,count:3,fps:12}},
+  {img:'commuter',  fw:95,  fh:139, h:88, off: 130, walk:{start:0,count:6,fps:10}, shoot:{start:6,count:4,fps:12}},
+];
+const CREW_DUR=10*60;
+const crew={active:false, timer:0, members:[], tracers:[]};
+function crewSummon(){
+  if(crew.active || helperCool[2]>0){ blip(180,120,0.08,'square',0.12); return; }
+  crew.active=true; crew.timer=CREW_DUR; crew.tracers=[];
+  crew.members=CREW_DEFS.map((d,i)=>({d, x:(i<2? camX-60-i*70 : camX+SRCW+60), slot:player.x+d.off,
+    w:Math.round(d.h*d.fw/d.fh), face:1, phase:'in', ct:Math.random()*10, fireCd:30+i*14, shootT:0}));
+  flashBanner('THE CAVALRY!');
+  blip(392,784,0.16,'triangle',0.2); blip(587,1175,0.2,'triangle',0.16);
+}
+function crewUpdate(){
+  if(!crew.active) return;
+  crew.timer--;
+  const SPD=3.4;
+  for(const m of crew.members){
+    m.ct++;
+    const d=m.d;
+    if(crew.timer<=0) m.phase='out';
+    if(m.phase==='in'){
+      m.slot=Math.max(40,Math.min(BGW-m.w-40, player.x+d.off));   // keep station on the player
+      const dx=m.slot-m.x;
+      if(Math.abs(dx)>8){ m.face=dx>0?1:-1; m.x+=m.face*SPD; m.shootT=0; }
+      else{                                                        // in position: fight
+        m.fireCd--;
+        if(m.shootT>0) m.shootT--;
+        if(m.fireCd<=0){
+          let best=null,bd=1e9;
+          for(const e of enemies){ if(e.state!=='walk')continue;
+            const dd=Math.abs((e.x+e.w/2)-(m.x+m.w/2)); if(dd<900&&dd<bd){bd=dd;best=e;} }
+          if(best){
+            m.face=(best.x+best.w/2>m.x+m.w/2)?1:-1;
+            m.shootT=16; m.fireCd=26+Math.random()*18;
+            const mx=m.x+m.w/2+m.face*m.w*0.6, my=groundAt(m.x+m.w/2)-d.h*0.62;
+            crew.tracers.push({x1:mx,y1:my,x2:best.x+best.w/2,y2:groundAt(best.x+best.w/2)-best.h*0.55,t:5});
+            noiseBurst(0.06,0.16,600); blip(200,80,0.05,'square',0.08);
+            hitEnemy(best,14,6,m.face);
+          } else m.fireCd=20;
+        }
+      }
+    } else {                                                       // leg it off the LEFT of the view
+      m.face=-1; m.x-=SPD*1.25; m.shootT=0;
+    }
+  }
+  for(const t of crew.tracers) t.t--;
+  crew.tracers=crew.tracers.filter(t=>t.t>0);
+  if(crew.timer<=0 && crew.members.every(m=>m.x+m.w<camX-20 || m.x<=0)){
+    crew.active=false; helperCool[2]=CREW_COOL;
+  }
+}
+function crewDraw(){
+  if(!crew.active) return;
+  ctx.save(); ctx.strokeStyle='rgba(255,230,140,0.85)'; ctx.lineWidth=2;   // tracers
+  for(const t of crew.tracers){
+    ctx.globalAlpha=t.t/5;
+    ctx.beginPath(); ctx.moveTo((t.x1-camX)*ZOOM,(t.y1-SRCY)*ZOOM); ctx.lineTo((t.x2-camX)*ZOOM,(t.y2-SRCY)*ZOOM); ctx.stroke();
+  }
+  ctx.restore();
+  for(const m of crew.members){
+    const d=m.d, dh=d.h*ZOOM*CSCALE, dw=m.w*ZOOM*CSCALE;
+    const wy=groundAt(m.x+m.w/2)-d.h;
+    const sx=(m.x-camX)*ZOOM-(dw-m.w*ZOOM)/2, sy=(wy+d.h-SRCY)*ZOOM-dh;
+    if(sx<-dw*2||sx>VW+dw*2) continue;
+    ctx.save(); ctx.shadowColor='rgba(120,255,200,0.8)'; ctx.shadowBlur=10;
+    if(m.face<0){ ctx.translate(sx+dw,sy); ctx.scale(-1,1); } else { ctx.translate(sx,sy); }
+    const img=loaded[d.img];
+    const clip=(m.shootT>0)?d.shoot:d.walk;
+    let f=Math.floor(m.ct*clip.fps/60)%clip.count;
+    if(imgOk(img)){ try{ ctx.drawImage(img,(clip.start+f)*d.fw,0,d.fw,d.fh,0,0,dw,dh); }catch(_){} }
+    else { ctx.fillStyle='#3b6a3f'; ctx.fillRect(dw*0.3,dh*0.15,dw*0.4,dh*0.85); }
+    ctx.restore();
+  }
+}
 const helper={active:false, kind:0, x:0, y:0, face:1, ct:0, phase:'in', timer:0, w:0, hitCt:0, kills:0, targets:[]};
 function pickNearestEnemies(n){
   const live=enemies.filter(e=>e.state==='walk');
@@ -740,6 +826,7 @@ function fighterNearTarget(){
 }
 function summonHelper(idx){
   idx=idx||0;
+  if(HELPERS[idx]&&HELPERS[idx].type==='crew'){ crewSummon(); return; }   // the cavalry runs independently
   if(helper.active) return;
   if(helperCool[idx]>0){ blip(180,120,0.08,'square',0.12); return; }
   const h=HELPERS[idx];
@@ -750,6 +837,7 @@ function summonHelper(idx){
   sfxSummon();
 }
 function updateHelper(){
+  crewUpdate();
   if(!helper.active){ for(let i=0;i<helperCool.length;i++) if(helperCool[i]>0) helperCool[i]--; refreshHelperBtns(); return; }
   helper.ct++;
   const h=HELPERS[helper.kind];
@@ -964,6 +1052,7 @@ function enterSection(opts){
   playSectionTrack();   // plays this room's track, or silence for screen rooms / trackless interiors
   initPickup();
   SEA.on=false; if(SECTIONS[sectionIndex].sea) seaEnter();   // THE SEA shooting gallery
+  else if(seaVid) { try{ seaVid.pause(); }catch(_){} }
   if(SECTIONS[sectionIndex].zdef) zomEnter();                // ZOMBIES wave defence
   tvEnter();                                       // start this room's wall screen (or stop if none)
   sceneEnter();                                    // start this level's full-scene wall+floor videos (or stop)
@@ -1880,6 +1969,7 @@ addEventListener('keydown',e=>{
   if((e.key==='x'||e.key==='f')&&!punchDown){punchDown=true;punchEdge=true;}
   if((e.key==='e'||e.key==='E')&&cur&&!csActive){ summonHelper(0); }
   if((e.key==='r'||e.key==='R')&&cur&&!csActive){ summonHelper(1); }
+  if((e.key==='t'||e.key==='T')&&cur&&!csActive){ summonHelper(2); }
   if((e.key==='q'||e.key==='Q')&&cur&&!csActive){ cycleWeapon(); }
   if(e.key==='Escape'&&csActive){clearTimeout(csTimeout);endCutscene();}
   if((e.key==='p'||e.key==='P')&&cur&&!csActive)setPaused(!paused);
@@ -1948,6 +2038,11 @@ const JOY={x:0,y:0,active:false};
   base.addEventListener('pointercancel',reset);
 })();
 
+const _hb1=document.querySelector('.helperbtn[data-h="1"]');
+if(_hb1 && !document.querySelector('.helperbtn[data-h="2"]')){   // build the third (Cavalry) button
+  const nb=_hb1.cloneNode(true); nb.dataset.h='2';
+  _hb1.parentElement.appendChild(nb);
+}
 document.querySelectorAll('.helperbtn').forEach(btn=>{
   const idx=+btn.dataset.h;
   const fire=e=>{ e.preventDefault(); actx(); summonHelper(idx); };
@@ -2377,7 +2472,18 @@ const SEA = { on:false, rx:VW/2, ry:VH*0.5, tx:VW/2, ty:VH*0.5, aimX:VW/2, aimY:
   firing:false, holdUp:false, holdDn:false,
   leaveBtn:{x:8,y:64,w:104,h:30} };   // below the DOM name/£ overlay
 function seaHorizonY(){ return VH*0.52; }              // waterline in the backdrop (~y187)
+let seaVid=null;                                         // room_sea.mp4 — optional looping video backdrop (audio stripped; level music is Sea.mp3)
+function seaVidEnsure(){
+  if(seaVid!==null) return;
+  seaVid=document.createElement('video');
+  seaVid.src='room_sea.mp4'; seaVid.muted=true; seaVid.loop=true;
+  seaVid.playsInline=true; seaVid.setAttribute('playsinline','');
+  seaVid.preload='auto';
+  seaVid.addEventListener('error', ()=>{ seaVid=false; });   // no file: fall back to room_sea.jpeg forever
+}
 function seaEnter(){
+  seaVidEnsure();
+  if(seaVid){ try{ seaVid.currentTime=0; seaVid.play().catch(()=>{}); }catch(_){}}
   SEA.on=true; SEA.rx=SEA.tx=SEA.aimX=VW/2; SEA.ry=SEA.ty=SEA.aimY=VH*0.5;
   SEA.cool=0; SEA.kick=0; SEA.flash=0; SEA.score=0; SEA.shots=0; SEA.hits=0; SEA.t=0;
   SEA.targets=[]; SEA.puffs=[]; SEA.spawnT=0; SEA.aiming=false;
@@ -2593,7 +2699,11 @@ function seaDraw(){
   const kx=(Math.random()*2-1)*SEA.kick, ky=(Math.random()*2-1)*SEA.kick;
   ctx.save(); ctx.translate(kx,ky);                      // recoil kick shakes the VIEW, not the HUD
   const bg=loaded[SECTIONS[sectionIndex].bgKey];
-  if(imgOk(bg)){ ctx.drawImage(bg,-4,-4,VW+8,VH+8); }
+  if(seaVid && seaVid.readyState>=2){
+    if(seaVid.paused){ try{ seaVid.play().catch(()=>{}); }catch(_){} }
+    ctx.drawImage(seaVid,-4,-4,VW+8,VH+8);
+  }
+  else if(imgOk(bg)){ ctx.drawImage(bg,-4,-4,VW+8,VH+8); }
   else {                                                 // fallback sea if the photo isn't uploaded
     const horizon=seaHorizonY();
     const sky=ctx.createLinearGradient(0,0,0,horizon);
@@ -3016,7 +3126,7 @@ function draw(){
   drawChurchNpc();
   drawLibraryNpc();
   drawMkNpcs();
-  drawHelper();
+  drawHelper(); crewDraw();
 
   const fx=frameIndex();
   const cs=(cur&&cur.scale)||1; const dw=PW*ZOOM*CSCALE*cs,dh=PH*ZOOM*CSCALE*cs;
