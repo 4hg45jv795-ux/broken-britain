@@ -2485,6 +2485,7 @@ function seaVidEnsure(){
     else seaVid=false;                                       // neither name: fall back to the jpeg forever
   });
   seaVid.src='room_sea.mp4';
+  try{ seaVid.load(); }catch(_){}
 }
 function seaEnter(){
   seaVidEnsure();
@@ -2543,6 +2544,7 @@ function seaPointer(clientX,clientY,fire){
   const px=Math.max(0,Math.min(VW,(clientX-b.left)/b.width*VW));
   const py=Math.max(0,Math.min(VH,(clientY-b.top)/b.height*VH));
   const inBtn=(B)=>px>=B.x&&px<=B.x+B.w&&py>=B.y&&py<=B.y+B.h;
+  if(fire && seaVid && seaVid.paused && SECTIONS[sectionIndex].sea){ try{ seaVid.play().catch(()=>{}); }catch(_){} }
   if(fire){
     if(inBtn(SEA.leaveBtn)){                                             // ◀ LEAVE → the door you came from
       gotoId('home',{x:SECTIONS[sectionIndex].zdef?1490:1290,face:1}); return; }
@@ -2704,10 +2706,8 @@ function seaDraw(){
   const kx=(Math.random()*2-1)*SEA.kick, ky=(Math.random()*2-1)*SEA.kick;
   ctx.save(); ctx.translate(kx,ky);                      // recoil kick shakes the VIEW, not the HUD
   const bg=loaded[SECTIONS[sectionIndex].bgKey];
-  if(seaVid && seaVid.readyState>=2){
-    if(seaVid.paused){ try{ seaVid.play().catch(()=>{}); }catch(_){} }
-    ctx.drawImage(seaVid,-4,-4,VW+8,VH+8);
-  }
+  if(seaVid && seaVid.paused){ try{ seaVid.play().catch(()=>{}); }catch(_){} }
+  if(seaVid && seaVid.readyState>=2){ ctx.drawImage(seaVid,-4,-4,VW+8,VH+8); }
   else if(imgOk(bg)){ ctx.drawImage(bg,-4,-4,VW+8,VH+8); }
   else {                                                 // fallback sea if the photo isn't uploaded
     const horizon=seaHorizonY();
