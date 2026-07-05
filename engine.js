@@ -2382,6 +2382,9 @@ function seaEnter(){
   SEA.cool=0; SEA.kick=0; SEA.flash=0; SEA.score=0; SEA.shots=0; SEA.hits=0; SEA.t=0;
   SEA.targets=[]; SEA.puffs=[]; SEA.spawnT=0; SEA.aiming=false;
   SEA.firing=false; SEA.holdUp=false; SEA.holdDn=false;
+  SEA.challenges=[ {hits:25, pay:1000, done:false},      // MONEY CHALLENGES (per visit):
+                   {hits:50, pay:2500, done:false},      // rack up hits, get paid at each rung
+                   {hits:100,pay:10000,done:false} ];
   for(let i=0;i<5;i++) seaSpawn(true);
 }
 function seaSpawn(anywhere){
@@ -2414,6 +2417,11 @@ function seaFireAt(ax,ay){
     best.dead=true; SEA.hits++; SEA.score+=best.pts;
     SEA.puffs.push({x:best.x,y:best.y,ct:0,pts:best.pts,splash:best.y>seaHorizonY()&&best.kind!=='gull'});
     blip(880,1500,0.07,'square',0.12); blip(560,1000,0.10,'triangle',0.10);     // hit chime
+    for(const ch of (SEA.challenges||[])){                // money challenge payouts
+      if(!ch.done && SEA.hits>=ch.hits){ ch.done=true; addMoney(ch.pay);
+        flashBanner('CHALLENGE \u2014 '+ch.hits+' HITS: \u00A3'+ch.pay.toLocaleString());
+        blip(520,1040,0.18,'triangle',0.2); blip(780,1560,0.22,'triangle',0.16); }
+    }
   } else {
     SEA.puffs.push({x:ax,y:ay,ct:0,miss:true,splash:ay>seaHorizonY()});
   }
@@ -2569,6 +2577,10 @@ function seaDrawHud(){
   ctx.fillStyle='#ffe98a'; ctx.fillText('SCORE '+SEA.score, VW-10, 18);
   ctx.font='12px system-ui,sans-serif'; ctx.fillStyle='rgba(235,240,245,0.85)';
   ctx.fillText('HITS '+SEA.hits+' / '+SEA.shots, VW-10, 36);
+  const _nx=(SEA.challenges||[]).find(ch=>!ch.done);
+  ctx.fillStyle=_nx?'rgba(140,255,170,0.9)':'rgba(255,233,138,0.9)';
+  ctx.fillText(_nx?('NEXT: '+_nx.hits+' HITS \u2192 \u00A3'+_nx.pay.toLocaleString())
+                  :'ALL CHALLENGES PAID', VW-10, 52);
   ctx.textAlign='left'; ctx.textBaseline='alphabetic';
   if(SEA.t<210){ ctx.globalAlpha=Math.max(0,1-(SEA.t-150)/60);
     ctx.fillStyle='#eef2f6'; ctx.font='13px system-ui,sans-serif'; ctx.textAlign='center';
@@ -2725,13 +2737,6 @@ function zomDrawBackdrop(){
   const gnd=ctx.createLinearGradient(0,hz,0,VH);
   gnd.addColorStop(0,'#17201a'); gnd.addColorStop(1,'#060a07');
   ctx.fillStyle=gnd; ctx.fillRect(0,hz,VW,VH-hz);
-  const pu=1+Math.sin(SEA.t*0.06)*0.08;                  // pulsing portal
-  const pg=ctx.createRadialGradient(VW/2,hz-6,4,VW/2,hz-6,64*pu);
-  pg.addColorStop(0,'rgba(220,150,255,0.95)'); pg.addColorStop(0.5,'rgba(130,50,220,0.55)');
-  pg.addColorStop(1,'rgba(80,20,160,0)');
-  ctx.fillStyle=pg; ctx.beginPath(); ctx.ellipse(VW/2,hz-6,64*pu,34*pu,0,0,7); ctx.fill();
-  ctx.strokeStyle='rgba(230,180,255,0.8)'; ctx.lineWidth=3;
-  ctx.beginPath(); ctx.ellipse(VW/2,hz-6,46*pu,24*pu,0,0,7); ctx.stroke();
 }
 function zomDrawZombie(zb){
   const g=zomGeom(zb), img=loaded[zb.k.img];
