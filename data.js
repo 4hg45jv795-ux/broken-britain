@@ -354,7 +354,7 @@ const SECTIONS=[
      mode instead of the platformer (see "THE SEA" block in engine.js). Drag to aim,
      tap / STRIKE to fire; shoot the moving seagulls, buoys, bottles and clay pigeons.
      Backdrop = room_sea.jpeg. There's an on-screen ◀ LEAVE button back to the hub.   */
-  {id:'the_sea', name:'The Sea', bgKey:'room_sea', BGW:800, sea:true, interior:true, enemies:[], doors:[]},
+  {id:'the_sea', name:'Dover Shooting Range', bgKey:'room_sea', BGW:800, sea:true, interior:true, enemies:[], doors:[]},
   /* LIBRARY swapped to the wide Alexandria panorama (room library.jpeg now 2172x375).
      zoom:1.0 shows an 800px-wide slice; walk RIGHT to explore, walk off the far LEFT to
      leave (exitLeft:'home'). Nudge flatGround/srcY/charScale to taste. */
@@ -779,7 +779,7 @@ const TRAVEL_MENUS={
     {label:'Dundee',                 target:'dundee'},
     {label:'Glasgow',                target:'glasgow'},
     {label:'Southside (the Street)', target:'street'},
-    {label:'The Sea &mdash; Rifle Range', target:'the_sea'},   // first-person scope shooting gallery
+    {label:'Dover Shooting Range', target:'the_sea'},   // first-person scope shooting gallery
   ]},
 };
 const SHOP=[
