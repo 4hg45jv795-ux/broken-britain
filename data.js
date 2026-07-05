@@ -80,6 +80,7 @@ const ASSETS = [
   {key:'room_sea', type:'img', src:'room_sea.jpeg', optional:true},  // The Sea shooting-gallery backdrop (scope view over the cliffs/sea)
   {key:'seaboat', type:'img', src:'seaboat.png', optional:true},     // The Sea: empty drifting fishing boat target (340x190 single image)
   {key:'zombie', type:'img', src:'zombie.png', optional:true},       // ZOMBIES wave defence: 9 frames (walk 0-4, lunge 5, collapse 6-8), fw:131 fh:237
+  {key:'zombie2', type:'img', src:'zombie2.png', optional:true},     // ZOMBIES type 2 (camo, faster/weaker): same 9-frame layout, fw:116 fh:239
   {key:'room_zombies', type:'img', src:'room_zombies.jpeg', optional:true},  // ZOMBIES backdrop (drawn portal-moor fallback if missing)
   {key:'room_library',      type:'img', src:'room library.jpeg', optional:true},
   {key:'room_winchester',   type:'img', src:'room winchester.jpeg', optional:true},
