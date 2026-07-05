@@ -78,6 +78,7 @@ const ASSETS = [
   {key:'room_easyjet',      type:'img', src:'room easyjet.jpeg', optional:true},
   {key:'room_trainstation', type:'img', src:'room trainstation.jpeg', optional:true},
   {key:'room_sea', type:'img', src:'room_sea.jpeg', optional:true},  // The Sea shooting-gallery backdrop (scope view over the cliffs/sea)
+  {key:'seaboat', type:'img', src:'seaboat.png', optional:true},     // The Sea: empty drifting fishing boat target (340x190 single image)
   {key:'room_library',      type:'img', src:'room library.jpeg', optional:true},
   {key:'room_winchester',   type:'img', src:'room winchester.jpeg', optional:true},
   /* ── NEW ROOM BACKGROUNDS (same "room NAME.jpeg" convention as above) ── */
