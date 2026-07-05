@@ -2804,8 +2804,10 @@ function zomDraw(){
 /* ── UPDATE / DRAW / LOOP ────────────────────────────────── */
 function update(){
   if(csActive||transitioning||shopOpen||travelOpen)return;
-  if(SECTIONS[sectionIndex].sea){ seaUpdate(); return; }   // THE SEA shooting gallery
-  if(SECTIONS[sectionIndex].zdef){ zomUpdate(); return; }  // ZOMBIES wave defence
+  if(SECTIONS[sectionIndex].sea){ seaUpdate(); updateProxAudio(); return; }   // THE SEA shooting gallery
+  if(SECTIONS[sectionIndex].zdef){ zomUpdate(); updateProxAudio(); return; }  // ZOMBIES wave defence
+  // (updateProxAudio in these modes keeps fading out / silencing audio carried in
+  //  from the previous room — e.g. hub walkers heard next to the portal/station)
   if(player.hurtCool>0) player.hurtCool--;
   if(player.invincibleT>0) player.invincibleT--;
   updateDoors();
