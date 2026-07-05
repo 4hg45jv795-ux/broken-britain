@@ -2476,10 +2476,15 @@ let seaVid=null;                                         // room_sea.mp4 — opt
 function seaVidEnsure(){
   if(seaVid!==null) return;
   seaVid=document.createElement('video');
-  seaVid.src='room_sea.mp4'; seaVid.muted=true; seaVid.loop=true;
+  seaVid.muted=true; seaVid.loop=true;
   seaVid.playsInline=true; seaVid.setAttribute('playsinline','');
   seaVid.preload='auto';
-  seaVid.addEventListener('error', ()=>{ seaVid=false; });   // no file: fall back to room_sea.jpeg forever
+  seaVid._alt=true;                                          // try 'room_sea.mp4' first, then 'room sea.mp4'
+  seaVid.addEventListener('error', ()=>{
+    if(seaVid && seaVid._alt){ seaVid._alt=false; seaVid.src='room sea.mp4'; seaVid.load(); }
+    else seaVid=false;                                       // neither name: fall back to the jpeg forever
+  });
+  seaVid.src='room_sea.mp4';
 }
 function seaEnter(){
   seaVidEnsure();
