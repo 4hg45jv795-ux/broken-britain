@@ -2573,14 +2573,14 @@ function seaDrawHud(){
   ctx.fillText('\u25C0 LEAVE', L.x+12, L.y+L.h/2+1);
   // score / accuracy (top-right)
   ctx.textAlign='right'; ctx.font='bold 18px system-ui,sans-serif';
-  ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillText('SCORE '+SEA.score, VW-9, 47);
-  ctx.fillStyle='#ffe98a'; ctx.fillText('SCORE '+SEA.score, VW-10, 46);
+  ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillText('SCORE '+SEA.score, VW-23, 47);
+  ctx.fillStyle='#ffe98a'; ctx.fillText('SCORE '+SEA.score, VW-24, 46);
   ctx.font='12px system-ui,sans-serif'; ctx.fillStyle='rgba(235,240,245,0.85)';
-  ctx.fillText('HITS '+SEA.hits+' / '+SEA.shots, VW-10, 64);
+  ctx.fillText('HITS '+SEA.hits+' / '+SEA.shots, VW-24, 64);
   const _nx=(SEA.challenges||[]).find(ch=>!ch.done);
   ctx.fillStyle=_nx?'rgba(140,255,170,0.9)':'rgba(255,233,138,0.9)';
   ctx.fillText(_nx?('NEXT: '+_nx.hits+' HITS \u2192 \u00A3'+_nx.pay.toLocaleString())
-                  :'ALL CHALLENGES PAID', VW-10, 80);
+                  :'ALL CHALLENGES PAID', VW-24, 80);
   ctx.textAlign='left'; ctx.textBaseline='alphabetic';
   if(SEA.t<210){ ctx.globalAlpha=Math.max(0,1-(SEA.t-150)/60);
     ctx.fillStyle='#eef2f6'; ctx.font='13px system-ui,sans-serif'; ctx.textAlign='center';
@@ -2651,7 +2651,7 @@ function zomGeom(zb){                                    // screen geometry from
   const t=1-zb.z, tt=t*t;
   const dh=26+tt*400;                                    // drawn height px
   const dw=dh*zb.k.fw/zb.k.fh;
-  const fy=VH*0.55+tt*VH*0.75;                          // feet start on the fog bank, walk down past the camera
+  const fy=VH*0.833+tt*VH*0.42;                         // ground line ~83% down (the misty path), walking down past the camera
   const x=VW/2 + zb.sx*(50+tt*430);                      // lanes fan out as they approach
   return {x, fy, dw, dh, t};
 }
@@ -2768,10 +2768,10 @@ function zomDrawHud(){
   ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillText(hearts, VW/2+1, 30);
   ctx.fillStyle='#ff5f6d'; ctx.fillText(hearts, VW/2, 29);
   ctx.textAlign='right'; ctx.font='bold 18px system-ui,sans-serif';
-  ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillText('SCORE '+ZOM.score, VW-9, 47);
-  ctx.fillStyle='#ffe98a'; ctx.fillText('SCORE '+ZOM.score, VW-10, 46);
+  ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillText('SCORE '+ZOM.score, VW-23, 47);
+  ctx.fillStyle='#ffe98a'; ctx.fillText('SCORE '+ZOM.score, VW-24, 46);
   ctx.font='12px system-ui,sans-serif'; ctx.fillStyle='rgba(235,240,245,0.85)';
-  ctx.fillText('WAVE '+Math.max(1,ZOM.wave)+'  \u2022  KILLS '+ZOM.kills, VW-10, 64);
+  ctx.fillText('WAVE '+Math.max(1,ZOM.wave)+'  \u2022  KILLS '+ZOM.kills, VW-24, 64);
   ctx.textAlign='left'; ctx.textBaseline='alphabetic';
   if(SEA.t<210&&!ZOM.over){ ctx.globalAlpha=Math.max(0,1-(SEA.t-150)/60);
     ctx.fillStyle='#eef2f6'; ctx.font='13px system-ui,sans-serif'; ctx.textAlign='center';
