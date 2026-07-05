@@ -79,6 +79,8 @@ const ASSETS = [
   {key:'room_trainstation', type:'img', src:'room trainstation.jpeg', optional:true},
   {key:'room_sea', type:'img', src:'room_sea.jpeg', optional:true},  // The Sea shooting-gallery backdrop (scope view over the cliffs/sea)
   {key:'seaboat', type:'img', src:'seaboat.png', optional:true},     // The Sea: empty drifting fishing boat target (340x190 single image)
+  {key:'zombie', type:'img', src:'zombie.png', optional:true},       // ZOMBIES wave defence: 9 frames (walk 0-4, lunge 5, collapse 6-8), fw:131 fh:237
+  {key:'room_zombies', type:'img', src:'room_zombies.jpeg', optional:true},  // ZOMBIES backdrop (drawn portal-moor fallback if missing)
   {key:'room_library',      type:'img', src:'room library.jpeg', optional:true},
   {key:'room_winchester',   type:'img', src:'room winchester.jpeg', optional:true},
   /* ── NEW ROOM BACKGROUNDS (same "room NAME.jpeg" convention as above) ── */
@@ -355,6 +357,12 @@ const SECTIONS=[
      tap / STRIKE to fire; shoot the moving seagulls, buoys, bottles and clay pigeons.
      Backdrop = room_sea.jpeg. There's an on-screen ◀ LEAVE button back to the hub.   */
   {id:'the_sea', name:'Dover Shooting Range', bgKey:'room_sea', BGW:800, sea:true, interior:true, enemies:[], doors:[]},
+  /* ── ZOMBIES — first-person WAVE DEFENCE through the portal. `zdef:true` runs the
+     zombie-defence mode in engine.js: same scope/machine gun/joystick as the Dover
+     range, but zombies pour out of the portal and walk AT you, growing as they come.
+     Each takes a few rounds to drop; one that reaches you costs a heart (3 hearts).
+     Waves get bigger and faster. ◀ LEAVE (or dying) returns to the hub portal.      */
+  {id:'lvl_zombies', name:'Zombies', bgKey:'room_zombies', BGW:800, zdef:true, interior:true, enemies:[], doors:[]},
   /* LIBRARY swapped to the wide Alexandria panorama (room library.jpeg now 2172x375).
      zoom:1.0 shows an 800px-wide slice; walk RIGHT to explore, walk off the far LEFT to
      leave (exitLeft:'home'). Nudge flatGround/srcY/charScale to taste. */
@@ -568,7 +576,7 @@ const TRACKS={ select:'Character selection screen.mp3', home:'Home.mp3', street:
   in_dnb:'Dnb.mp3', in_hiphop:'Hiphop.mp3', in_special:'Specialguest.mp3', in_cottagers:'Cottagerscove.mp3',
   /* ── BLACK LEVEL + HOLODECK MUSIC (the MP4s are silent; these are the sound) ── */
   blacklevel:'Void.mp3', holodeck:'Holodeck.mp3', judgement:'Judgement.mp3', bossmode:'Bossmode.mp3',
-  lvl_europe:'Europe.mp3', lvl_america:'America.mp3', in_shitter:'Shitter.mp3', the_sea:'Sea.mp3' };
+  lvl_europe:'Europe.mp3', lvl_america:'America.mp3', in_shitter:'Shitter.mp3', the_sea:'Sea.mp3', lvl_zombies:'Zombies.mp3' };
 /* ── THE WINCHESTER JUKEBOX ────────────────────────────────────────────────
    Works exactly like the house TV, but for MUSIC. Stand near the jukebox in the
    Winchester and STRIKE to flip to the next track; the chosen .mp3 becomes the
@@ -762,6 +770,7 @@ const TRAVEL_MENUS={
     {label:'Judgement Day', target:'judgement'},
     {label:'Mortal Kombat', target:'mk'},
     {label:'Boss Mode', target:'bossmode'},
+    {label:'Zombies', target:'lvl_zombies'},   // first-person wave defence (scope + machine gun)
   ]},
   easyjet: { title:'easyJet Holidays', dests:[
     {label:'Europe',    target:'lvl_europe'},
