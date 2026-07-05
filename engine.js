@@ -2610,6 +2610,12 @@ function seaDraw(){
    portal is used until it's uploaded. */
 const ZOM={ zombies:[], wave:0, kills:0, score:0, lives:3, spawnLeft:0, spawnT:0,
   betweenT:0, over:false, overT:0, hurtT:0 };
+/* zombie TYPES — add a row per sheet (9 frames each: walk 0-4, lunge 5, collapse 6-8).
+   spdM = speed multiplier, hpM = hit-points adjustment vs the wave baseline. */
+const ZOM_KINDS=[
+  {img:'zombie',  fw:131, fh:237, spdM:1.0, hpM:0},   // nightgown — baseline
+  {img:'zombie2', fw:116, fh:239, spdM:1.3, hpM:-1},  // camo jacket — faster but weaker
+];
 function zomEnter(){
   SEA.rx=SEA.tx=SEA.aimX=VW/2; SEA.ry=SEA.ty=SEA.aimY=VH*0.5;
   SEA.cool=0; SEA.kick=0; SEA.flash=0; SEA.t=0; SEA.aiming=false; SEA.firing=false;
@@ -2623,15 +2629,16 @@ function zomStartWave(){
   blip(220,440,0.25,'triangle',0.16);
 }
 function zomSpawn(){
-  const spd=(0.0016+0.00035*ZOM.wave)*(0.85+Math.random()*0.4);
-  ZOM.zombies.push({ sx:(Math.random()*2-1)*0.9, z:1, spd,
-    hp:2+(ZOM.wave>=4?1:0)+(ZOM.wave>=8?1:0), st:'walk', anim:Math.random()*5,
-    hitT:0, lungeT:0, dieT:0 });
+  const k=ZOM_KINDS[(Math.random()*ZOM_KINDS.length)|0];
+  const spd=(0.0016+0.00035*ZOM.wave)*(0.85+Math.random()*0.4)*k.spdM;
+  ZOM.zombies.push({ k, sx:(Math.random()*2-1)*0.9, z:1, spd,
+    hp:Math.max(1, 2+(ZOM.wave>=4?1:0)+(ZOM.wave>=8?1:0)+k.hpM),
+    st:'walk', anim:Math.random()*5, hitT:0, lungeT:0, dieT:0 });
 }
 function zomGeom(zb){                                    // screen geometry from depth z (1=portal, 0=camera)
   const t=1-zb.z, tt=t*t;
   const dh=26+tt*400;                                    // drawn height px
-  const dw=dh*131/237;
+  const dw=dh*zb.k.fw/zb.k.fh;
   const fy=zomHorizonY()+8+tt*(VH-zomHorizonY()+50);     // feet y walks down the ground plane
   const x=VW/2 + zb.sx*(50+tt*430);                      // lanes fan out as they approach
   return {x, fy, dw, dh, t};
@@ -2727,7 +2734,7 @@ function zomDrawBackdrop(){
   ctx.beginPath(); ctx.ellipse(VW/2,hz-6,46*pu,24*pu,0,0,7); ctx.stroke();
 }
 function zomDrawZombie(zb){
-  const g=zomGeom(zb), img=loaded.zombie;
+  const g=zomGeom(zb), img=loaded[zb.k.img];
   let fr;
   if(zb.st==='walk') fr=Math.floor(zb.anim)%5;
   else if(zb.st==='lunge') fr=5;
@@ -2736,7 +2743,7 @@ function zomDrawZombie(zb){
   if(zb.st==='die'&&zb.dieT>34) ctx.globalAlpha=Math.max(0,1-(zb.dieT-34)/26);
   if(imgOk(img)){
     if(zb.hitT>0){ ctx.filter='brightness(1.9)'; }       // white flash on hit
-    ctx.drawImage(img, fr*131,0,131,237, g.x-g.dw/2, g.fy-g.dh, g.dw, g.dh);
+    ctx.drawImage(img, fr*zb.k.fw,0,zb.k.fw,zb.k.fh, g.x-g.dw/2, g.fy-g.dh, g.dw, g.dh);
     ctx.filter='none';
   } else {                                               // fallback silhouette
     ctx.fillStyle=zb.hitT>0?'#cfd6cc':'#39413a';
