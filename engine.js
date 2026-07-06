@@ -2479,12 +2479,12 @@ function seaVidEnsure(){
   seaVid.muted=true; seaVid.loop=true;
   seaVid.playsInline=true; seaVid.setAttribute('playsinline','');
   seaVid.preload='auto';
-  seaVid._alt=true;                                          // try 'room_sea.mp4' first, then 'room sea.mp4'
+  seaVid._alt=true;                                          // repo name first, underscore as backup
   seaVid.addEventListener('error', ()=>{
-    if(seaVid && seaVid._alt){ seaVid._alt=false; seaVid.src='room sea.mp4'; seaVid.load(); }
+    if(seaVid && seaVid._alt){ seaVid._alt=false; seaVid.src='room_sea.mp4'; seaVid.load(); }
     else seaVid=false;                                       // neither name: fall back to the jpeg forever
   });
-  seaVid.src='room_sea.mp4';
+  seaVid.src='room sea.mp4';
   try{ seaVid.load(); }catch(_){}
 }
 function seaEnter(){
