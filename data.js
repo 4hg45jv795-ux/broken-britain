@@ -399,7 +399,7 @@ const SECTIONS=[
    /* BARMAN — torso-only sprite (pint in one hand, cocktail in the other) stood BEHIND
       the bar: yOff lifts him so his waist disappears behind the counter top. Nudge
       at (left/right along the bar), h (size) and yOff (how deep behind the counter). */
-   npcs:[ {img:'barman', fw:141, fh:150, at:1500, h:118, yOff:-96, face:1,
+   npcs:[ {img:'barman', fw:141, fh:150, at:1465, h:118, yOff:-112, face:1,
            clip:{start:0,count:8,fps:5,loop:true}, mp3:'Barman.mp3', range:200} ],
    doors:[ {x:880, w:110, label:'The Toilet', target:'in_toilet', locked:true, key:'toiletkey'},
            /* Middle of the bar (BGW is 2172, so x:1086 is dead centre) — STRIKE opens your
