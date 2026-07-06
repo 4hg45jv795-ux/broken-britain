@@ -170,7 +170,7 @@ const ENEMY_KINDS=[
    clips:{walk:{start:0,count:7,fps:9,loop:true}, die:{start:7,count:4,fps:8,loop:false}}},
   {img:'knifeman', fw:89, fh:151, color:'#3a5a8a', hair:'#241712', mp3:'Knifeman.mp3',
    clips:{walk:{start:0,count:8,fps:9,loop:true}, die:{start:8,count:6,fps:10,loop:false}}},
-  {img:'deliveroo', fw:134, fh:120, color:'#2c2f36', hair:'#101216', mp3:'Deliveroo.mp3',
+  {img:'deliveroo', fw:134, fh:120, scale:1.05, color:'#2c2f36', hair:'#101216', mp3:'Deliveroo.mp3',
    clips:{walk:{start:0,count:6,fps:12,loop:true}, die:{start:6,count:4,fps:9,loop:false}}},
   {img:'bikeboy', fw:175, fh:130, color:'#8a8f96', hair:'#2a2622', mp3:'Bikeboy.mp3',
    clips:{walk:{start:0,count:2,fps:3,loop:true}, die:{start:2,count:2,fps:6,loop:false}}},
@@ -207,7 +207,7 @@ const ENEMY_KINDS=[
   //      0-5 walk, 6-7 knife-draw/lunge (UNUSED — basic enemies have no melee-attack hook),
   //      8-10 die (hit-with-blood -> kneel -> lying dead in a blood pool). Lives in
   //      Crackadilly Gardens alongside the crackmen. Melee/contact only. Nudge scale to taste.
-  {img:'stabber', fw:222, fh:208, scale:1.1, color:'#23232a', hair:'#0e0e10', mp3:'Stabber.mp3',
+  {img:'stabber', fw:222, fh:208, scale:1.155, color:'#23232a', hair:'#0e0e10', mp3:'Stabber.mp3',
    clips:{walk:{start:0,count:6,fps:9,loop:true}, die:{start:8,count:3,fps:9,loop:false}}},
   // 15 = BLADEBOT (bladebot.png). T-1000-style android with arm-blades. 6-frame walk cycle
   //      (the face peels back to bare endoskeleton across the cycle). Melee/contact; no death
@@ -725,9 +725,13 @@ let helperCool=[0,0,0];
 HELPERS.push({id:'crew', name:'The Cavalry', img:'piper', type:'crew', fw:164, fh:242, drawH:80,
   color:'#3b6a3f', skin:'#e8c49a', stick:'#caa05a'});
 const CREW_DEFS=[
-  {img:'vigilante', fw:167, fh:282, h:85, off:-170, walk:{start:0,count:6,fps:10}, shoot:{start:6,count:3,fps:10}},
-  {img:'piper',     fw:164, fh:242, h:88, off:-100, walk:{start:0,count:6,fps:10}, shoot:{start:6,count:3,fps:12}},
-  {img:'commuter',  fw:95,  fh:139, h:88, off: 130, walk:{start:0,count:6,fps:10}, shoot:{start:6,count:4,fps:12}},
+  /* each cavalry member carries a DIFFERENT shop weapon (dmg/cooldown/knock from WEAPONS): */
+  {img:'vigilante', fw:167, fh:282, h:85, off:-170, walk:{start:0,count:6,fps:10}, shoot:{start:6,count:3,fps:10},
+   wpn:{name:'Annihilator', dmg:70, cd:26, knock:20, trace:'rgba(255,120,80,0.9)'}},
+  {img:'piper',     fw:164, fh:242, h:88, off:-100, walk:{start:0,count:6,fps:10}, shoot:{start:6,count:3,fps:12},
+   wpn:{name:'Ravager', dmg:44, cd:16, knock:11, trace:'rgba(140,220,255,0.9)'}},
+  {img:'commuter',  fw:95,  fh:139, h:88, off: 130, walk:{start:0,count:6,fps:10}, shoot:{start:6,count:4,fps:12},
+   wpn:{name:'Sledgehammer', dmg:55, cd:22, knock:18, trace:'rgba(255,230,140,0.9)'}},
 ];
 const CREW_DUR=10*60;
 const crew={active:false, timer:0, members:[], tracers:[]};
@@ -759,12 +763,14 @@ function crewUpdate(){
           for(const e of enemies){ if(e.state!=='walk')continue;
             const dd=Math.abs((e.x+e.w/2)-(m.x+m.w/2)); if(dd<900&&dd<bd){bd=dd;best=e;} }
           if(best){
+            const w=d.wpn;
             m.face=(best.x+best.w/2>m.x+m.w/2)?1:-1;
-            m.shootT=16; m.fireCd=26+Math.random()*18;
+            m.shootT=16; m.fireCd=w.cd+6+Math.random()*10;
             const mx=m.x+m.w/2+m.face*m.w*0.6, my=groundAt(m.x+m.w/2)-d.h*0.62;
-            crew.tracers.push({x1:mx,y1:my,x2:best.x+best.w/2,y2:groundAt(best.x+best.w/2)-best.h*0.55,t:5});
-            noiseBurst(0.06,0.16,600); blip(200,80,0.05,'square',0.08);
-            hitEnemy(best,14,6,m.face);
+            crew.tracers.push({x1:mx,y1:my,x2:best.x+best.w/2,y2:groundAt(best.x+best.w/2)-best.h*0.55,t:5,col:w.trace});
+            noiseBurst(0.06,0.10+w.dmg*0.0012,520-w.dmg*2); blip(220-w.dmg,70,0.06,'square',0.09);
+            if(w.knock>=18) addShake(2,3);
+            hitEnemy(best,w.dmg,w.knock,m.face);
           } else m.fireCd=20;
         }
       }
@@ -780,8 +786,9 @@ function crewUpdate(){
 }
 function crewDraw(){
   if(!crew.active) return;
-  ctx.save(); ctx.strokeStyle='rgba(255,230,140,0.85)'; ctx.lineWidth=2;   // tracers
+  ctx.save(); ctx.lineWidth=2;                                             // tracers (weapon-coloured)
   for(const t of crew.tracers){
+    ctx.strokeStyle=t.col||'rgba(255,230,140,0.85)';
     ctx.globalAlpha=t.t/5;
     ctx.beginPath(); ctx.moveTo((t.x1-camX)*ZOOM,(t.y1-SRCY)*ZOOM); ctx.lineTo((t.x2-camX)*ZOOM,(t.y2-SRCY)*ZOOM); ctx.stroke();
   }
