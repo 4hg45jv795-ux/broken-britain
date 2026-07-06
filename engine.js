@@ -207,7 +207,7 @@ const ENEMY_KINDS=[
   //      0-5 walk, 6-7 knife-draw/lunge (UNUSED — basic enemies have no melee-attack hook),
   //      8-10 die (hit-with-blood -> kneel -> lying dead in a blood pool). Lives in
   //      Crackadilly Gardens alongside the crackmen. Melee/contact only. Nudge scale to taste.
-  {img:'stabber', fw:222, fh:208, scale:1.5, color:'#23232a', hair:'#0e0e10', mp3:'Stabber.mp3',
+  {img:'stabber', fw:222, fh:208, scale:1.1, color:'#23232a', hair:'#0e0e10', mp3:'Stabber.mp3',
    clips:{walk:{start:0,count:6,fps:9,loop:true}, die:{start:8,count:3,fps:9,loop:false}}},
   // 15 = BLADEBOT (bladebot.png). T-1000-style android with arm-blades. 6-frame walk cycle
   //      (the face peels back to bare endoskeleton across the cycle). Melee/contact; no death
@@ -256,10 +256,7 @@ const EH=78;
 let enemies=[];
 const killedEnemies=new Set();          // ids of enemies killed this playthrough (don't respawn)
 function pushEnemy(kind,at,id,opts){
-  if(kind===1 && !(opts&&opts.static)){                 // CLOWNS always pile in from the LEFT edge,
-    at=40+Math.random()*260;                            // walking left→right at the player
-    opts=Object.assign({},opts,{face:1});
-  }
+  if(kind===1) return null;                             // CLOWNS removed from the game entirely
   const k=ENEMY_KINDS[kind]; const sc=(k.scale||1)*((opts&&opts.scaleMul)||1); const h=Math.round(EH*sc); const w=Math.round(h*k.fw/k.fh);
   const hp=(opts&&opts.hp)||40;
   const e={kind, x:at, w, h, y:0, vx:0, face:((opts&&opts.face)||-1), id:id||null, static:!!(opts&&opts.static),
@@ -3358,7 +3355,7 @@ function arenaPool(){
   // it falls back to the Void's roughly-even mix of every melee/ground enemy.
   // (the every-5th "boss" wave uses arenaSpecial instead — see arenaNextWave.)
   const s=SECTIONS[sectionIndex];
-  return s.arenaPool || [0,1,2,3,4,5,7,9,12];
+  return s.arenaPool || [0,2,3,4,5,7,9,12];   // (kind 1, the clown, removed from the game)
 }
 function arenaEnter(){
   arenaActive=true; arenaWave=0; arenaScore=0; arenaGrace=0; arenaScored=false;
