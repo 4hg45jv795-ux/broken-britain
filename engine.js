@@ -1051,6 +1051,7 @@ function enterSection(opts){
   updateHelperBarVisibility();
   playSectionTrack();   // plays this room's track, or silence for screen rooms / trackless interiors
   initPickup();
+  if(bik.met&&bik.active){ bik.x=Math.max(10,player.x-120); bik.state='trail'; }   // the dancer follows through doors
   SEA.on=false; if(SECTIONS[sectionIndex].sea) seaEnter();   // THE SEA shooting gallery
   else if(seaVid) { try{ seaVid.pause(); }catch(_){} }
   if(SECTIONS[sectionIndex].zdef) zomEnter();                // ZOMBIES wave defence
@@ -1932,6 +1933,56 @@ function showNextLine(){
 function endCutscene(){ csActive=false; csDone=true; document.getElementById('cutscene').classList.remove('active'); }
 document.getElementById('cutscene').addEventListener('click',()=>{ if(!csActive)return; clearTimeout(csTimeout); if(csStep<DIALOGUE.length) showNextLine(); else endCutscene(); });
 
+/* ── BIKINI DANCER (bikinigirl.png, 14 frames: walk 0-5, dance 6-13, fw:129 fh:179)
+   Stay in the Winchester for a FULL MINUTE and she dances her way in — and from
+   then on she follows the player around everywhere, photographer-style: trails a
+   step behind while you walk, dances on the spot whenever you stand still. */
+const BKW=129,BKH=179,BIKH=82,BIKW=Math.round(BIKH*BKW/BKH);
+const bik={active:false, met:false, x:0, state:'walkin', anim:0, winT:0};
+function initBikini(){
+  bik.met=true; bik.active=true; bik.state='walkin'; bik.anim=0;
+  bik.x=Math.min(BGW-BIKW-10, camX+SRCW+60);
+  flashBanner("You've pulled!");
+  blip(523,1046,0.18,'triangle',0.18); blip(659,1318,0.22,'triangle',0.14);
+}
+function updateBikini(){
+  const sec=SECTIONS[sectionIndex];
+  if(!bik.met){
+    if(sec.id==='in_winchester' && !csActive){ bik.winT++; if(bik.winT>=3600) initBikini(); }
+    else bik.winT=0;
+    return;
+  }
+  if(!bik.active) return;
+  if(bik.state==='walkin'){
+    bik.anim+=0.13;
+    const tgt=player.x+110;
+    if(bik.x>tgt+16){ bik.x-=1.5; }
+    else bik.state='trail';
+  } else {
+    const targetX=player.x-104;                          // her spot (photographer keeps -130)
+    const gap=bik.x-targetX;
+    if(gap>30){ bik.x-=2.0; bik.anim+=0.16; bik.state='trail'; }
+    else if(gap<-20){ bik.x+=2.4; bik.anim+=0.16; bik.state='trail'; }
+    else { bik.state='trailIdle'; bik.anim+=0.115; }     // on the spot: DANCE
+  }
+  bik.x=Math.max(0,Math.min(BGW-BIKW,bik.x));
+}
+function drawBikini(){
+  if(!bik.active||!imgOk(loaded.bikinigirl))return;
+  const dw=BIKW*ZOOM*CSCALE, dh=BIKH*ZOOM*CSCALE;
+  const wy=groundAt(bik.x+BIKW/2)-BIKH;
+  const sx=(bik.x-camX)*ZOOM-(dw-BIKW*ZOOM)/2, sy=(wy+BIKH-SRCY)*ZOOM-dh;
+  if(sx<-dw*2||sx>VW+dw*2)return;
+  const dancing=(bik.state==='trailIdle'||bik.state==='walkin');
+  let f;
+  if(dancing) f=6+Math.floor(bik.anim)%8;                // dance 6-13
+  else f=Math.floor(bik.anim)%6;                         // walk 0-5
+  const facingLeft = dancing ? false : (bik.x>player.x);
+  ctx.save();
+  if(facingLeft){ ctx.translate(sx+dw,sy); ctx.scale(-1,1); } else { ctx.translate(sx,sy); }
+  try{ ctx.drawImage(loaded.bikinigirl, f*BKW,0,BKW,BKH, 0,0,dw,dh); }catch(_){}
+  ctx.restore();
+}
 /* ── NPC photographer (unchanged) ────────────────────────── */
 const NPCH=78,NPCW=Math.round(NPCH*PFW/PFH);
 const npc={x:0,y:0,state:'walkin',t:0,anim:0,active:false};
@@ -2120,6 +2171,7 @@ function start(m){
   document.getElementById('hpbar').style.width='100%';
   bannerShown=false;csActive=false;csDone=false;
   photographerMet=false; npc.active=false;
+  bik.met=false; bik.active=false; bik.winT=0;
   money=1000; owned.clear(); updateMoneyHUD(); closeShop(); floaters=[];
   weaponList=[]; weaponSel=-1; shootCool=0; bullets=[]; vfx=[]; drops=[];
   owned.add('pistol'); addWeaponToLoadout('pistol');   // everyone starts with the free sidearm so SHOOT works from the off
@@ -2609,10 +2661,6 @@ function seaDrawTarget(t){
     }
   }
   ctx.restore();
-  if(t.kind==='boat'){                                               // wake ripple
-    ctx.strokeStyle='rgba(255,255,255,0.25)'; ctx.lineWidth=1.5;
-    ctx.beginPath(); ctx.ellipse(x,y+8*s,42*s,3.5*s,0,0,7); ctx.stroke();
-  }
 }
 function seaDrawPuff(p){
   const k=p.ct/24;
@@ -3014,6 +3062,7 @@ function update(){
   updateVfx();
   updateBlood();
   updateNPC();
+  updateBikini();
   updateHubNpcs();
   updateChurchNpc();
   updateLibraryNpc();
@@ -3126,6 +3175,7 @@ function draw(){
   drawDrops();
   for(const e of enemies) drawEnemy(e);
   drawNPC();
+  drawBikini();
   drawHubNpcs();
   drawChurchNpc();
   drawLibraryNpc();
