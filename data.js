@@ -396,7 +396,7 @@ const SECTIONS=[
       of the room and the toilet door @880). 8-frame laughing/gesturing loop with an
       mp3 PROXIMITY slot: record his patter as Jokeman.mp3 and it fades up as you
       approach. Nudge at/h/range to taste. */
-   npcs:[ {img:'jokeman', fw:156, fh:223, at:470, h:105, yOff:0, face:1,
+   npcs:[ {img:'jokeman', fw:156, fh:223, at:660, h:175, yOff:-12, face:1,
            clip:{start:0,count:8,fps:6,loop:true}, mp3:'Jokeman.mp3', range:210} ],
    doors:[ {x:880, w:110, label:'The Toilet', target:'in_toilet', locked:true, key:'toiletkey'},
            /* Middle of the bar (BGW is 2172, so x:1086 is dead centre) — STRIKE opens your
