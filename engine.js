@@ -2475,23 +2475,6 @@ function _proxEl(src){
   return _proxEls[src];
 }
 function pauseAllProxAudio(){ for(const k in _proxEls){ try{ _proxEls[k].pause(); }catch(_){} } }
-/* iOS keeps a hard cap on live media pipelines; with ~40 proximity mp3s, long sessions
-   (e.g. jukebox running in the Winchester) make Safari silently refuse further play()
-   calls and NPC audio "dies". Two defences:
-   1) free any element that's been silent ~15s (recreated on demand), so we stay under the cap;
-   2) on every screen touch (a user gesture, which iOS always honours), retry any sound
-      that WANTS to play (volume set) but is stuck paused. */
-function _proxIdleSweep(){
-  for(const k in _proxEls){ const a=_proxEls[k];
-    if(a.paused){ a._idle=(a._idle||0)+1;
-      if(a._idle>900){ try{ a.src=''; a.load(); }catch(_){} delete _proxEls[k]; } }
-    else a._idle=0;
-  }
-}
-document.addEventListener('pointerdown', ()=>{
-  for(const k in _proxEls){ const a=_proxEls[k];
-    if(a.volume>0.01 && a.paused){ a.play().catch(()=>{}); } }
-}, {passive:true});
 function updateProxAudio(){
   const secId=SECTIONS[sectionIndex].id;
   for(const p of PROX_AUDIO){
@@ -2534,7 +2517,6 @@ function updateProxAudio(){
   // any npc mp3 that has EVER played but whose owner isn't in THIS room: force it silent
   // (fixes hub walker audio carrying on inside the Winchester etc.)
   for(const src in _npcSrcSeen){ if(!(src in _npcVol)) _npcVol[src]=0; }
-  _proxIdleSweep();
   for(const src in _npcVol){
     const a=_proxEl(src); const vol=_npcVol[src];
     if(vol>0){ a.muted=musicMuted; a.volume=Math.max(0,Math.min(0.8,vol)); if(a.paused) a.play().catch(()=>{}); }
