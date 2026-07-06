@@ -1937,7 +1937,7 @@ document.getElementById('cutscene').addEventListener('click',()=>{ if(!csActive)
    is right there waiting every time you come back. */
 const BKW=129,BKH=179,BIKH=82,BIKW=Math.round(BIKH*BKW/BKH);
 const bik={active:false, met:false, x:0, state:'walkin', anim:0, winT:0, sayT:0, sayCool:0};
-const BIK_LINE="Buy me a pint and I'll get my baps out";
+const BIK_LINE="Buy me a drink and I'll get my baps out";
 function initBikini(){
   bik.met=true; bik.active=true; bik.state='walkin'; bik.anim=0;
   bik.x=Math.min(BGW-BIKW-10, camX+SRCW+60);
@@ -1948,7 +1948,7 @@ function initBikini(){
 function updateBikini(){
   const sec=SECTIONS[sectionIndex];
   if(!bik.met){
-    if(sec.id==='in_winchester' && !csActive){ bik.winT++; if(bik.winT>=18000) initBikini(); }   // 5 minutes
+    if(sec.id==='in_winchester' && !csActive){ bik.winT++; if(bik.winT>=5400) initBikini(); }   // 1 min 30
     else bik.winT=0;
     return;
   }
