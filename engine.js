@@ -725,13 +725,14 @@ let helperCool=[0,0,0];
 HELPERS.push({id:'crew', name:'The Cavalry', img:'piper', type:'crew', fw:164, fh:242, drawH:80,
   color:'#3b6a3f', skin:'#e8c49a', stick:'#caa05a'});
 const CREW_DEFS=[
-  /* each cavalry member carries a DIFFERENT shop weapon (dmg/cooldown/knock from WEAPONS): */
+  /* each cavalry member fires a DIFFERENT shop weapon — real projectiles through the
+     same bullets system as the player, so the actual weapon sprite flies out: */
   {img:'vigilante', fw:167, fh:282, h:85, off:-170, walk:{start:0,count:6,fps:10}, shoot:{start:6,count:3,fps:10},
-   wpn:{name:'Annihilator', dmg:70, cd:26, knock:20, trace:'rgba(255,120,80,0.9)'}},
+   wid:'weapon08'},   // Annihilator
   {img:'piper',     fw:164, fh:242, h:88, off:-100, walk:{start:0,count:6,fps:10}, shoot:{start:6,count:3,fps:12},
-   wpn:{name:'Ravager', dmg:44, cd:16, knock:11, trace:'rgba(140,220,255,0.9)'}},
+   wid:'weapon03'},   // Ravager
   {img:'commuter',  fw:95,  fh:139, h:88, off: 130, walk:{start:0,count:6,fps:10}, shoot:{start:6,count:4,fps:12},
-   wpn:{name:'Sledgehammer', dmg:55, cd:22, knock:18, trace:'rgba(255,230,140,0.9)'}},
+   wid:'weapon04'},   // Sledgehammer
 ];
 const CREW_DUR=10*60;
 const crew={active:false, timer:0, members:[], tracers:[]};
@@ -763,14 +764,16 @@ function crewUpdate(){
           for(const e of enemies){ if(e.state!=='walk')continue;
             const dd=Math.abs((e.x+e.w/2)-(m.x+m.w/2)); if(dd<900&&dd<bd){bd=dd;best=e;} }
           if(best){
-            const w=d.wpn;
+            const w=WEAPONS[d.wid];
             m.face=(best.x+best.w/2>m.x+m.w/2)?1:-1;
-            m.shootT=16; m.fireCd=w.cd+6+Math.random()*10;
+            m.shootT=16; m.fireCd=w.cooldown+6+Math.random()*10;
             const mx=m.x+m.w/2+m.face*m.w*0.6, my=groundAt(m.x+m.w/2)-d.h*0.62;
-            crew.tracers.push({x1:mx,y1:my,x2:best.x+best.w/2,y2:groundAt(best.x+best.w/2)-best.h*0.55,t:5,col:w.trace});
-            noiseBurst(0.06,0.10+w.dmg*0.0012,520-w.dmg*2); blip(220-w.dmg,70,0.06,'square',0.09);
-            if(w.knock>=18) addShake(2,3);
-            hitEnemy(best,w.dmg,w.knock,m.face);
+            vfx.push({type:'muzzle', x:mx, y:my, face:m.face, t:0, life:7});
+            const spread=(Math.random()*2-1)*w.spread;
+            bullets.push({ x:mx, y:my, vx:m.face*w.speed*Math.cos(spread), vy:w.speed*Math.sin(spread),
+                           dmg:w.dmg, knock:w.knock, range:w.range, traveled:0, sprite:w.sprite, spriteH:w.spriteH,
+                           hitfx:w.hitfx });
+            sfxShot(); if(w.shake) addShake(3,4);
           } else m.fireCd=20;
         }
       }
@@ -778,21 +781,12 @@ function crewUpdate(){
       m.face=-1; m.x-=SPD*1.25; m.shootT=0;
     }
   }
-  for(const t of crew.tracers) t.t--;
-  crew.tracers=crew.tracers.filter(t=>t.t>0);
   if(crew.timer<=0 && crew.members.every(m=>m.x+m.w<camX-20 || m.x<=0)){
     crew.active=false; helperCool[2]=CREW_COOL;
   }
 }
 function crewDraw(){
   if(!crew.active) return;
-  ctx.save(); ctx.lineWidth=2;                                             // tracers (weapon-coloured)
-  for(const t of crew.tracers){
-    ctx.strokeStyle=t.col||'rgba(255,230,140,0.85)';
-    ctx.globalAlpha=t.t/5;
-    ctx.beginPath(); ctx.moveTo((t.x1-camX)*ZOOM,(t.y1-SRCY)*ZOOM); ctx.lineTo((t.x2-camX)*ZOOM,(t.y2-SRCY)*ZOOM); ctx.stroke();
-  }
-  ctx.restore();
   for(const m of crew.members){
     const d=m.d, dh=d.h*ZOOM*CSCALE, dw=m.w*ZOOM*CSCALE;
     const wy=groundAt(m.x+m.w/2)-d.h;
