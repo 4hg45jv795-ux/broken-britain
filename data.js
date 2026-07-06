@@ -392,12 +392,9 @@ const SECTIONS=[
      DUNDEE). The JUKEBOX (see JUKEBOX below) is the Wurlitzer at the far right (x:1994) —
      STRIKE near it to flip through its track slots, like the house TV but for music. */
   {id:'in_winchester', name:'Inside &mdash; The Winchester', bgKey:'room_winchester', BGW:2172, zoom:1.0, srcY:27, flatGround:360, charScale:2.2, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
-   /* JOKE TELLER — suit + shades, holds court by the pool table (between the left end
-      of the room and the toilet door @880). 8-frame laughing/gesturing loop with an
-      mp3 PROXIMITY slot: record his patter as Jokeman.mp3 and it fades up as you
-      approach. Nudge at/h/range to taste. */
-   npcs:[ {img:'jokeman', fw:156, fh:223, at:660, h:175, yOff:-12, face:1,
-           clip:{start:0,count:8,fps:6,loop:true}, mp3:'Jokeman.mp3', range:210} ],
+   /* (The joke teller swapped places with the BURGER KING — he's on the Special Guest
+      stage now, and the King holds court by the pool table. The King is the custom
+      BK/bkNpc system in engine.js; his spot is set in BK={} further down this file.) */
    doors:[ {x:880, w:110, label:'The Toilet', target:'in_toilet', locked:true, key:'toiletkey'},
            /* Middle of the bar (BGW is 2172, so x:1086 is dead centre) — STRIKE opens your
               Ko-fi page in a new tab. PLACEHOLDER URL below — swap it for your real Ko-fi
@@ -544,7 +541,12 @@ const SECTIONS=[
    /* Decorative NPC: the carried sedan-chair group strolls back and forth along the floor on
       the player's path (normal size, ground level). Nudge h / paceFrom-To / paceSpd / face. */
    npcs:[ {img:'piggybackguy', fw:151, fh:287, at:240, h:130, yOff:0, face:1,
-           clip:{start:0,count:11,fps:8,loop:true}, pace:true, paceFrom:130, paceTo:420, paceSpd:0.45, mp3:'Piggybackguy.mp3', range:190} ],
+           clip:{start:0,count:11,fps:8,loop:true}, pace:true, paceFrom:130, paceTo:420, paceSpd:0.45, mp3:'Piggybackguy.mp3', range:190},
+          /* JOKE TELLER — swapped with the Burger King: stands on the stage in the King's
+             exact old spot (centre x:280, raised 110, same drawn size). Jokeman.mp3 fades
+             up as you approach. */
+          {img:'jokeman', fw:156, fh:223, at:253, h:78, yOff:-110, face:1,
+           clip:{start:0,count:8,fps:6,loop:true}, mp3:'Jokeman.mp3', range:180} ],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
 
   /* ── COTTAGERS COVE (the underpass at the far end of Crackadilly Gardens) ──
@@ -866,7 +868,7 @@ const PRIEST={ centre:296, halfRun:58, lift:46, height:66 };
      animSpd   = strike playback speed (higher = faster swings)
      flipEvery = ticks between turning to face the other direction   */
 const BK_DEF={ key:'burgerking', fw:170, fh:170, frames:6 };
-const BK={ x:280, lift:110, height:60, animSpd:0.16, flipEvery:80 };  // raised higher onto the stage + a touch smaller (background)
+const BK={ x:721, lift:12, height:79.5, animSpd:0.16, flipEvery:80 };  // the Winchester pool table (the joke teller's old spot: world h 175, feet raised 12)
 /* ── MORTAL KOMBAT NPCS (ambient characters in the Portal / MK arena) ──────
    These live ONLY in the 'mk' section. They pace back and forth like the hub
    wanderers and are purely decorative — they can't hit the player and take no
@@ -896,7 +898,7 @@ const MK_NPCS=[
    range = how close, in room pixels, before it begins.              */
 const PROX_AUDIO=[
   {section:'in_church',  src:'Priest.mp3',     range:180, getX:()=>priestNpc?priestNpc.x:null},
-  {section:'in_special', src:'Burgerking.mp3', range:180, getX:()=>bkNpc?bkNpc.x:null},
+  {section:'in_winchester', src:'Burgerking.mp3', range:180, getX:()=>bkNpc?bkNpc.x:null},
   /* (the CAPTAIN's entry moved out of here — his Captain.mp3 now plays from his
      mp3 slot on the hub npcs list, like the other walkers. Keeping an entry here
      too would fight that slot over the same audio element and silence it.) */
