@@ -2357,7 +2357,7 @@ function drawChurchNpc(){
 let bkNpc=null;
 function initLibraryNpc(){
   bkNpc=null;
-  if(SECTIONS[sectionIndex].id!=='in_special') return;   // moved from the Library to the Special Guest room
+  if(SECTIONS[sectionIndex].id!=='in_winchester') return;   // moved again: Special Guest room -> the Winchester (pool table)
   bkNpc={ x:BK.x, face:1, anim:Math.random()*BK_DEF.frames, flipT:BK.flipEvery };
 }
 function updateLibraryNpc(){
