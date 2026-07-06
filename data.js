@@ -480,7 +480,7 @@ const SECTIONS=[
    enemies:[ {at:800,kind:13},{at:1200,kind:14,hp:50},{at:1600,kind:13},{at:2000,kind:14,hp:50},{at:2400,kind:13},{at:3200,kind:13},{at:3600,kind:14,hp:50},{at:4000,kind:13},{at:4800,kind:13},{at:5200,kind:14,hp:50},{at:2800,kind:20,hp:60},{at:4400,kind:20,hp:60},
              {at:1400,kind:5,spd:1.6,scaleMul:1.08},{at:2600,kind:5,spd:1.6,scaleMul:1.08},{at:3800,kind:5,spd:1.6,scaleMul:1.08},{at:5000,kind:5,spd:1.6,scaleMul:1.08},
              /* reinforcements: extra POLICE + DELIVEROO riders along the gardens */
-             {at:1000,kind:0},{at:1800,kind:0},{at:3000,kind:0},{at:4200,kind:0},{at:5300,kind:0},
+             {at:1000,kind:0,scaleMul:1.3},{at:1800,kind:0,scaleMul:1.3},{at:3000,kind:0,scaleMul:1.3},{at:4200,kind:0,scaleMul:1.3},{at:5300,kind:0,scaleMul:1.3},
              {at:2200,kind:5,spd:1.6,scaleMul:1.08},{at:4600,kind:5,spd:1.6,scaleMul:1.08} ],
    groundStep:100,
    groundPts:[350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,352,360,364,366,366,366,362,354,350,350,350,350,350,350,350,350,350],
