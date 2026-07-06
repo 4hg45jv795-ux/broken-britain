@@ -81,7 +81,9 @@ const ASSETS = [
   {key:'seaboat', type:'img', src:'seaboat.png', optional:true},     // The Sea: empty drifting fishing boat target (340x190 single image)
   {key:'zombie', type:'img', src:'zombie.png', optional:true},       // ZOMBIES wave defence: 9 frames (walk 0-4, lunge 5, collapse 6-8), fw:131 fh:237
   {key:'zombie2', type:'img', src:'zombie2.png', optional:true},     // ZOMBIES type 2 (camo, faster/weaker): same 9-frame layout, fw:116 fh:239
-  {key:'bikinigirl', type:'img', src:'bikinigirl.png', optional:true},  // Winchester dancer (14 frames: walk 0-5, dance 6-13, fw:129 fh:179) — earned by staying in the pub a full minute
+  {key:'bikinigirl', type:'img', src:'bikinigirl.png', optional:true},  // Winchester dancer (14 frames: walk 0-5, dance 6-13, fw:129 fh:179) — earned by staying in the pub 5 minutes
+  {key:'paleman', type:'img', src:'paleman.png', optional:true},      // ZOMBIES type 3 (the pale man): 10 frames (walk 0-5, lunge/attack 6-9), fw:101 fh:214
+  {key:'jokeman', type:'img', src:'jokeman.png', optional:true},      // Winchester joke teller (8 frames, all one laughing/gesturing loop), fw:156 fh:223
   {key:'room_zombies', type:'img', src:'room zombies.jpeg', optional:true},  // ZOMBIES backdrop (drawn portal-moor fallback if missing)
   {key:'room_library',      type:'img', src:'room library.jpeg', optional:true},
   {key:'room_winchester',   type:'img', src:'room winchester.jpeg', optional:true},
@@ -390,6 +392,12 @@ const SECTIONS=[
      DUNDEE). The JUKEBOX (see JUKEBOX below) is the Wurlitzer at the far right (x:1994) —
      STRIKE near it to flip through its track slots, like the house TV but for music. */
   {id:'in_winchester', name:'Inside &mdash; The Winchester', bgKey:'room_winchester', BGW:2172, zoom:1.0, srcY:27, flatGround:360, charScale:2.2, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
+   /* JOKE TELLER — suit + shades, holds court by the pool table (between the left end
+      of the room and the toilet door @880). 8-frame laughing/gesturing loop with an
+      mp3 PROXIMITY slot: record his patter as Jokeman.mp3 and it fades up as you
+      approach. Nudge at/h/range to taste. */
+   npcs:[ {img:'jokeman', fw:156, fh:223, at:470, h:105, yOff:0, face:1,
+           clip:{start:0,count:8,fps:6,loop:true}, mp3:'Jokeman.mp3', range:210} ],
    doors:[ {x:880, w:110, label:'The Toilet', target:'in_toilet', locked:true, key:'toiletkey'},
            /* Middle of the bar (BGW is 2172, so x:1086 is dead centre) — STRIKE opens your
               Ko-fi page in a new tab. PLACEHOLDER URL below — swap it for your real Ko-fi
