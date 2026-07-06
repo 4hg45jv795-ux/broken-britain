@@ -2471,7 +2471,7 @@ const SEA = { on:false, rx:VW/2, ry:VH*0.5, tx:VW/2, ty:VH*0.5, aimX:VW/2, aimY:
   cool:0, kick:0, flash:0, score:0, shots:0, hits:0, t:0, targets:[], puffs:[], spawnT:0, aiming:false,
   firing:false, holdUp:false, holdDn:false,
   leaveBtn:{x:8,y:64,w:104,h:30} };   // below the DOM name/£ overlay
-function seaHorizonY(){ return VH*0.52; }              // waterline in the backdrop (~y187)
+function seaHorizonY(){ return VH*0.37; }              // waterline in the VIDEO backdrop (~y133)
 let seaVid=null;                                         // room_sea.mp4 — optional looping video backdrop (audio stripped; level music is Sea.mp3)
 function seaVidEnsure(){
   if(seaVid!==null) return;
@@ -2510,7 +2510,7 @@ function seaSpawn(anywhere){
   } else {                                              // empty drifting fishing boat (seaboat.png)
     t.y=horizon+12+Math.random()*(VH-horizon-60); t.spd=0.45+Math.random()*0.45;
     t.r=36; t.pts=20;
-    t.scale = 0.7 + (t.y-horizon)/(VH-horizon)*0.85;    // nearer = bigger
+    t.scale = 0.42 + (t.y-horizon)/(VH-horizon)*1.35;   // far out = small, close in = big
   }
   t.x = anywhere ? (40+Math.random()*(VW-80)) : (dir>0 ? -30 : VW+30);
   SEA.targets.push(t);
@@ -2719,7 +2719,6 @@ function seaDraw(){
   }
   for(const t of SEA.targets) if(!t.dead) seaDrawTarget(t);
   for(const p of SEA.puffs) seaDrawPuff(p);
-  seaDrawScope();
   seaDrawGun();
   ctx.restore();
   seaDrawReticle(SEA.aimX,SEA.aimY);
