@@ -874,7 +874,7 @@ const PRIEST={ centre:296, halfRun:58, lift:46, height:66 };
      animSpd   = strike playback speed (higher = faster swings)
      flipEvery = ticks between turning to face the other direction   */
 const BK_DEF={ key:'burgerking', fw:170, fh:170, frames:6 };
-const BK={ x:721, lift:12, height:79.5, animSpd:0.16, flipEvery:80 };  // the Winchester pool table (the joke teller's old spot: world h 175, feet raised 12)
+const BK={ x:721, lift:12, height:83.5, animSpd:0.16, flipEvery:80 };  // the Winchester pool table (the joke teller's old spot: world h 175, feet raised 12)
 /* ── MORTAL KOMBAT NPCS (ambient characters in the Portal / MK arena) ──────
    These live ONLY in the 'mk' section. They pace back and forth like the hub
    wanderers and are purely decorative — they can't hit the player and take no
