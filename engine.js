@@ -1051,7 +1051,6 @@ function enterSection(opts){
   updateHelperBarVisibility();
   playSectionTrack();   // plays this room's track, or silence for screen rooms / trackless interiors
   initPickup();
-  if(bik.met&&bik.active){ bik.x=Math.max(10,player.x-120); bik.state='trail'; }   // the dancer follows through doors
   SEA.on=false; if(SECTIONS[sectionIndex].sea) seaEnter();   // THE SEA shooting gallery
   else if(seaVid) { try{ seaVid.pause(); }catch(_){} }
   if(SECTIONS[sectionIndex].zdef) zomEnter();                // ZOMBIES wave defence
@@ -1934,25 +1933,32 @@ function endCutscene(){ csActive=false; csDone=true; document.getElementById('cu
 document.getElementById('cutscene').addEventListener('click',()=>{ if(!csActive)return; clearTimeout(csTimeout); if(csStep<DIALOGUE.length) showNextLine(); else endCutscene(); });
 
 /* ── BIKINI DANCER (bikinigirl.png, 14 frames: walk 0-5, dance 6-13, fw:129 fh:179)
-   Stay in the Winchester for a FULL MINUTE and she dances her way in — and from
-   then on she follows the player around everywhere, photographer-style: trails a
-   step behind while you walk, dances on the spot whenever you stand still. */
+   Stay in the Winchester for FIVE FULL MINUTES and she dances her way in — and
+   from then on she lives in the pub: follows the player around INSIDE the
+   Winchester (walks behind you, dances when you stand still), never leaves, and
+   is right there waiting every time you come back. */
 const BKW=129,BKH=179,BIKH=82,BIKW=Math.round(BIKH*BKW/BKH);
-const bik={active:false, met:false, x:0, state:'walkin', anim:0, winT:0};
+const bik={active:false, met:false, x:0, state:'walkin', anim:0, winT:0, sayT:0, sayCool:0};
+const BIK_LINE="Buy me a pint and I'll get my baps out";
 function initBikini(){
   bik.met=true; bik.active=true; bik.state='walkin'; bik.anim=0;
   bik.x=Math.min(BGW-BIKW-10, camX+SRCW+60);
+  bik.sayT=300; bik.sayCool=1500;
   flashBanner("You've pulled!");
   blip(523,1046,0.18,'triangle',0.18); blip(659,1318,0.22,'triangle',0.14);
 }
 function updateBikini(){
   const sec=SECTIONS[sectionIndex];
   if(!bik.met){
-    if(sec.id==='in_winchester' && !csActive){ bik.winT++; if(bik.winT>=3600) initBikini(); }
+    if(sec.id==='in_winchester' && !csActive){ bik.winT++; if(bik.winT>=18000) initBikini(); }   // 5 minutes
     else bik.winT=0;
     return;
   }
   if(!bik.active) return;
+  if(sec.id!=='in_winchester') return;                   // she never leaves the pub
+  if(bik.sayT>0) bik.sayT--;
+  if(bik.sayCool>0) bik.sayCool--;
+  else if(Math.abs(player.x-bik.x)<230){ bik.sayT=300; bik.sayCool=1700; }   // pipes up when you're close
   if(bik.state==='walkin'){
     bik.anim+=0.13;
     const tgt=player.x+110;
@@ -1969,6 +1975,7 @@ function updateBikini(){
 }
 function drawBikini(){
   if(!bik.active||!imgOk(loaded.bikinigirl))return;
+  if(SECTIONS[sectionIndex].id!=='in_winchester')return;
   const dw=BIKW*ZOOM*CSCALE, dh=BIKH*ZOOM*CSCALE;
   const wy=groundAt(bik.x+BIKW/2)-BIKH;
   const sx=(bik.x-camX)*ZOOM-(dw-BIKW*ZOOM)/2, sy=(wy+BIKH-SRCY)*ZOOM-dh;
@@ -1982,6 +1989,19 @@ function drawBikini(){
   if(facingLeft){ ctx.translate(sx+dw,sy); ctx.scale(-1,1); } else { ctx.translate(sx,sy); }
   try{ ctx.drawImage(loaded.bikinigirl, f*BKW,0,BKW,BKH, 0,0,dw,dh); }catch(_){}
   ctx.restore();
+  if(bik.sayT>0){                                        // speech bubble
+    const alpha=Math.min(1,bik.sayT/40);
+    ctx.save(); ctx.globalAlpha=alpha;
+    ctx.font='bold 13px system-ui,sans-serif';
+    const tw=ctx.measureText(BIK_LINE).width;
+    let bx=sx+dw/2, by=sy-14;
+    bx=Math.max(tw/2+10,Math.min(VW-tw/2-10,bx));
+    ctx.fillStyle='rgba(255,255,255,0.94)'; ctx.strokeStyle='rgba(20,24,30,0.85)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.roundRect(bx-tw/2-9,by-21,tw+18,26,9); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(bx-5,by+5); ctx.lineTo(bx+7,by+5); ctx.lineTo(sx+dw/2,by+14); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#14181d'; ctx.textAlign='center'; ctx.fillText(BIK_LINE,bx,by-3); ctx.textAlign='left';
+    ctx.restore();
+  }
 }
 /* ── NPC photographer (unchanged) ────────────────────────── */
 const NPCH=78,NPCW=Math.round(NPCH*PFW/PFH);
@@ -2787,8 +2807,12 @@ const ZOM={ zombies:[], wave:0, kills:0, score:0, lives:3, spawnLeft:0, spawnT:0
 /* zombie TYPES — add a row per sheet (9 frames each: walk 0-4, lunge 5, collapse 6-8).
    spdM = speed multiplier, hpM = hit-points adjustment vs the wave baseline. */
 const ZOM_KINDS=[
-  {img:'zombie',  fw:131, fh:237, spdM:1.0, hpM:0},   // nightgown — baseline
-  {img:'zombie2', fw:116, fh:239, spdM:1.3, hpM:-1},  // camo jacket — faster but weaker
+  {img:'zombie',  fw:131, fh:237, spdM:1.0, hpM:0,
+   clips:{walk:{start:0,count:5}, lunge:{start:5,count:1}, die:{start:6,count:3}}},   // nightgown — baseline
+  {img:'zombie2', fw:116, fh:239, spdM:1.3, hpM:-1,
+   clips:{walk:{start:0,count:5}, lunge:{start:5,count:1}, die:{start:6,count:3}}},   // camo jacket — faster but weaker
+  {img:'paleman', fw:101, fh:214, spdM:0.9, hpM:2,
+   clips:{walk:{start:0,count:6}, lunge:{start:6,count:2}, die:{start:6,count:4}}},   // the pale man — slow, tanky, horrid
 ];
 function zomEnter(){
   SEA.rx=SEA.tx=SEA.aimX=VW/2; SEA.ry=SEA.ty=SEA.aimY=VH*0.5;
@@ -2902,10 +2926,11 @@ function zomDrawBackdrop(){
 }
 function zomDrawZombie(zb){
   const g=zomGeom(zb), img=loaded[zb.k.img];
+  const cl=zb.k.clips;
   let fr;
-  if(zb.st==='walk') fr=Math.floor(zb.anim)%5;
-  else if(zb.st==='lunge') fr=5;
-  else fr=6+Math.min(2,Math.floor(zb.dieT/9));
+  if(zb.st==='walk') fr=cl.walk.start+Math.floor(zb.anim)%cl.walk.count;
+  else if(zb.st==='lunge') fr=cl.lunge.start+Math.floor(zb.lungeT/8)%cl.lunge.count;
+  else fr=cl.die.start+Math.min(cl.die.count-1,Math.floor(zb.dieT/9));
   ctx.save();
   if(zb.st==='die'&&zb.dieT>34) ctx.globalAlpha=Math.max(0,1-(zb.dieT-34)/26);
   if(imgOk(img)){
