@@ -84,6 +84,7 @@ const ASSETS = [
   {key:'bikinigirl', type:'img', src:'bikinigirl.png', optional:true},  // Winchester dancer (14 frames: walk 0-5, dance 6-13, fw:129 fh:179) — earned by staying in the pub 5 minutes
   {key:'paleman', type:'img', src:'paleman.png', optional:true},      // ZOMBIES type 3 (the pale man): 10 frames (walk 0-5, lunge/attack 6-9), fw:101 fh:214
   {key:'jokeman', type:'img', src:'jokeman.png', optional:true},      // Winchester joke teller (8 frames, all one laughing/gesturing loop), fw:156 fh:223
+  {key:'barman', type:'img', src:'barman.png', optional:true},        // Winchester BARMAN (torso only, 8-frame serving/toasting loop), fw:141 fh:150
   {key:'room_zombies', type:'img', src:'room zombies.jpeg', optional:true},  // ZOMBIES backdrop (drawn portal-moor fallback if missing)
   {key:'room_library',      type:'img', src:'room library.jpeg', optional:true},
   {key:'room_winchester',   type:'img', src:'room winchester.jpeg', optional:true},
@@ -244,7 +245,7 @@ const SECTIONS=[
      the LAST stop before the chain loops back to the hub. The photographer's first
      appearance + cutscene now triggers at the start of Southampton (see engine.js). */
   {id:'southampton', name:'Southampton &mdash; Above Bar Street', bgKey:'southampton', BGW:1879, srcY:90, flatGround:296, chain:true, next:'park', prev:null,
-   enemies:[ {at:430,kind:0},{at:640,kind:0},{at:850,kind:0},{at:1050,kind:0},{at:1250,kind:0},{at:1450,kind:0},{at:1650,kind:0},{at:1800,kind:0},{at:540,kind:0},{at:1150,kind:0},{at:1370,kind:0},{at:1730,kind:0} ]},
+   enemies:[ {at:430,kind:0},{at:640,kind:0},{at:850,kind:0},{at:1050,kind:0},{at:1250,kind:0},{at:1450,kind:0},{at:1650,kind:0},{at:1800,kind:0},{at:540,kind:0},{at:1150,kind:0},{at:1370,kind:0},{at:1730,kind:0},{at:330,kind:0},{at:760,kind:0},{at:960,kind:0},{at:1550,kind:0},{at:1840,kind:0},{at:1200,kind:0} ]},
   {id:'park', name:'Standard UK Park', bgKey:'park', BGW:1763, srcY:0, flatGround:196, chain:true, next:'belfast', prev:'southampton',
    enemies:[ {at:520,kind:3},{at:880,kind:3},{at:1240,kind:3},{at:680,kind:12},{at:1040,kind:12},{at:1400,kind:12},{at:600,kind:5,spd:1.6},{at:1100,kind:5,spd:1.6},{at:1500,kind:5,spd:1.6} ],
    aliens:[ {at:700,kind:2},{at:1020,kind:2},{at:1360,kind:2},{at:1560,kind:2} ]},
@@ -258,9 +259,9 @@ const SECTIONS=[
    /* THE TOILET KEY lives here now, near the END of the Trongate (x:2500 of 2672) — walk over it
       to pick it up; it then unlocks the Winchester toilet door. Nudge at/h to taste. */
    items:[ {id:'toiletkey', at:2500, h:34, label:'the Winchester toilet key'} ],
-   enemies:[ {at:230,kind:6,hp:1,static:true},{at:760,kind:5},{at:1080,kind:0},{at:1380,kind:5},{at:1700,kind:1},{at:2000,kind:5},{at:2480,kind:5} ]},
+   enemies:[ {at:230,kind:6,hp:1,static:true},{at:760,kind:5},{at:1080,kind:0},{at:1380,kind:5},{at:2000,kind:5},{at:2480,kind:5} ]},
   {id:'street', name:'Southside &mdash; the street', bgKey:'bg',  BGW:4047, srcY:120, flatGround:null, chain:true, next:null, prev:'glasgow',
-   enemies:[ {at:1200,kind:0},{at:1700,kind:1},{at:2300,kind:0},{at:3300,kind:1},{at:3700,kind:0},{at:2000,kind:12},{at:2800,kind:12},{at:600,kind:0},{at:3900,kind:0},{at:1500,kind:20,hp:60},{at:3000,kind:20,hp:60},{at:1900,kind:14,hp:50},{at:3100,kind:14,hp:50},{at:2600,kind:10,hp:60} ]},
+   enemies:[ {at:1200,kind:0},{at:2300,kind:0},{at:3700,kind:0},{at:2000,kind:12},{at:2800,kind:12},{at:600,kind:0},{at:3900,kind:0},{at:1500,kind:20,hp:60},{at:3000,kind:20,hp:60},{at:1900,kind:14,hp:50},{at:3100,kind:14,hp:50},{at:2600,kind:10,hp:60} ]},
 
   /* ── MORTAL KOMBAT (entered from the hub Portal -> travel menu) ──
      Standalone fight arena: the UMK3 "Blue Portal" bridge. Background
@@ -269,7 +270,7 @@ const SECTIONS=[
      edge gives the "THE END" exit and the left edge returns to the hub.
      Ambient MK characters (NPCs) are wired separately in MK_NPCS below. */
   {id:'mk', name:'The Portal &mdash; Mortal Kombat', bgKey:'mk', BGW:1432, srcY:0, flatGround:206, chain:true, next:null, prev:null,
-   arena:true, arenaPool:[0,1,4,9,14], arenaSpecial:10, arenaSpecialName:'GUNMAN SQUAD', arenaSpecialHp:120,
+   arena:true, arenaPool:[0,4,9,14], arenaSpecial:10, arenaSpecialName:'GUNMAN SQUAD', arenaSpecialHp:120,
    arenaBaseCount:6, arenaMaxCount:14, arenaGrowth:1.5, enemies:[]},
 
   /* ── BLACK LEVEL (entered from the hub Portal -> travel menu) ──────────
@@ -395,6 +396,11 @@ const SECTIONS=[
    /* (The joke teller swapped places with the BURGER KING — he's on the Special Guest
       stage now, and the King holds court by the pool table. The King is the custom
       BK/bkNpc system in engine.js; his spot is set in BK={} further down this file.) */
+   /* BARMAN — torso-only sprite (pint in one hand, cocktail in the other) stood BEHIND
+      the bar: yOff lifts him so his waist disappears behind the counter top. Nudge
+      at (left/right along the bar), h (size) and yOff (how deep behind the counter). */
+   npcs:[ {img:'barman', fw:141, fh:150, at:1500, h:118, yOff:-96, face:1,
+           clip:{start:0,count:8,fps:5,loop:true}, mp3:'Barman.mp3', range:200} ],
    doors:[ {x:880, w:110, label:'The Toilet', target:'in_toilet', locked:true, key:'toiletkey'},
            /* Middle of the bar (BGW is 2172, so x:1086 is dead centre) — STRIKE opens your
               Ko-fi page in a new tab. PLACEHOLDER URL below — swap it for your real Ko-fi
