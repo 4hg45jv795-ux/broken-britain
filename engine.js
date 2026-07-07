@@ -1400,9 +1400,9 @@ function updateJukebox(){
 }
 function jukeNext(){
   const jb=curJukebox(); if(!jb) return;
-  jb.idx=(jb.idx+1)%jb.files.length;
+  jb.idx = (jb.idx>=jb.files.length-1) ? -1 : jb.idx+1;   // after the last track: PAUSED, then round again
   blip(540,820,0.05,'square',0.12); blip(300,300,0.04,'square',0.08);
-  flashBanner('Jukebox &mdash; Track '+(jb.idx+1));
+  flashBanner(jb.idx<0 ? 'Jukebox &mdash; PAUSED' : 'Jukebox &mdash; Track '+(jb.idx+1));
   playSectionTrack();                              // re-evaluates music; picks the new jukebox track
   requestWakeLock();                               // keep the screen awake while listening (same as the TV screens)
 }
@@ -1411,7 +1411,7 @@ function drawJukeMarker(){
   const jb=curJukebox();
   const cx=(jb.x-camX)*ZOOM;
   const cy=30 + Math.sin(performance.now()/260)*4;
-  drawMarker(cx, cy, 'JUKEBOX \u00B7 '+(jb.idx+1), 'STRIKE to change track');
+  drawMarker(cx, cy, jb.idx<0 ? 'JUKEBOX \u00B7 paused' : 'JUKEBOX \u00B7 '+(jb.idx+1), 'STRIKE to change track');
 }
 /* ── JUKEBOX AMBIENT GLOW ───────────────────────────────────────────────────
    A soft pulsing multi-colour halo around the jukebox spot (the Wurlitzer in the
@@ -1727,7 +1727,7 @@ const WEAPON_ART={
   vest:    {sx:190,  sy:544, sw:273, sh:281},
   grenade: {sx:856,  sy:653, sw:145, sh:128},
 };
-const WEAPON_ORDER=['pistol','rifle','weapon02','weapon01','littleblaster','weapon07','weapon05','weapon03','weapon06','weapon04','weapon08','bigblaster'];
+const WEAPON_ORDER=['pistol','rifle','weapon02','weapon01','littleblaster','weapon07','weapon05','weapon03','weapon06','weapon04','weapon08','bigblaster','nbomb'];
 let weaponList=[];
 let weaponSel=-1;
 let shootCool=0;
@@ -2201,7 +2201,7 @@ function updateDog(){
   dog.x=Math.max(10,Math.min(BGW-DOGW-10,dog.x));
 }
 function drawDog(){
-  if(!dogHere()||!imgOk(loaded.dog)) return;
+  if(!dogHere()||!imgOk(loaded.housedog)) return;
   const dw=DOGW*ZOOM*CSCALE, dh=DGH*(DOGW*ZOOM*CSCALE/DGW);
   const wy=groundAt(dog.x+DOGW/2)-DOGH;
   let f, hop=0;
@@ -2212,7 +2212,7 @@ function drawDog(){
   if(sx<-dw*2||sx>VW+dw*2) return;
   ctx.save();
   if(dog.face<0){ ctx.translate(sx+dw,sy); ctx.scale(-1,1); } else { ctx.translate(sx,sy); }
-  try{ ctx.drawImage(loaded.dog, f*DGW,0,DGW,DGH, 0,0,dw,dh); }catch(_){}
+  try{ ctx.drawImage(loaded.housedog, f*DGW,0,DGW,DGH, 0,0,dw,dh); }catch(_){}
   ctx.restore();
 }
 /* ── NPC photographer (unchanged) ────────────────────────── */
@@ -2664,7 +2664,7 @@ function drawPickup(){
 function sectionMusic(){
   const id=SECTIONS[sectionIndex].id;
   const jb=(typeof JUKEBOX!=='undefined') ? JUKEBOX[id] : null;
-  if(jb) return jb.files[jb.idx];                    // jukebox rooms play the selected track
+  if(jb) return jb.idx<0 ? null : jb.files[jb.idx]; // jukebox rooms play the selected track (idx -1 = paused/silent)
   return (!SCREENS[id] && TRACKS[id]) ? TRACKS[id] : null;
 }
 function playTrack(src){
