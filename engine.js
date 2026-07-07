@@ -259,7 +259,10 @@ function pushEnemy(kind,at,id,opts){
   if(kind===1) return null;                             // CLOWNS removed from the game entirely
   const k=ENEMY_KINDS[kind]; const sc=(k.scale||1)*((opts&&opts.scaleMul)||1); const h=Math.round(EH*sc); const w=Math.round(h*k.fw/k.fh);
   const hp=(opts&&opts.hp)||40;
-  const e={kind, x:at, w, h, y:0, vx:0, face:((opts&&opts.face)||-1), id:id||null, static:!!(opts&&opts.static),
+  let face=((opts&&opts.face)||-1);
+  if(opts&&opts.spawnSide==='left'){  at=Math.max(20, at-BGW*0.35);        face= 1; }   // enter from the LEFT, walking right
+  if(opts&&opts.spawnSide==='right'){ at=Math.min(BGW-w-20, at+BGW*0.25);  face=-1; }   // enter from the RIGHT, walking left
+  const e={kind, x:at, w, h, y:0, vx:0, face, id:id||null, static:!!(opts&&opts.static),
     cross:!!(opts&&opts.cross), spd:(opts&&opts.spd)||null,
     hp, max:hp, state:'walk', ct:0, hitId:-1, dmgCool:0, fade:1, fireCd:80+Math.floor(Math.random()*60)};
   enemies.push(e); return e;            // returned so the arena can scale its speed/damage
@@ -1018,7 +1021,8 @@ function doFade(txt, mid){
 function enterSection(opts){
   loadSectionConfig();
   let ex;
-  if(opts && typeof opts.x==='number') ex=opts.x;
+  if(SECTIONS[sectionIndex].spawnMid) ex=Math.round(BGW/2-PW/2);   // easyJet / station: start dead centre
+  else if(opts && typeof opts.x==='number') ex=opts.x;
   else if(opts==='right') ex=BGW-PW-60;
   else ex=120;
   player.x=Math.max(0,Math.min(BGW-PW,ex));
@@ -1054,6 +1058,9 @@ function enterSection(opts){
   if(SECTIONS[sectionIndex].zdef) zomEnter();                // ZOMBIES wave defence
   tvEnter();                                       // start this room's wall screen (or stop if none)
   sceneEnter();                                    // start this level's full-scene wall+floor videos (or stop)
+  if(SECTIONS[sectionIndex].autoMenu){ setTimeout(()=>{   // easyJet / station: open the board straight away
+    if(SECTIONS[sectionIndex].autoMenu && !travelOpen) openTravel(SECTIONS[sectionIndex].autoMenu);
+  }, 260); }
 }
 
 /* ── WORLD / DOORWAYS (hub <-> rooms) ────────────────────── */
@@ -1448,7 +1455,7 @@ function drawSceneVideos(){
 /* ── MONEY + FLOATING REWARDS ────────────────────────────── */
 let money=0;
 function updateMoneyHUD(){ const m=document.getElementById('money'); if(m) m.textContent='\u00A3'+money; }
-function addMoney(n){ money+=n; updateMoneyHUD(); }
+function addMoney(n){ money+=n; updateMoneyHUD(); if(typeof saveProgress==='function') saveProgress(); }
 let floaters=[];
 function addFloater(x,y,txt){ floaters.push({x,y,txt,t:0}); }
 function updateFloaters(){ for(const f of floaters) f.t++; floaters=floaters.filter(f=>f.t<55); }
@@ -1469,6 +1476,27 @@ function returnToHub(){
 
 /* ── GUN SHOP ────────────────────────────────────────────── */
 const owned=new Set();
+/* ── SAVED PROGRESS ─────────────────────────────────────────────────────────
+   Money, bought weapons and story unlocks persist across sessions (localStorage).
+   Saved on every money change / purchase and every few seconds as a backstop. */
+function saveProgress(){
+  try{ localStorage.setItem('crusader_save', JSON.stringify({
+    money, owned:[...owned],
+    bikMet:(typeof bik!=='undefined')&&bik.met,
+    photoMet:(typeof photographerMet!=='undefined')&&photographerMet })); }catch(_){}
+}
+function loadProgress(){
+  try{
+    const j=JSON.parse(localStorage.getItem('crusader_save')||'null'); if(!j) return;
+    if(typeof j.money==='number') money=j.money;
+    if(Array.isArray(j.owned)) j.owned.forEach(id=>{ if(WEAPONS[id]) owned.add(id); });
+    weaponList=WEAPON_ORDER.filter(x=>owned.has(x));
+    if(j.bikMet && typeof bik!=='undefined'){ bik.met=true; bik.active=true; bik.state='trail'; }
+    if(j.photoMet) photographerMet=true;
+    updateMoneyHUD();
+  }catch(_){}
+}
+setInterval(saveProgress, 5000);
 let shopOpen=false;
 function openShop(){ shopOpen=true; renderShop(); document.getElementById('shop').classList.add('on'); }
 function closeShop(){ shopOpen=false; document.getElementById('shop').classList.remove('on'); }
@@ -1557,7 +1585,7 @@ function renderShop(){
 function buyWeapon(w){
   if(owned.has(w.id)) return;
   if(money>=w.price){
-    money-=w.price; owned.add(w.id); updateMoneyHUD(); renderShop();
+    money-=w.price; owned.add(w.id); updateMoneyHUD(); renderShop(); saveProgress();
     if(w.id==='vest'){ player.armour=ARMOUR_HITS; updateArmourHUD(); flashBanner('Armour on &mdash; '+ARMOUR_HITS+' hits'); }
     else { addWeaponToLoadout(w.id); flashBanner(w.name+' ready'); }
     [0,4,7,12].forEach((s,i)=>setTimeout(()=>blip(440*Math.pow(2,s/12),0,0.12,'triangle',0.15),i*60));
@@ -2523,7 +2551,7 @@ function updateProxAudio(){
     else if(!a.paused){ a.pause(); }
   }
   // DUCK the room music while a scenery NPC (e.g. gardenman) is talking, so their voice is clear.
-  let _duck=0; for(const src in _npcVol){ if(_npcVol[src]>_duck) _duck=_npcVol[src]; }
+  let _duck=0; for(const src in _npcVol){ if(src==='Barman.mp3') continue; if(_npcVol[src]>_duck) _duck=_npcVol[src]; }   // the barman talks OVER the jukebox, no ducking
   if(typeof bgm!=='undefined' && bgm){ const norm=Math.min(1,_duck/0.8); bgm.volume = 0.35*(1-0.92*norm); }
 }
 
@@ -3470,3 +3498,16 @@ function drawArenaBoard(){
   ctx.fillText('respawning\u2026', bx+bw/2, by+bh-9);
   ctx.restore();
 }
+loadProgress();   // restore money / weapons / unlocks from the last session
+
+/* wall.mp4 is the heaviest scene clip and stalls the first time you enter The Void;
+   warm it (and its floor) in the background on the first user gesture so it's buffered
+   by the time you get there. */
+(function(){
+  let warmed=false;
+  const warm=()=>{ if(warmed) return; warmed=true;
+    try{ sceneVidFor('wall.mp4'); sceneVidFor('floor.mp4'); }catch(_){}
+    document.removeEventListener('pointerdown', warm);
+  };
+  document.addEventListener('pointerdown', warm, {passive:true, once:false});
+})();
