@@ -84,7 +84,46 @@ function onAllLoaded(){
   buildHelperThumbs();
 }
 
+/* ── RECORDS SCREEN ─────────────────────────────────────────────────────────
+   A "Records" button on the fighter-select screen opens an overlay of lifetime
+   stats (persisted). Built in JS so index.html needs no edits. */
+function buildRecordsUI(){
+  if(document.getElementById('recordsbtn')) return;
+  const st=document.createElement('style');
+  st.textContent=`
+   #recordsbtn{display:block;margin:14px auto 0;padding:9px 20px;border-radius:999px;cursor:pointer;
+     background:rgba(20,26,34,0.9);color:#eef2f6;border:1.5px solid #8a929b;font:bold 14px system-ui,sans-serif;}
+   #records{position:fixed;inset:0;z-index:80;background:rgba(4,6,10,0.9);display:none;align-items:center;justify-content:center;}
+   #records.on{display:flex;}
+   #records .rcard{background:#12171f;border:1.5px solid #8a929b;border-radius:16px;padding:22px 26px;min-width:280px;max-width:360px;color:#eef2f6;font:15px/1.7 system-ui,sans-serif;}
+   #records h2{margin:0 0 4px;font-size:22px;letter-spacing:1px;} #records .rsub{color:#aab2bb;font-size:12px;margin-bottom:14px;}
+   #records .rrow{display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.08);padding:6px 0;}
+   #records .rrow b{color:#ffe98a;font-variant-numeric:tabular-nums;}
+   #records button{margin-top:16px;width:100%;padding:10px;border:0;border-radius:10px;background:#3fae5a;color:#fff;font:bold 15px system-ui,sans-serif;cursor:pointer;}
+   #records .rreset{background:transparent;color:#8a929b;font-size:12px;margin-top:8px;}`;
+  document.head.appendChild(st);
+  const btn=document.createElement('button'); btn.id='recordsbtn'; btn.textContent='\uD83C\uDFC5 Records';
+  const cards=document.getElementById('cards');
+  cards.parentNode.insertBefore(btn, cards.nextSibling);
+  const ov=document.createElement('div'); ov.id='records';
+  ov.innerHTML='<div class="rcard"><h2>RECORDS</h2><div class="rsub">Your lifetime stats</div><div id="rrows"></div>'+
+    '<button id="rclose">Close</button><button class="rreset" id="rreset">Reset records</button></div>';
+  document.body.appendChild(ov);
+  const fmt=n=>n.toLocaleString();
+  const render=()=>{ document.getElementById('rrows').innerHTML=[
+      ['Enemies defeated', fmt(STATS.kills)],
+      ['Total &pound; earned', '&pound;'+fmt(STATS.earned)],
+      ['Best Zombies wave', STATS.bestWave||'&mdash;'],
+      ['Best Dover score', STATS.bestDover?fmt(STATS.bestDover):'&mdash;'],
+      ['Times downed', fmt(STATS.deaths)],
+    ].map(r=>`<div class="rrow"><span>${r[0]}</span><b>${r[1]}</b></div>`).join(''); };
+  btn.onclick=()=>{ render(); ov.classList.add('on'); };
+  ov.onclick=e=>{ if(e.target===ov) ov.classList.remove('on'); };
+  document.getElementById('rclose').onclick=()=>ov.classList.remove('on');
+  document.getElementById('rreset').onclick=()=>{ if(confirm('Reset all records?')){ STATS.kills=STATS.earned=STATS.bestWave=STATS.bestDover=STATS.deaths=STATS.runs=0; saveStats(); render(); } };
+}
 function buildCards(){
+  buildRecordsUI();
   const grid=document.getElementById('cards');
   META.forEach(m=>{
     const c=document.createElement('button'); c.className='card';
@@ -296,6 +335,7 @@ function maybeDropPickup(e){
   drops.push({kind, x:e.x+e.w/2, taken:false, t:Math.random()*10});
 }
 function killEnemy(e,ko){ if(e.state==='die'||e.state==='dead')return; e.state='die'; e.ct=0; (ko?sfxKO:sfxHit)();
+  STATS.kills++; if(STATS.kills%25===0) saveStats();
   const reward=e.static?25:10; addMoney(reward); addFloater(e.x+e.w/2, e.y, '+\u00A3'+reward); arenaAddKillScore();
   maybeDropPickup(e);
   const sec=SECTIONS[sectionIndex];
@@ -948,7 +988,7 @@ function damagePlayer(d){
   }
   player.hp=Math.max(0,player.hp-d); player.hurtCool=18; sfxHurt();
   document.getElementById('hpbar').style.width=(player.hp/player.max*100)+'%';
-  if(player.hp<=0){ player.dead=true; player.deadT=0; setClip('die'); sfxKO(); if(isArena()) arenaBankScore(); flashBanner('YOU GOT DONE &mdash; respawning'); }
+  if(player.hp<=0){ player.dead=true; player.deadT=0; setClip('die'); sfxKO(); if(isArena()) arenaBankScore(); STATS.deaths++; saveStats(); flashBanner('YOU GOT DONE &mdash; respawning'); }
 }
 function respawnPlayer(){
   player.x=120; player.y=groundAt(120+PW/2)-PH; player.vx=0; player.vy=0; player.onGround=true;
@@ -1098,6 +1138,7 @@ function useDoor(d){
     return;
   }
   if(d.target===null){ flashBanner('The portal is dormant&hellip; for now'); return; }
+  if(d.action==='stash'){ openStash(); return; }      // gun cabinet: opens the STASH menu
   if(d.target==='shop'){ openShop(); return; }
   const sec=SECTIONS[sectionIndex];
   if(d.target==='home'){                              // leaving a room -> back outside
@@ -1140,6 +1181,7 @@ function drawDoors(){
   else if(d.target===null){ name=label; hint='locked for now'; }
   else if(d.locked && !inventory.has(d.key)){ name=label; hint='LOCKED \u2014 need a key'; }
   else if(d.target==='home'){ name='EXIT'; hint='STRIKE to leave'; }
+  else if(d.action==='stash'){ name=label; hint='STRIKE to open'; }
   else if(d.target==='shop'){ name=label; hint='STRIKE to open'; }
   else { name=label; hint='STRIKE to enter'; }
   drawMarker(mx, 30+bob, name, hint);
@@ -1455,7 +1497,14 @@ function drawSceneVideos(){
 /* ── MONEY + FLOATING REWARDS ────────────────────────────── */
 let money=0;
 function updateMoneyHUD(){ const m=document.getElementById('money'); if(m) m.textContent='\u00A3'+money; }
-function addMoney(n){ money+=n; updateMoneyHUD(); if(typeof saveProgress==='function') saveProgress(); }
+function addMoney(n){ money+=n; updateMoneyHUD(); if(n>0){ STATS.earned+=n; } if(typeof saveProgress==='function') saveProgress(); }
+/* ── LIFETIME STATS ─────────────────────────────────────────────────────────
+   Persisted records shown on the RECORDS screen. */
+const STATS={ kills:0, earned:0, bestWave:0, bestDover:0, deaths:0, runs:0 };
+function loadStats(){ try{ const j=JSON.parse(localStorage.getItem('crusader_stats')||'null'); if(j) Object.assign(STATS,j); }catch(_){}}
+function saveStats(){ try{ localStorage.setItem('crusader_stats', JSON.stringify(STATS)); }catch(_){}}
+function statBestWave(w){ if(w>STATS.bestWave){ STATS.bestWave=w; saveStats(); } }
+function statBestDover(s){ if(s>STATS.bestDover){ STATS.bestDover=s; saveStats(); } }
 let floaters=[];
 function addFloater(x,y,txt){ floaters.push({x,y,txt,t:0}); }
 function updateFloaters(){ for(const f of floaters) f.t++; floaters=floaters.filter(f=>f.t<55); }
@@ -1520,6 +1569,31 @@ function openTravel(menuId){
   document.getElementById('travel').classList.add('on');
 }
 function closeTravel(){ travelOpen=false; document.getElementById('travel').classList.remove('on'); }
+/* ── THE STASH ─────────────────────────────────────────────────────────────
+   The upstairs gun cabinet. Reuses the #travel overlay. Options are defined here
+   (add more rows to STASH_ITEMS); each has a one-off effect when tapped. */
+const STASH_ITEMS=[
+  {label:'N Bombs', tag:'ARM', fx:()=>{ giveNBombs(3); }},
+  // add more here later, e.g. {label:'Body Armour', tag:'ARM', fx:()=>{...}},
+];
+function openStash(){
+  travelOpen=true;
+  document.getElementById('travel-title').textContent='The Stash';
+  const list=document.getElementById('travel-list'); list.innerHTML='';
+  STASH_ITEMS.forEach(it=>{
+    const b=document.createElement('button'); b.className='trow';
+    const nm=document.createElement('span'); nm.className='tname'; nm.textContent=it.label;
+    const tag=document.createElement('span'); tag.className='ttag'; tag.textContent=it.tag||'GET';
+    b.appendChild(nm); b.appendChild(tag);
+    b.onclick=(e)=>{ e.stopPropagation(); closeTravel(); try{ it.fx(); }catch(_){}; };
+    list.appendChild(b);
+  });
+  document.getElementById('travel').classList.add('on');
+}
+/* placeholder N-bomb grant — gives the player N bombs to lob (wire to your throwable
+   system when ready; for now it banks them + confirms). */
+let nBombs=0;
+function giveNBombs(n){ nBombs+=n; flashBanner('N BOMBS x'+nBombs+' \\u2014 armed'); blip(320,660,0.18,'triangle',0.2); }
 /* ── PDF LIBRARY MENU ──────────────────────────────────────────────────────
    Reuses the same on-screen overlay as the travel menu (#travel), but lists
    PDF documents from the PDF_MENUS table (data.js) with a READ button (opens
@@ -2784,6 +2858,7 @@ function seaDrawHud(){
   ctx.fillStyle='#ffe98a'; ctx.fillText('SCORE '+SEA.score, VW-24, 46);
   ctx.font='12px system-ui,sans-serif'; ctx.fillStyle='rgba(235,240,245,0.85)';
   ctx.fillText('HITS '+SEA.hits+' / '+SEA.shots, VW-24, 64);
+  statBestDover(SEA.score);
   const _nx=(SEA.challenges||[]).find(ch=>!ch.done);
   ctx.fillStyle=_nx?'rgba(140,255,170,0.9)':'rgba(255,233,138,0.9)';
   ctx.fillText(_nx?('NEXT: '+_nx.hits+' HITS \u2192 \u00A3'+_nx.pay.toLocaleString())
@@ -2848,7 +2923,7 @@ function zomEnter(){
 }
 function zomHorizonY(){ return VH*0.46; }
 function zomStartWave(){
-  ZOM.wave++; ZOM.spawnLeft=2+ZOM.wave*2; ZOM.spawnT=10;
+  ZOM.wave++; statBestWave(ZOM.wave); ZOM.spawnLeft=2+ZOM.wave*2; ZOM.spawnT=10;
   flashBanner('WAVE '+ZOM.wave);
   blip(220,440,0.25,'triangle',0.16);
 }
@@ -3499,6 +3574,7 @@ function drawArenaBoard(){
   ctx.restore();
 }
 loadProgress();   // restore money / weapons / unlocks from the last session
+loadStats();      // restore lifetime records for the Records screen
 
 /* wall.mp4 is the heaviest scene clip and stalls the first time you enter The Void;
    warm it (and its floor) in the background on the first user gesture so it's buffered
