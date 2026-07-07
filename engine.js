@@ -87,6 +87,32 @@ function onAllLoaded(){
 /* ── RECORDS SCREEN ─────────────────────────────────────────────────────────
    A "Records" button on the fighter-select screen opens an overlay of lifetime
    stats (persisted). Built in JS so index.html needs no edits. */
+/* ── CONTINUE / NEW GAME ────────────────────────────────────────────────────
+   If a previous session was saved, the select screen opens with a choice:
+   CONTINUE (same fighter, money, weapons, unlocks) or NEW GAME (wipes the save). */
+function buildContinueUI(){
+  if(!SAVED || !SAVED.fighter) return;
+  const m=META.find(x=>x.id===SAVED.fighter); if(!m) return;
+  const st=document.createElement('style');
+  st.textContent=`#contwrap{position:fixed;inset:0;z-index:85;background:rgba(4,6,10,0.88);display:flex;align-items:center;justify-content:center;}
+   #contwrap .ccard{background:#12171f;border:1.5px solid #8a929b;border-radius:16px;padding:24px 28px;text-align:center;color:#eef2f6;font:15px system-ui,sans-serif;max-width:340px;}
+   #contwrap h2{margin:0 0 6px;font-size:22px;} #contwrap .csub{color:#aab2bb;font-size:13px;margin-bottom:16px;line-height:1.5;}
+   #contwrap button{display:block;width:100%;padding:12px;border:0;border-radius:10px;font:bold 15px system-ui,sans-serif;cursor:pointer;margin-top:10px;}
+   #contbtn{background:#3fae5a;color:#fff;} #newbtn{background:rgba(255,255,255,0.08);color:#eef2f6;border:1.5px solid #566 !important;}`;
+  document.head.appendChild(st);
+  const ov=document.createElement('div'); ov.id='contwrap';
+  ov.innerHTML=`<div class="ccard"><h2>WELCOME BACK</h2>
+    <div class="csub">${m.name} &bull; &pound;${(SAVED.money||0).toLocaleString()} &bull; ${(SAVED.owned||[]).length} weapon${(SAVED.owned||[]).length===1?'':'s'}</div>
+    <button id="contbtn">&#9654; Continue</button>
+    <button id="newbtn">New Game</button></div>`;
+  document.body.appendChild(ov);
+  document.getElementById('contbtn').onclick=()=>{ CONTINUE_MODE=true; ov.remove(); start(m); };
+  document.getElementById('newbtn').onclick=()=>{
+    CONTINUE_MODE=false; SAVED=null;
+    try{ localStorage.removeItem('crusader_save'); }catch(_){}
+    ov.remove();
+  };
+}
 function buildRecordsUI(){
   if(document.getElementById('recordsbtn')) return;
   const st=document.createElement('style');
@@ -124,6 +150,7 @@ function buildRecordsUI(){
 }
 function buildCards(){
   buildRecordsUI();
+  buildContinueUI();
   const grid=document.getElementById('cards');
   META.forEach(m=>{
     const c=document.createElement('button'); c.className='card';
@@ -988,11 +1015,34 @@ function damagePlayer(d){
   }
   player.hp=Math.max(0,player.hp-d); player.hurtCool=18; sfxHurt();
   document.getElementById('hpbar').style.width=(player.hp/player.max*100)+'%';
-  if(player.hp<=0){ player.dead=true; player.deadT=0; setClip('die'); sfxKO(); if(isArena()) arenaBankScore(); STATS.deaths++; saveStats(); flashBanner('YOU GOT DONE &mdash; respawning'); }
+  if(player.hp<=0){ player.dead=true; player.deadT=0; setClip('die'); sfxKO(); if(isArena()) arenaBankScore(); STATS.deaths++; saveStats(); showDeathCard(); }
 }
+function showDeathCard(){
+  let d=document.getElementById('deathcard');
+  if(!d){
+    const st=document.createElement('style');
+    st.textContent=`#deathcard{position:fixed;inset:0;z-index:75;background:rgba(6,2,2,0.72);display:none;align-items:center;justify-content:center;pointer-events:none;}
+     #deathcard.on{display:flex;}
+     #deathcard .dcard{text-align:center;color:#eef2f6;font:15px system-ui,sans-serif;}
+     #deathcard h2{margin:0 0 6px;font-size:30px;color:#ff5f6d;letter-spacing:1px;text-shadow:0 2px 12px #000;}
+     #deathcard .dmsg{font-style:italic;font-size:16px;margin-bottom:14px;color:#ffe98a;}
+     #deathcard .drow{color:#cdd4dc;font-size:13px;line-height:1.8;}`;
+    document.head.appendChild(st);
+    d=document.createElement('div'); d.id='deathcard';
+    d.innerHTML='<div class="dcard"><h2>YOU GOT DONE</h2><div class="dmsg"></div><div class="drow"></div></div>';
+    document.body.appendChild(d);
+  }
+  d.querySelector('.dmsg').textContent="You're dead? Don't think you are, mate.";
+  d.querySelector('.drow').innerHTML=
+    'Enemies defeated: <b>'+STATS.kills.toLocaleString()+'</b> &nbsp;&bull;&nbsp; &pound; earned: <b>'+STATS.earned.toLocaleString()+'</b><br>'+
+    'Best wave: <b>'+(STATS.bestWave||'&mdash;')+'</b> &nbsp;&bull;&nbsp; Times downed: <b>'+STATS.deaths.toLocaleString()+'</b>';
+  d.classList.add('on');
+}
+function hideDeathCard(){ const d=document.getElementById('deathcard'); if(d) d.classList.remove('on'); }
 function respawnPlayer(){
   player.x=120; player.y=groundAt(120+PW/2)-PH; player.vx=0; player.vy=0; player.onGround=true;
   player.hp=player.max; player.dead=false; player.deadT=0; setClip('idle');
+  hideDeathCard();
   document.getElementById('hpbar').style.width='100%';
   if(isArena()) arenaBankScore();                   // record the run before the wave counter resets
   spawnEnemiesForSection();
@@ -1093,6 +1143,7 @@ function enterSection(opts){
   updateHelperBarVisibility();
   playSectionTrack();   // plays this room's track, or silence for screen rooms / trackless interiors
   initPickup();
+  if(dogHere()){ dog.x=Math.max(10,player.x-90); dog.st='trail'; dog.jumps=0; }   // the dog trots after you between floors
   SEA.on=false; if(SECTIONS[sectionIndex].sea) seaEnter();   // THE SEA shooting gallery
   else if(seaVid) { try{ seaVid.pause(); }catch(_){} }
   if(SECTIONS[sectionIndex].zdef) zomEnter();                // ZOMBIES wave defence
@@ -1154,6 +1205,7 @@ function useDoor(d){
     const ret=roomReturn[sec.id];
     if(ret && ret.from===d.target){ ex=ret.x; face=ret.face||1; }
     else { roomReturn[d.target]={from:sec.id, x:d.x, face:1}; }
+    if(typeof d.tx==='number'){ ex=d.tx; roomReturn[d.target]={from:sec.id, x:d.x, face:1}; }   // door-specified arrival spot
     transitioning=true;
     doFade(dest?dest.name:'', ()=>{ gotoId(d.target,{x:ex,face:face}); transitioning=false; });
   }
@@ -1531,19 +1583,23 @@ const owned=new Set();
 function saveProgress(){
   try{ localStorage.setItem('crusader_save', JSON.stringify({
     money, owned:[...owned],
+    fighter:(typeof cur!=='undefined'&&cur)?cur.id:null,
     bikMet:(typeof bik!=='undefined')&&bik.met,
     photoMet:(typeof photographerMet!=='undefined')&&photographerMet })); }catch(_){}
 }
+let CONTINUE_MODE=false, SAVED=null;
 function loadProgress(){
-  try{
-    const j=JSON.parse(localStorage.getItem('crusader_save')||'null'); if(!j) return;
-    if(typeof j.money==='number') money=j.money;
-    if(Array.isArray(j.owned)) j.owned.forEach(id=>{ if(WEAPONS[id]) owned.add(id); });
-    weaponList=WEAPON_ORDER.filter(x=>owned.has(x));
-    if(j.bikMet && typeof bik!=='undefined'){ bik.met=true; bik.active=true; bik.state='trail'; }
-    if(j.photoMet) photographerMet=true;
-    updateMoneyHUD();
-  }catch(_){}
+  try{ SAVED=JSON.parse(localStorage.getItem('crusader_save')||'null'); }catch(_){ SAVED=null; }
+}
+function applySavedProgress(){                          // called AFTER start(m)'s reset, when Continuing
+  const j=SAVED; if(!j) return;
+  if(typeof j.money==='number') money=j.money;
+  if(Array.isArray(j.owned)) j.owned.forEach(id=>{ if(WEAPONS[id]) owned.add(id); });
+  weaponList=WEAPON_ORDER.filter(x=>owned.has(x));
+  weaponSel=weaponList.indexOf('pistol');
+  if(j.bikMet){ bik.met=true; bik.active=true; bik.state='trail'; }
+  if(j.photoMet) photographerMet=true;
+  updateMoneyHUD(); refreshWeaponBtn();
 }
 setInterval(saveProgress, 5000);
 let shopOpen=false;
@@ -1573,7 +1629,7 @@ function closeTravel(){ travelOpen=false; document.getElementById('travel').clas
    The upstairs gun cabinet. Reuses the #travel overlay. Options are defined here
    (add more rows to STASH_ITEMS); each has a one-off effect when tapped. */
 const STASH_ITEMS=[
-  {label:'N Bombs', tag:'ARM', fx:()=>{ giveNBombs(3); }},
+  {label:'N Bomb', tag:'FREE', fx:()=>{ owned.add('nbomb'); addWeaponToLoadout('nbomb'); saveProgress(); flashBanner('N BOMB \u2014 in your hands'); blip(320,660,0.18,'triangle',0.2); }},
   // add more here later, e.g. {label:'Body Armour', tag:'ARM', fx:()=>{...}},
 ];
 function openStash(){
@@ -1590,10 +1646,6 @@ function openStash(){
   });
   document.getElementById('travel').classList.add('on');
 }
-/* placeholder N-bomb grant — gives the player N bombs to lob (wire to your throwable
-   system when ready; for now it banks them + confirms). */
-let nBombs=0;
-function giveNBombs(n){ nBombs+=n; flashBanner('N BOMBS x'+nBombs+' \\u2014 armed'); blip(320,660,0.18,'triangle',0.2); }
 /* ── PDF LIBRARY MENU ──────────────────────────────────────────────────────
    Reuses the same on-screen overlay as the travel menu (#travel), but lists
    PDF documents from the PDF_MENUS table (data.js) with a READ button (opens
@@ -1766,7 +1818,7 @@ function fireWeapon(w){
   for(let i=0;i<3;i++) vfx.push({type:'spark', x:m.x+player.face*(4+Math.random()*9), y:m.y+(Math.random()*7-3.5), t:0, life:6});
   if(w.type==='grenade'){
     sfxThrow();
-    bullets.push({grenade:true, x:m.x, y:m.y-4, vx:player.face*w.speed, vy:-7.5, fuse:60, dmg:w.dmg, radius:w.radius, knock:w.knock});
+    bullets.push({grenade:true, x:m.x, y:m.y-4, vx:player.face*w.speed, vy:-7.5, fuse:60, dmg:w.dmg, radius:w.radius, knock:w.knock, sprite:w.sprite, nuke:w.nuke, spin:0});
     return;
   }
   sfxShot();
@@ -1799,6 +1851,8 @@ function blastClearAll(){            // Big Blaster: one shot wipes every enemy 
 }
 function explodeGrenade(b){
   vfx.push({type:'boom', x:b.x, y:b.y, t:0, life:26, r:b.radius});
+  if(b.nuke){ vfx.push({type:'nboom', x:b.x, y:b.y-14, t:0, life:34, r:b.radius});   // N BOMB: the big art + ground-shaking blast
+    addShake(15,30); noiseBurst(0.5,0.34,90); noiseBurst(0.3,0.3,60); blip(70,24,0.5,'sawtooth',0.3); }
   sfxKO();
   addShake(9,12);
   for(const e of enemies){
@@ -1860,8 +1914,16 @@ function drawBullets(){
     const sx=(b.x-camX)*ZOOM, sy=(b.y-SRCY)*ZOOM;
     if(sx<-30||sx>VW+30) continue;
     if(b.grenade){
-      ctx.save(); ctx.fillStyle='#3f5a2a'; ctx.strokeStyle='#1a240f'; ctx.lineWidth=2;
-      ctx.beginPath(); ctx.arc(sx,sy,6,0,7); ctx.fill(); ctx.stroke(); ctx.restore();
+      if(b.sprite && imgOk(loaded[b.sprite])){                 // N BOMB: the letter itself tumbles through the air
+        const bi=loaded[b.sprite]; b.spin=(b.spin||0)+0.14;
+        const bh=34*ZOOM, bw=bh*bi.naturalWidth/bi.naturalHeight;
+        ctx.save(); ctx.translate(sx,sy); ctx.rotate(b.spin*(b.vx<0?-1:1));
+        try{ ctx.drawImage(bi,-bw/2,-bh/2,bw,bh); }catch(_){}
+        ctx.restore();
+      } else {
+        ctx.save(); ctx.fillStyle='#3f5a2a'; ctx.strokeStyle='#1a240f'; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(sx,sy,6,0,7); ctx.fill(); ctx.stroke(); ctx.restore();
+      }
     } else if(b.sprite && imgOk(loaded[b.sprite])){
       const bi=loaded[b.sprite]; const bh=(b.spriteH||30)*ZOOM, bw=bh*bi.naturalWidth/bi.naturalHeight;
       ctx.save(); ctx.translate(sx,sy); if(b.vx<0) ctx.scale(-1,1);
@@ -1890,6 +1952,12 @@ function drawVfx(){
     } else if(f.type==='spark'){
       ctx.save(); ctx.globalAlpha=1-p; ctx.fillStyle='#ffd24a';
       ctx.beginPath(); ctx.arc(sx,sy,3*ZOOM*(1-p),0,7); ctx.fill(); ctx.restore();
+    } else if(f.type==='nboom'){
+      const bi=loaded.nboom;
+      if(imgOk(bi)){ const g=0.55+p*1.15, bh=f.r*2.2*g, bw=bh*bi.naturalWidth/bi.naturalHeight;
+        ctx.save(); ctx.globalAlpha=Math.min(1,(1-p)*1.6);
+        try{ ctx.drawImage(bi, sx-bw/2, sy-bh/2, bw, bh); }catch(_){}
+        ctx.restore(); }
     } else if(f.type==='boom'){
       ctx.save();
       const rr=(f.r||80)*ZOOM*Math.min(1,p*1.6);
@@ -2103,6 +2171,50 @@ function drawBikini(){
     ctx.restore();
   }
 }
+/* ── THE DOG (dog.png, 10 frames: run 0-4, jump-up 5-7, lie 8, asleep 9; fw:145 fh:150)
+   Lives in MY HOUSE and follows the player between downstairs and upstairs. Runs
+   after you; when he catches you he jumps up at you a few times; if you then stand
+   still he settles down and lies next to you (nodding off if you stay put). Move
+   off and he springs up and follows again. */
+const DGW=145,DGH=150,DOGH=44,DOGW=Math.round(DOGH*DGW/DGH);
+const dog={ x:1500, anim:0, st:'trail', jumps:0, restT:0, face:1 };
+function dogHere(){ const id=SECTIONS[sectionIndex].id; return id==='in_house'||id==='in_upstairs'; }
+function updateDog(){
+  if(!dogHere()||csActive) return;
+  dog.anim+=1;
+  const px=player.x+PW/2, dx=px-(dog.x+DOGW/2);
+  const moving=Math.abs(player.vx||0)>0.4 || keys.left || keys.right;
+  if(dog.st==='trail'){
+    if(Math.abs(dx)>70){ dog.face=dx>0?1:-1; dog.x+=dog.face*2.6; dog.jumps=0; }
+    else { dog.st='jump'; dog.anim=0; }
+  } else if(dog.st==='jump'){
+    if(Math.abs(dx)>120){ dog.st='trail'; }
+    else if(dog.anim>26){ dog.anim=0; dog.jumps++;
+      blip(880,1400,0.06,'square',0.06);                 // excited yip
+      if(dog.jumps>=3 && !moving){ dog.st='settle'; dog.restT=0; dog.anim=0; }
+    }
+    dog.face=dx>0?1:-1;
+  } else {                                               // settle: lying beside you
+    dog.restT++;
+    if(moving || Math.abs(dx)>170){ dog.st='trail'; }
+  }
+  dog.x=Math.max(10,Math.min(BGW-DOGW-10,dog.x));
+}
+function drawDog(){
+  if(!dogHere()||!imgOk(loaded.dog)) return;
+  const dw=DOGW*ZOOM*CSCALE, dh=DGH*(DOGW*ZOOM*CSCALE/DGW);
+  const wy=groundAt(dog.x+DOGW/2)-DOGH;
+  let f, hop=0;
+  if(dog.st==='trail') f=Math.floor(dog.anim*0.18)%5;
+  else if(dog.st==='jump'){ const k=(dog.anim%26)/26; f=5+Math.min(2,Math.floor(k*3)); hop=Math.sin(k*Math.PI)*16; }
+  else f=(dog.restT>240)?9:8;
+  const sx=(dog.x-camX)*ZOOM-(dw-DOGW*ZOOM)/2, sy=(wy+DOGH-SRCY)*ZOOM-dh-hop*ZOOM;
+  if(sx<-dw*2||sx>VW+dw*2) return;
+  ctx.save();
+  if(dog.face<0){ ctx.translate(sx+dw,sy); ctx.scale(-1,1); } else { ctx.translate(sx,sy); }
+  try{ ctx.drawImage(loaded.dog, f*DGW,0,DGW,DGH, 0,0,dw,dh); }catch(_){}
+  ctx.restore();
+}
 /* ── NPC photographer (unchanged) ────────────────────────── */
 const NPCH=78,NPCW=Math.round(NPCH*PFW/PFH);
 const npc={x:0,y:0,state:'walkin',t:0,anim:0,active:false};
@@ -2295,6 +2407,7 @@ function start(m){
   money=1000; owned.clear(); updateMoneyHUD(); closeShop(); floaters=[];
   weaponList=[]; weaponSel=-1; shootCool=0; bullets=[]; vfx=[]; drops=[];
   owned.add('pistol'); addWeaponToLoadout('pistol');   // everyone starts with the free sidearm so SHOOT works from the off
+  if(CONTINUE_MODE) applySavedProgress();               // CONTINUE: same money / weapons / unlocks as last session
   player.armour=0; updateArmourHUD(); refreshWeaponBtn();
   hubReturnX=200;
   helper.active=false; helperCool=[0,0]; buildHelperThumbs(); refreshHelperBtns();
@@ -2619,6 +2732,13 @@ function updateProxAudio(){
   // any npc mp3 that has EVER played but whose owner isn't in THIS room: force it silent
   // (fixes hub walker audio carrying on inside the Winchester etc.)
   for(const src in _npcSrcSeen){ if(!(src in _npcVol)) _npcVol[src]=0; }
+  // N BOMB armed loop: Nbomb.mp3 plays while the N bomb is the selected weapon
+  {
+    const el=_proxEl('Nbomb.mp3');
+    if(el){ const want=live && isArmed() && weaponList[weaponSel]==='nbomb';
+      if(want){ el.volume=0.75; if(el.paused) el.play().catch(()=>{}); }
+      else if(!el.paused) el.pause(); }
+  }
   for(const src in _npcVol){
     const a=_proxEl(src); const vol=_npcVol[src];
     if(vol>0){ a.muted=musicMuted; a.volume=Math.max(0,Math.min(0.8,vol)); if(a.paused) a.play().catch(()=>{}); }
@@ -3189,6 +3309,7 @@ function update(){
   updateBlood();
   updateNPC();
   updateBikini();
+  updateDog();
   updateHubNpcs();
   updateChurchNpc();
   updateLibraryNpc();
@@ -3302,6 +3423,7 @@ function draw(){
   for(const e of enemies) drawEnemy(e);
   drawNPC();
   drawBikini();
+  drawDog();
   drawHubNpcs();
   drawChurchNpc();
   drawLibraryNpc();
