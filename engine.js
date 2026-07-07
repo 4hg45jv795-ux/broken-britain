@@ -1747,6 +1747,9 @@ function cycleWeapon(){
   if(weaponSel>=weaponList.length) weaponSel=-1;
   refreshWeaponBtn();
   blip(560,640,0.05,'square',0.10);
+  const el=_proxEl('Nbomb.mp3');                          // N BOMB theme: start/stop right in the tap
+  if(el){ if(weaponList[weaponSel]==='nbomb'){ el.volume=0.75; el.play().catch(()=>{}); }
+          else if(!el.paused) el.pause(); }
 }
 function drawWeaponIcon(cx,id,W,H){
   cx.clearRect(0,0,W,H);
@@ -1790,8 +1793,20 @@ const HELD_WEAPON={
 };
 function drawHeldWeapon(){
   if(player.dead || !isArmed()) return;
-  if(cur && cur.noWeaponArt) return;
   const id=weaponList[weaponSel];
+  if(id==='nbomb' && imgOk(loaded.nbomb)){                 // the N BOMB is handheld: shown even on fighters
+    const bi=loaded.nbomb;                                 // whose guns are baked into the sprite art
+    const dw=PW*ZOOM*CSCALE, dh=PH*ZOOM*CSCALE;
+    const pcx=(player.x+PW/2-camX)*ZOOM;
+    const midY=(player.y+PH-SRCY)*ZOOM-dh*0.5;
+    const bh=dh*0.42, bw=bh*bi.naturalWidth/bi.naturalHeight;
+    const bx=pcx + player.face*dw*0.30, by=midY + dh*0.02 + Math.sin(performance.now()/300)*2;
+    ctx.save(); ctx.translate(bx,by); if(player.face<0) ctx.scale(-1,1);
+    try{ ctx.drawImage(bi,-bw/2,-bh/2,bw,bh); }catch(_){}
+    ctx.restore();
+    return;
+  }
+  if(cur && cur.noWeaponArt) return;
   if(id==='grenade') return;
   const cfg=HELD_WEAPON[id], art=WEAPON_ART[id], img=loaded.weapons;
   if(!cfg||!art||!imgOk(img)) return;
