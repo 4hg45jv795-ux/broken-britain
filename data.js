@@ -74,7 +74,7 @@ const ASSETS = [
   {key:'room_upstairs', type:'img', src:'room upstairs.jpeg', optional:true},   // upstairs: master bedroom / armoury / landing / lounge
   {key:'nbomb', type:'img', src:'nbomb.png', optional:true},          // N BOMB weapon (held + thrown sprite)
   {key:'nboom', type:'img', src:'nboom.png', optional:true},          // N BOMB explosion art
-  {key:'dog', type:'img', src:'dog.png', optional:true},              // the house DOG: 10 frames (run 0-4, jump 5-7, lie 8, sleep 9), fw:140 fh:139
+  {key:'housedog', type:'img', src:'housedog.png', optional:true},   // the house PET dog: 10 frames (run 0-4, jump 5-7, lie 8, sleep 9), fw:145 fh:150 — renamed so it can NEVER overwrite the K-9 fighter's dog.png
   {key:'room_church',       type:'img', src:'room church.jpeg', optional:true},
   {key:'room_gunstore',     type:'img', src:'room gunstore.jpeg', optional:true},
   {key:'room_restore',      type:'img', src:'room restore.jpeg', optional:true},
@@ -553,7 +553,7 @@ const SECTIONS=[
              raised up the scene (yOff:-55) so he reads as further back = depth. Paces a shorter
              range now (80..400) so he doesn't wander as far right. Walk frames 0-5. */
           {img:'bigman3', fw:484, fh:438, at:200, h:80, yOff:-55, face:1,
-           clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:80, paceTo:400, paceSpd:0.6, mp3:'Bigman3.mp3', range:180},
+           clip:{start:0,count:6,fps:9,loop:true}, pace:true, paceFrom:80, paceTo:400, paceSpd:0.6},   // (mp3 removed: he only speaks in America)
           {img:'dancer',  fw:163, fh:310, at:220, h:135, yOff:0, face:1,  clip:{start:8,count:6,fps:9,loop:true}, mp3:'Dancer.mp3', range:180},
           {img:'dgreen',  fw:156, fh:231, at:355, h:104, yOff:0, face:1,  clip:{start:0,count:6,fps:9,loop:true}, mp3:'Dgreen.mp3', range:180},
           {img:'tvguy',   fw:231, fh:369, at:490, h:128, yOff:0, face:-1, clip:{start:0,count:18,fps:7,loop:true}, mp3:'Tvguy.mp3', range:180} ],
@@ -621,7 +621,8 @@ const TRACKS={ select:'Character selection screen.mp3', home:'Home.mp3', street:
 const JUKEBOX={
   in_winchester:{ x:1994, reach:150, idx:0, glowY:0.49, glowR:84,
     files:['Winchester.mp3','Juke2.mp3','Juke3.mp3','Juke4.mp3','Juke5.mp3',
-           'Juke6.mp3','Juke7.mp3','Juke8.mp3','Juke9.mp3','Juke10.mp3'] },
+           'Juke6.mp3','Juke7.mp3','Juke8.mp3','Juke9.mp3','Juke10.mp3',
+           'Juke11.mp3','Juke12.mp3','Juke13.mp3','Juke14.mp3','Juke15.mp3','Juke16.mp3'] },
 };
 /* ── AMBIENT GLOWS ─────────────────────────────────────────────────────────
    Soft pulsing halos painted onto things that emit light (candles, neon, lamps,
@@ -768,7 +769,7 @@ const GRAFFITI = {
          in_restore -> restore.mp4                                            */
 const SCREENS = {
   in_house:   { rect:{ x:283, y:111, w:182, h:102 },                   // TV on the left-room wall (new house panorama, art px)
-                files:['channel1.mp4','channel2.mp4','channel3.mp4','channel4.mp4','channel5.mp4','channel6.mp4','channel7.mp4','channel8.mp4'],
+                files:['channel1.mp4','channel2.mp4','channel3.mp4','channel4.mp4','channel5.mp4','channel6.mp4','channel7.mp4','channel8.mp4','channel9.mp4','channel10.mp4','channel11.mp4','channel12.mp4'],
                 switchable:true, sound:true, reach:120, idx:0, debug:false },
   in_cinema:  { rect:{ x:183, y:61, w:240, h:120 },                      // measured to the painted cinema screen
                 files:['cinema.mp4'], playlist:false, switchable:false, sound:true, reach:160, idx:0, debug:false },   // ONE small looping clip on the screen (no parts, no auto-advance)
