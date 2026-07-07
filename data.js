@@ -338,7 +338,7 @@ const SECTIONS=[
 
 
   /* ── INTERIOR ROOMS (entered from the hub; EXIT door returns to the street) ── */
-  {id:'in_house', name:'Inside &mdash; My House', bgKey:'room_house', BGW:591, srcY:46, flatGround:277, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
+  {id:'in_house', name:'Inside &mdash; My House', bgKey:'room_house', BGW:2172, zoom:1.0, srcY:27, flatGround:360, charScale:2.2, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
    doors:[]},
   {id:'in_church', name:'Inside &mdash; The Church', bgKey:'room_church', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
    doors:[]},
@@ -633,14 +633,14 @@ const GLOWS={
      flicker (mode 'warm'), plus steady warm pools under the lamps, pendants and the
      hall chandelier. Coords in room space (BGW 591). Nudge x/y/r/alpha on the phone. */
   in_house: [
-    {x:138, y:53, r:30, mode:'warm', alpha:0.34},                  // living-room FIRE (left)
-    {x:496, y:71, r:30, mode:'warm', alpha:0.34},                  // office FIRE (right)
-    {x:26,  y:58, r:20, mode:'warm', alpha:0.20},                  // left table lamp
-    {x:147, y:53, r:18, mode:'warm', alpha:0.16},                  // living-room lamp
-    {x:208, y:36, r:22, mode:'warm', alpha:0.18},                  // kitchen pendants
-    {x:344, y:15, r:20, mode:'warm', alpha:0.16},                  // hallway chandelier
-    {x:462, y:23, r:16, mode:'warm', alpha:0.14},                  // stairway sconce
-    {x:527, y:33, r:20, mode:'warm', alpha:0.18},                  // office lamp (right)
+    {x:508,  y:195, r:80, mode:'warm', alpha:0.34},                // living-room FIRE (left)
+    {x:1822, y:255, r:80, mode:'warm', alpha:0.34},                // office FIRE (right)
+    {x:97,   y:212, r:52, mode:'warm', alpha:0.20},                // left table lamp
+    {x:542,  y:196, r:46, mode:'warm', alpha:0.16},                // living-room lamp
+    {x:764,  y:134, r:56, mode:'warm', alpha:0.18},                // kitchen pendants
+    {x:1265, y:55,  r:52, mode:'warm', alpha:0.16},                // hallway chandelier
+    {x:1697, y:83,  r:42, mode:'warm', alpha:0.14},                // stairway sconce
+    {x:1935, y:120, r:52, mode:'warm', alpha:0.18},                // office lamp (right)
   ],
   /* HIGH STREET (home4.png 2868x266) — daytime, so only the things that truly emit:
      the portal vortex, the cinema marquee + poster boxes, the club neon, police sign. */
@@ -747,7 +747,7 @@ const GRAFFITI = {
                        upload (missing parts are skipped; spare slots just show static).
          in_restore -> restore.mp4                                            */
 const SCREENS = {
-  in_house:   { rect:{ x:77, y:30, w:50, h:28 },                         // TV on the left-room wall (new house panorama)
+  in_house:   { rect:{ x:283, y:111, w:182, h:102 },                   // TV on the left-room wall (new house panorama, art px)
                 files:['channel1.mp4','channel2.mp4','channel3.mp4','channel4.mp4','channel5.mp4','channel6.mp4','channel7.mp4','channel8.mp4'],
                 switchable:true, sound:true, reach:120, idx:0, debug:false },
   in_cinema:  { rect:{ x:183, y:61, w:240, h:120 },                      // measured to the painted cinema screen
