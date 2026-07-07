@@ -345,7 +345,7 @@ const SECTIONS=[
      STASH menu), landing with the big window (a TV screen so a moving 'outside' clip can
      play through it), and the lounge. Exits back down the stairs to the house. */
   {id:'in_upstairs', name:'Upstairs', bgKey:'room_upstairs', BGW:2172, zoom:1.0, srcY:27, flatGround:360, charScale:2.2, interior:true, exitLeft:'in_house', exitRight:'in_house', enemies:[],
-   doors:[ {x:120,  w:150, label:'Downstairs', target:'in_house'},
+   doors:[ {x:1080, w:170, label:'Downstairs', target:'in_house'},   // at the actual staircase on the landing
            {x:830,  w:150, label:'The Stash', action:'stash'} ]},
   {id:'in_church', name:'Inside &mdash; The Church', bgKey:'room_church', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
    doors:[]},
