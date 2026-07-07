@@ -292,14 +292,14 @@ const SECTIONS=[
       Raised up the path (yOff) so they sit higher than the player as background
       dancers. Dancingcouple.mp3 fades in near them. Nudge `at`/`yOff`/`h` to taste. */
    npcs:[
-     {img:'couple', fw:234, fh:231, at:6150, h:105, yOff:-40, face:1,  clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
-     {img:'couple', fw:234, fh:231, at:6450, h:105, yOff:-40, face:-1, clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
-     {img:'couple', fw:234, fh:231, at:6750, h:105, yOff:-40, face:1,  clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
-     {img:'couple', fw:234, fh:231, at:7050, h:105, yOff:-40, face:-1, clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
-     {img:'couple', fw:234, fh:231, at:7350, h:105, yOff:-40, face:1,  clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
-     {img:'couple', fw:234, fh:231, at:7650, h:105, yOff:-40, face:-1, clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
-     {img:'couple', fw:234, fh:231, at:7950, h:105, yOff:-40, face:1,  clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220},
-     {img:'couple', fw:234, fh:231, at:8250, h:105, yOff:-40, face:-1, clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dancingcouple.mp3', range:220} ]},
+     {img:'couple', fw:234, fh:231, at:6150, h:105, yOff:-40, face:1,  clip:{start:0,count:15,fps:8,loop:true}},
+     {img:'couple', fw:234, fh:231, at:6450, h:105, yOff:-40, face:-1, clip:{start:0,count:15,fps:8,loop:true}},
+     {img:'couple', fw:234, fh:231, at:6750, h:105, yOff:-40, face:1,  clip:{start:0,count:15,fps:8,loop:true}},
+     {img:'couple', fw:234, fh:231, at:7050, h:105, yOff:-40, face:-1, clip:{start:0,count:15,fps:8,loop:true}},
+     {img:'couple', fw:234, fh:231, at:7350, h:105, yOff:-40, face:1,  clip:{start:0,count:15,fps:8,loop:true}},
+     {img:'couple', fw:234, fh:231, at:7650, h:105, yOff:-40, face:-1, clip:{start:0,count:15,fps:8,loop:true}},
+     {img:'couple', fw:234, fh:231, at:7950, h:105, yOff:-40, face:1,  clip:{start:0,count:15,fps:8,loop:true}},
+     {img:'couple', fw:234, fh:231, at:8250, h:105, yOff:-40, face:-1, clip:{start:0,count:15,fps:8,loop:true}} ]},
 
   /* ── HOLODECK (entered from the hub Portal -> travel menu) ─────────────
      A full-screen MP4 backdrop: one widescreen clip (holodeck.mp4) fills the
@@ -352,9 +352,9 @@ const SECTIONS=[
    doors:[]},
   {id:'in_cinema', name:'Inside &mdash; The Cinema', bgKey:'room_cinema', BGW:591, srcY:46, flatGround:273, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
    doors:[]},
-  {id:'in_easyjet', name:'Inside &mdash; easyJet Holidays', bgKey:'room_easyjet', BGW:580, srcY:46, flatGround:277, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
+  {id:'in_easyjet', name:'Inside &mdash; easyJet Holidays', bgKey:'room_easyjet', BGW:580, srcY:46, flatGround:277, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[], spawnMid:true, autoMenu:'easyjet',
    doors:[ {x:290, w:74, label:'Departures', menu:'easyjet'} ]},
-  {id:'in_trainstation', name:'Inside &mdash; DigiTown Station', bgKey:'room_trainstation', BGW:580, srcY:46, flatGround:281, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
+  {id:'in_trainstation', name:'Inside &mdash; DigiTown Station', bgKey:'room_trainstation', BGW:580, srcY:46, flatGround:281, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[], spawnMid:true, autoMenu:'trainstation',
    doors:[ {x:290, w:74, label:'Departures', menu:'trainstation'} ]},
   /* ── THE SEA — first-person scope SHOOTING GALLERY (reached from the Train
      Station departures board). `sea:true` makes the engine run the shooting-gallery
@@ -511,7 +511,9 @@ const SECTIONS=[
      srcY re-tuned to keep the pavement in view. respawn:true — enemies come back
      every time you re-enter. */
   {id:'lvl_america', name:'America', bgKey:'room_america', BGW:2172, zoom:1.6, srcY:138, flatGround:345, charScale:0.81, interior:true, walkMul:1.5, exitLeft:'home', respawn:true, helpers:true,
-   enemies:[ {at:500,kind:21,hp:80,scaleMul:0.625},{at:1000,kind:22,hp:80,scaleMul:0.625},{at:1500,kind:21,hp:80,scaleMul:0.625},{at:1900,kind:22,hp:80,scaleMul:0.625},{at:750,kind:24,hp:90,scaleMul:0.625},{at:1300,kind:24,hp:90,scaleMul:0.625} ],
+   enemies:[ {at:500,kind:21,hp:80,scaleMul:0.625},{at:1000,kind:22,hp:80,scaleMul:0.625},{at:1500,kind:21,hp:80,scaleMul:0.625},{at:1900,kind:22,hp:80,scaleMul:0.625},{at:750,kind:24,hp:90,scaleMul:0.625},{at:1300,kind:24,hp:90,scaleMul:0.625},
+             {at:300,kind:22,hp:80,scaleMul:0.625,spawnSide:'left'},{at:800,kind:24,hp:90,scaleMul:0.625,spawnSide:'left'},{at:1200,kind:21,hp:80,scaleMul:0.625,spawnSide:'left'},
+             {at:1150,kind:21,hp:80,scaleMul:0.625,spawnSide:'right'},{at:1600,kind:22,hp:80,scaleMul:0.625,spawnSide:'right'},{at:2000,kind:24,hp:90,scaleMul:0.625,spawnSide:'right'},{at:1750,kind:21,hp:80,scaleMul:0.625,spawnSide:'right'} ],
    npcs:[ {img:'potus', fw:233, fh:362, at:1086, h:84, yOff:0, face:1,
            clip:{start:0,count:18,fps:9,loop:true}, mp3:'Potus.mp3', range:260},
           /* decorative dancing PAIR near the end of the level (BGW 2172). 16-frame sheet;
@@ -527,8 +529,8 @@ const SECTIONS=[
      room until the art exists; nudge BGW/srcY/flatGround/charScale once it does. */
   {id:'in_dnb', name:'Room 1 &mdash; Drum &amp; Bass', bgKey:'room_dnb', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
    /* two background dancing couples (NOT enemies) just looping a dance on the floor */
-   npcs:[ {img:'dnbcouple1', fw:328, fh:310, at:175, h:130, yOff:0, face:1,  clip:{start:0,count:15,fps:6,loop:true}, mp3:'Dnbcouple1.mp3', range:180},
-          {img:'dnbcouple2', fw:260, fh:272, at:410, h:130, yOff:0, face:-1, clip:{start:0,count:15,fps:8,loop:true}, mp3:'Dnbcouple2.mp3', range:180} ],
+   npcs:[ {img:'dnbcouple1', fw:328, fh:310, at:175, h:130, yOff:0, face:1,  clip:{start:0,count:15,fps:6,loop:true}},
+          {img:'dnbcouple2', fw:260, fh:272, at:410, h:130, yOff:0, face:-1, clip:{start:0,count:15,fps:8,loop:true}} ],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
   /* HIP-HOP room: the original dancer + the green dancer + the "TV guy" (orange-shirt
      bloke hugging a safe, tvguy.png) boogieing on the spot. The purple dancer was removed.
