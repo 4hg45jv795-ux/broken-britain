@@ -71,6 +71,7 @@ const META=[
 const ASSETS = [
   {key:'home',     type:'img', src:'home4.png', optional:true},
   {key:'room_house',        type:'img', src:'room house.jpeg', optional:true},
+  {key:'room_upstairs', type:'img', src:'room upstairs.jpeg', optional:true},   // upstairs: master bedroom / armoury / landing / lounge
   {key:'room_church',       type:'img', src:'room church.jpeg', optional:true},
   {key:'room_gunstore',     type:'img', src:'room gunstore.jpeg', optional:true},
   {key:'room_restore',      type:'img', src:'room restore.jpeg', optional:true},
@@ -339,7 +340,13 @@ const SECTIONS=[
 
   /* ── INTERIOR ROOMS (entered from the hub; EXIT door returns to the street) ── */
   {id:'in_house', name:'Inside &mdash; My House', bgKey:'room_house', BGW:2172, zoom:1.0, srcY:27, flatGround:360, charScale:2.2, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
-   doors:[]},
+   doors:[ {x:1300, w:150, label:'Upstairs', target:'in_upstairs'} ]},
+  /* ── UPSTAIRS (room_upstairs.jpeg 2172x387) — master bedroom, gun cabinet (opens the
+     STASH menu), landing with the big window (a TV screen so a moving 'outside' clip can
+     play through it), and the lounge. Exits back down the stairs to the house. */
+  {id:'in_upstairs', name:'Upstairs', bgKey:'room_upstairs', BGW:2172, zoom:1.0, srcY:27, flatGround:360, charScale:2.2, interior:true, exitLeft:'in_house', exitRight:'in_house', enemies:[],
+   doors:[ {x:120,  w:150, label:'Downstairs', target:'in_house'},
+           {x:830,  w:150, label:'The Stash', action:'stash'} ]},
   {id:'in_church', name:'Inside &mdash; The Church', bgKey:'room_church', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
    doors:[]},
   {id:'in_gunstore', name:'Inside &mdash; FAFO Ammo &amp; Arms', bgKey:'room_gunstore', BGW:591, srcY:46, flatGround:273, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
@@ -632,6 +639,16 @@ const GLOWS={
   /* MY HOUSE (room_house.jpeg 2172x387, rendered at BGW 591) — the two fireplaces
      flicker (mode 'warm'), plus steady warm pools under the lamps, pendants and the
      hall chandelier. Coords in room space (BGW 591). Nudge x/y/r/alpha on the phone. */
+  /* UPSTAIRS (room_upstairs.jpeg 2172x387) — daylight from the big window, the green
+     neon weed-leaf sign, warm bedside + landing lamps. Coords art px. */
+  in_upstairs: [
+    {x:1935, y:180, r:90, hue:210, sat:35, light:70, alpha:0.16},        // window daylight
+    {x:1606, y:130, r:40, hue:110, sat:90, light:55, alpha:0.22},        // green neon leaf
+    {x:204,  y:41,  r:34, mode:'warm', alpha:0.18},                      // bedroom ceiling light
+    {x:81,   y:197, r:40, mode:'warm', alpha:0.20},                      // bedside lamp (left)
+    {x:306,  y:55,  r:30, mode:'warm', alpha:0.16},                      // bedroom light (right)
+    {x:1150, y:60,  r:34, mode:'warm', alpha:0.16},                      // landing chandelier
+  ],
   in_house: [
     {x:508,  y:195, r:80, mode:'warm', alpha:0.34},                // living-room FIRE (left)
     {x:1822, y:255, r:80, mode:'warm', alpha:0.34},                // office FIRE (right)
@@ -752,6 +769,8 @@ const SCREENS = {
                 switchable:true, sound:true, reach:120, idx:0, debug:false },
   in_cinema:  { rect:{ x:183, y:61, w:240, h:120 },                      // measured to the painted cinema screen
                 files:['cinema.mp4'], playlist:false, switchable:false, sound:true, reach:160, idx:0, debug:false },   // ONE small looping clip on the screen (no parts, no auto-advance)
+  in_upstairs:{ rect:{ x:1814, y:73, w:243, h:217 },                    // the big landing WINDOW (art px) — drop an 'outside' clip in as window.* 
+                files:['outside.mp4'], switchable:false, sound:false, loop:true, idx:0, debug:false },
   in_restore: { rect:{ x:243, y:64, w:109, h:66 },                       // measured to the painted restore-room TV
                 files:['restore.mp4'], switchable:false, sound:true, idx:0, debug:false },
 };
