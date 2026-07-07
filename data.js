@@ -72,6 +72,9 @@ const ASSETS = [
   {key:'home',     type:'img', src:'home4.png', optional:true},
   {key:'room_house',        type:'img', src:'room house.jpeg', optional:true},
   {key:'room_upstairs', type:'img', src:'room upstairs.jpeg', optional:true},   // upstairs: master bedroom / armoury / landing / lounge
+  {key:'nbomb', type:'img', src:'nbomb.png', optional:true},          // N BOMB weapon (held + thrown sprite)
+  {key:'nboom', type:'img', src:'nboom.png', optional:true},          // N BOMB explosion art
+  {key:'dog', type:'img', src:'dog.png', optional:true},              // the house DOG: 10 frames (run 0-4, jump 5-7, lie 8, sleep 9), fw:140 fh:139
   {key:'room_church',       type:'img', src:'room church.jpeg', optional:true},
   {key:'room_gunstore',     type:'img', src:'room gunstore.jpeg', optional:true},
   {key:'room_restore',      type:'img', src:'room restore.jpeg', optional:true},
@@ -340,12 +343,12 @@ const SECTIONS=[
 
   /* ── INTERIOR ROOMS (entered from the hub; EXIT door returns to the street) ── */
   {id:'in_house', name:'Inside &mdash; My House', bgKey:'room_house', BGW:2172, zoom:1.0, srcY:27, flatGround:360, charScale:2.2, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
-   doors:[ {x:1300, w:150, label:'Upstairs', target:'in_upstairs'} ]},
+   doors:[ {x:1350, w:150, label:'Upstairs', target:'in_upstairs', tx:1155} ]},   // arrive upstairs by the landing stairs
   /* ── UPSTAIRS (room_upstairs.jpeg 2172x387) — master bedroom, gun cabinet (opens the
      STASH menu), landing with the big window (a TV screen so a moving 'outside' clip can
      play through it), and the lounge. Exits back down the stairs to the house. */
   {id:'in_upstairs', name:'Upstairs', bgKey:'room_upstairs', BGW:2172, zoom:1.0, srcY:27, flatGround:360, charScale:2.2, interior:true, exitLeft:'in_house', exitRight:'in_house', enemies:[],
-   doors:[ {x:1080, w:170, label:'Downstairs', target:'in_house'},   // at the actual staircase on the landing
+   doors:[ {x:1130, w:170, label:'Downstairs', target:'in_house', tx:1425},   // at the staircase; arrive downstairs by the stairs
            {x:830,  w:150, label:'The Stash', action:'stash'} ]},
   {id:'in_church', name:'Inside &mdash; The Church', bgKey:'room_church', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
    doors:[]},
@@ -605,7 +608,7 @@ const TRACKS={ select:'Character selection screen.mp3', home:'Home.mp3', street:
   in_dnb:'Dnb.mp3', in_hiphop:'Hiphop.mp3', in_special:'Specialguest.mp3', in_cottagers:'Cottagerscove.mp3',
   /* ── BLACK LEVEL + HOLODECK MUSIC (the MP4s are silent; these are the sound) ── */
   blacklevel:'Void.mp3', holodeck:'Holodeck.mp3', judgement:'Judgement.mp3', bossmode:'Bossmode.mp3',
-  lvl_europe:'Europe.mp3', lvl_america:'America.mp3', in_shitter:'Shitter.mp3', the_sea:'Sea.mp3', lvl_zombies:'Zombies.mp3' };
+  lvl_europe:'Europe.mp3', lvl_america:'America.mp3', in_shitter:'Shitter.mp3', the_sea:'Sea.mp3', lvl_zombies:'Zombies.mp3', in_upstairs:'Upstairs.mp3' };
 /* ── THE WINCHESTER JUKEBOX ────────────────────────────────────────────────
    Works exactly like the house TV, but for MUSIC. Stand near the jukebox in the
    Winchester and STRIKE to flip to the next track; the chosen .mp3 becomes the
@@ -863,6 +866,7 @@ const WEAPONS={
   pistol:  {name:'Pistol', auto:false, cooldown:14, type:'bullet', pellets:1, spread:0.04, speed:14, range:600, dmg:14, knock:5 },   // the free starting sidearm — semi-auto, tap to fire
   rifle:   {name:'Fully Automatic', auto:true,  cooldown:10, type:'bullet', pellets:1, spread:0.06, speed:14, range:640, dmg:15, knock:5 },
   grenade: {name:'Grenade', auto:false, cooldown:48, type:'grenade', speed:8, dmg:80, radius:95, knock:22 },
+  nbomb:   {name:'N Bomb', auto:false, cooldown:60, type:'grenade', speed:7.5, dmg:150, radius:175, knock:28, nuke:true, sprite:'nbomb' },   // free from the upstairs STASH; ground-shaking blast
   littleblaster:{name:'Little Blaster', auto:false, cooldown:16, type:'bullet', pellets:1, spread:0.02, speed:12, range:600, dmg:34, knock:9,  sprite:'littleblaster', spriteH:30, shake:false},
   bigblaster:   {name:'Big Blaster',    auto:false, cooldown:75, type:'bullet', pellets:1, spread:0.00, speed:10, range:680, dmg:999, knock:30, sprite:'bigblaster', spriteH:58, shake:true, clearAll:true },  // THE ultimate: one shot wipes every enemy on the level. Long cooldown so each blast is an event.
   // NOTE: the 'fireblaster' weapon AND its asset were removed completely by request.
