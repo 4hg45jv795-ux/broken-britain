@@ -187,6 +187,7 @@ const ASSETS = [
   {key:'piper', type:'img', src:'piper.png', optional:true},  // walking plaid-shirt drifter NPC on the hub — 9 frames: 0-5 walk, 6-8 shoot (unused for now; frame 8 has the muzzle flash)
   {key:'graffiti_eyes', type:'img', src:'graffiti_eyes.png', optional:true},  // Cottagers Cove reactive wall eyes (7-frame dripping-eyeball blink loop) — LEFT of the Charlie tag
   {key:'graffiti_eyes2', type:'img', src:'graffiti_eyes2.png', optional:true}, // Cottagers Cove grinning eyeball (15-frame roll+grin) — RIGHT of the Charlie tag
+  {key:'graffiti_alien', type:'img', src:'graffiti_alien.png', optional:true}, // Cottagers Cove AREA 51 alien tag (6-frame blink) — LEFT side of the wall
 ];
 /* ── SECTIONS / LEVELS ───────────────────────────────────── */
 const SECTIONS=[
@@ -745,6 +746,10 @@ const GRAFFITI = {
      see them: (a) make sure BOTH pngs are deployed next to index.html, and (b) nudge yOff toward
      0 to bring them DOWN, or more negative to push them UP. h is on-screen height before zoom. */
   in_cottagers: [
+    /* AREA 51 ALIEN (left side of the wall) — blinks awake as you walk past.
+       6 frames: 0 eyes open (idle), 1-3 closing, 4-5 reopening/looking. */
+    {img:'graffiti_alien', fw:100, fh:180, at:760, h:150, yOff:-270, range:160,
+     clips:{idle:{start:0,count:1,fps:1,loop:true}, react:{start:0,count:6,fps:9,loop:false}}},
     {img:'graffiti_eyes2', fw:165, fh:182, at:1360, h:150, yOff:-270, range:160,
      clips:{idle:{start:0,count:1,fps:1,loop:true}, react:{start:0,count:15,fps:12,loop:false}}},
   ],
