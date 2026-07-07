@@ -769,7 +769,7 @@ const SCREENS = {
                 switchable:true, sound:true, reach:120, idx:0, debug:false },
   in_cinema:  { rect:{ x:183, y:61, w:240, h:120 },                      // measured to the painted cinema screen
                 files:['cinema.mp4'], playlist:false, switchable:false, sound:true, reach:160, idx:0, debug:false },   // ONE small looping clip on the screen (no parts, no auto-advance)
-  in_upstairs:{ rect:{ x:1814, y:73, w:243, h:217 },                    // the big landing WINDOW (art px) — drop an 'outside' clip in as window.* 
+  in_upstairs:{ rect:{ x:1750, y:68, w:314, h:160 },                    // the big lounge WINDOW glass (stops at the sofa back) — outside.mp4 plays through it 
                 files:['outside.mp4'], switchable:false, sound:false, loop:true, idx:0, debug:false },
   in_restore: { rect:{ x:243, y:64, w:109, h:66 },                       // measured to the painted restore-room TV
                 files:['restore.mp4'], switchable:false, sound:true, idx:0, debug:false },
