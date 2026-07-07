@@ -549,15 +549,14 @@ const SECTIONS=[
           {img:'tvguy',   fw:231, fh:369, at:490, h:128, yOff:0, face:-1, clip:{start:0,count:18,fps:7,loop:true}, mp3:'Tvguy.mp3', range:180} ],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
   {id:'in_special', name:'Room 3 &mdash; Special Guest', bgKey:'room_special', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
-   /* Decorative NPC: the carried sedan-chair group strolls back and forth along the floor on
-      the player's path (normal size, ground level). Nudge h / paceFrom-To / paceSpd / face. */
-   npcs:[ {img:'piggybackguy', fw:151, fh:287, at:240, h:130, yOff:0, face:1,
-           clip:{start:0,count:11,fps:8,loop:true}, pace:true, paceFrom:130, paceTo:420, paceSpd:0.45, mp3:'Piggybackguy.mp3', range:190},
-          /* JOKE TELLER — swapped with the Burger King: stands on the stage in the King's
-             exact old spot (centre x:280, raised 110, same drawn size). Jokeman.mp3 fades
-             up as you approach. */
-          {img:'jokeman', fw:156, fh:223, at:253, h:78, yOff:-110, face:1,
-           clip:{start:0,count:8,fps:6,loop:true}, mp3:'Jokeman.mp3', range:180} ],
+   /* JOKE TELLER draws FIRST (behind), so the strolling piggyback group passes IN FRONT of him. */
+   npcs:[ {img:'jokeman', fw:156, fh:223, at:253, h:78, yOff:-110, face:1,
+           clip:{start:0,count:8,fps:6,loop:true}, mp3:'Jokeman.mp3', range:180},
+          /* Decorative NPC: the carried sedan-chair group strolls back and forth along the
+             floor on the player's path (normal size, ground level), passing in front of the
+             joke teller on the stage. Nudge h / paceFrom-To / paceSpd / face. */
+          {img:'piggybackguy', fw:151, fh:287, at:240, h:130, yOff:0, face:1,
+           clip:{start:0,count:11,fps:8,loop:true}, pace:true, paceFrom:130, paceTo:420, paceSpd:0.45, mp3:'Piggybackguy.mp3', range:190} ],
    doors:[ {x:506, w:92, label:'EXIT &mdash; to the lobby', target:'in_nightclub'} ]},
 
   /* ── COTTAGERS COVE (the underpass at the far end of Crackadilly Gardens) ──
@@ -630,6 +629,19 @@ const JUKEBOX={
    actual candle / sign / lamp in the room art. Add lights to any room by adding an
    `id:[ ... ]` block; remove a glow by deleting its line. */
 const GLOWS={
+  /* MY HOUSE (room_house.jpeg 2172x387, rendered at BGW 591) — the two fireplaces
+     flicker (mode 'warm'), plus steady warm pools under the lamps, pendants and the
+     hall chandelier. Coords in room space (BGW 591). Nudge x/y/r/alpha on the phone. */
+  in_house: [
+    {x:138, y:53, r:30, mode:'warm', alpha:0.34},                  // living-room FIRE (left)
+    {x:496, y:71, r:30, mode:'warm', alpha:0.34},                  // office FIRE (right)
+    {x:26,  y:58, r:20, mode:'warm', alpha:0.20},                  // left table lamp
+    {x:147, y:53, r:18, mode:'warm', alpha:0.16},                  // living-room lamp
+    {x:208, y:36, r:22, mode:'warm', alpha:0.18},                  // kitchen pendants
+    {x:344, y:15, r:20, mode:'warm', alpha:0.16},                  // hallway chandelier
+    {x:462, y:23, r:16, mode:'warm', alpha:0.14},                  // stairway sconce
+    {x:527, y:33, r:20, mode:'warm', alpha:0.18},                  // office lamp (right)
+  ],
   /* HIGH STREET (home4.png 2868x266) — daytime, so only the things that truly emit:
      the portal vortex, the cinema marquee + poster boxes, the club neon, police sign. */
   home: [
@@ -735,7 +747,7 @@ const GRAFFITI = {
                        upload (missing parts are skipped; spare slots just show static).
          in_restore -> restore.mp4                                            */
 const SCREENS = {
-  in_house:   { rect:{ x:222, y:66, w:146, h:82 },                       // perfect already
+  in_house:   { rect:{ x:77, y:30, w:50, h:28 },                         // TV on the left-room wall (new house panorama)
                 files:['channel1.mp4','channel2.mp4','channel3.mp4','channel4.mp4','channel5.mp4','channel6.mp4','channel7.mp4','channel8.mp4'],
                 switchable:true, sound:true, reach:120, idx:0, debug:false },
   in_cinema:  { rect:{ x:183, y:61, w:240, h:120 },                      // measured to the painted cinema screen
