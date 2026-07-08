@@ -188,6 +188,7 @@ const ASSETS = [
   {key:'graffiti_eyes', type:'img', src:'graffiti_eyes.png', optional:true},  // Cottagers Cove reactive wall eyes (7-frame dripping-eyeball blink loop) — LEFT of the Charlie tag
   {key:'graffiti_eyes2', type:'img', src:'graffiti_eyes2.png', optional:true}, // Cottagers Cove grinning eyeball (15-frame roll+grin) — RIGHT of the Charlie tag
   {key:'graffiti_alien', type:'img', src:'graffiti_alien.png', optional:true}, // Cottagers Cove AREA 51 alien tag (6-frame blink) — LEFT side of the wall
+  {key:'bigeye', type:'img', src:'bigeye.png', optional:true},                // BIG EYE stash weapon: the grinning eyeball, fired like the Big Blaster
 ];
 /* ── SECTIONS / LEVELS ───────────────────────────────────── */
 const SECTIONS=[
@@ -622,8 +623,7 @@ const TRACKS={ select:'Character selection screen.mp3', home:'Home.mp3', street:
 const JUKEBOX={
   in_winchester:{ x:1994, reach:150, idx:0, glowY:0.49, glowR:84,
     files:['Winchester.mp3','Juke2.mp3','Juke3.mp3','Juke4.mp3','Juke5.mp3',
-           'Juke6.mp3','Juke7.mp3','Juke8.mp3','Juke9.mp3','Juke10.mp3',
-           'Juke11.mp3','Juke12.mp3','Juke13.mp3','Juke14.mp3','Juke15.mp3','Juke16.mp3'] },
+           'Juke6.mp3','Juke7.mp3','Juke8.mp3','Juke9.mp3','Juke10.mp3'] },
 };
 /* ── AMBIENT GLOWS ─────────────────────────────────────────────────────────
    Soft pulsing halos painted onto things that emit light (candles, neon, lamps,
@@ -750,8 +750,6 @@ const GRAFFITI = {
        6 frames: 0 eyes open (idle), 1-3 closing, 4-5 reopening/looking. */
     {img:'graffiti_alien', fw:100, fh:180, at:760, h:150, yOff:-270, range:160,
      clips:{idle:{start:0,count:1,fps:1,loop:true}, react:{start:0,count:6,fps:9,loop:false}}},
-    {img:'graffiti_eyes2', fw:165, fh:182, at:1360, h:150, yOff:-270, range:160,
-     clips:{idle:{start:0,count:1,fps:1,loop:true}, react:{start:0,count:15,fps:12,loop:false}}},
   ],
 };
 /* ── ROOM SCREENS (looping .mp4s with sound, painted onto wall screens) ──
@@ -774,7 +772,7 @@ const GRAFFITI = {
          in_restore -> restore.mp4                                            */
 const SCREENS = {
   in_house:   { rect:{ x:283, y:111, w:182, h:102 },                   // TV on the left-room wall (new house panorama, art px)
-                files:['channel1.mp4','channel2.mp4','channel3.mp4','channel4.mp4','channel5.mp4','channel6.mp4','channel7.mp4','channel8.mp4','channel9.mp4','channel10.mp4','channel11.mp4','channel12.mp4'],
+                files:['channel1.mp4','channel2.mp4','channel3.mp4','channel4.mp4','channel5.mp4','channel6.mp4','channel7.mp4','channel8.mp4'],
                 switchable:true, sound:true, reach:120, idx:0, debug:false },
   in_cinema:  { rect:{ x:183, y:61, w:240, h:120 },                      // measured to the painted cinema screen
                 files:['cinema.mp4'], playlist:false, switchable:false, sound:true, reach:160, idx:0, debug:false },   // ONE small looping clip on the screen (no parts, no auto-advance)
@@ -875,6 +873,7 @@ const WEAPONS={
   nbomb:   {name:'N Bomb', auto:false, cooldown:60, type:'grenade', speed:7.5, dmg:150, radius:175, knock:28, nuke:true, sprite:'nbomb' },   // free from the upstairs STASH; ground-shaking blast
   littleblaster:{name:'Little Blaster', auto:false, cooldown:16, type:'bullet', pellets:1, spread:0.02, speed:12, range:600, dmg:34, knock:9,  sprite:'littleblaster', spriteH:30, shake:false},
   bigblaster:   {name:'Big Blaster',    auto:false, cooldown:75, type:'bullet', pellets:1, spread:0.00, speed:10, range:680, dmg:999, knock:30, sprite:'bigblaster', spriteH:58, shake:true, clearAll:true },  // THE ultimate: one shot wipes every enemy on the level. Long cooldown so each blast is an event.
+  bigeye:       {name:'Big Eye',        auto:false, cooldown:75, type:'bullet', pellets:1, spread:0.00, speed:10, range:680, dmg:999, knock:30, sprite:'bigeye', spriteH:58, shake:true, clearAll:true },   // STASH exclusive: the grinning eyeball, same one-shot wipe as the Big Blaster
   // NOTE: the 'fireblaster' weapon AND its asset were removed completely by request.
   // Shooter enemies (the UFO) now fire the BIG BLASTER bolt instead (bigblaster.png),
   // which also remains a buyable weapon below.
