@@ -1663,7 +1663,7 @@ function updateWar(){
   if(WAR.spawnT<=0){
     const kind=WAR_KINDS[WAR.kindIdx%WAR_KINDS.length]; WAR.kindIdx++;
     const at=1760+Math.random()*260;                     // they climb IN THROUGH THE WINDOW
-    const e=pushEnemy(kind, at, null, {face:(player.x<at?-1:1), hp:40});
+    const e=pushEnemy(kind, at, null, {face:(player.x<at?-1:1), hp:40, scaleMul:2.2});   // match the room's 2.2x character scale
     if(e) e.aggro=true;
     const ramp=Math.min(1, WAR.t/6000);
     WAR.spawnT=Math.round(95-55*ramp)+Math.random()*20;   // waves thicken as the madness deepens
