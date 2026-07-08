@@ -1190,6 +1190,7 @@ function useDoor(d){
   }
   if(d.target===null){ flashBanner('The portal is dormant&hellip; for now'); return; }
   if(d.action==='stash'){ openStash(); return; }      // gun cabinet: opens the STASH menu
+  if(d.action==='war'){ startWar(); return; }         // the window marker: 5 minutes of madness
   if(d.target==='shop'){ openShop(); return; }
   const sec=SECTIONS[sectionIndex];
   if(d.target==='home'){                              // leaving a room -> back outside
@@ -1234,6 +1235,7 @@ function drawDoors(){
   else if(d.locked && !inventory.has(d.key)){ name=label; hint='LOCKED \u2014 need a key'; }
   else if(d.target==='home'){ name='EXIT'; hint='STRIKE to leave'; }
   else if(d.action==='stash'){ name=label; hint='STRIKE to open'; }
+  else if(d.action==='war'){ name=label; hint='STRIKE for WAR MODE \u2014 5 minutes of madness'; }
   else if(d.target==='shop'){ name=label; hint='STRIKE to open'; }
   else { name=label; hint='STRIKE to enter'; }
   drawMarker(mx, 30+bob, name, hint);
@@ -1628,6 +1630,58 @@ function openTravel(menuId){
   document.getElementById('travel').classList.add('on');
 }
 function closeTravel(){ travelOpen=false; document.getElementById('travel').classList.remove('on'); }
+/* ── WAR MODE ───────────────────────────────────────────────────────────────
+   Triggered from the marker LEFT of the upstairs window: 5 MINUTES OF MADNESS.
+   The window feed switches to war.mp4 (upload it), a two-tone siren wails, red/
+   blue light floods the room, and every enemy kind in the game pours in from the
+   far LEFT of upstairs, walking straight at you. Survive the 5 minutes (or die
+   trying). The war only ticks while you're up there. */
+const WAR={ on:false, t:0, dur:5*60*60, spawnT:0, kindIdx:0, sirenT:0 };
+const WAR_KINDS=[0,2,3,4,5,7,9,10,12,14,15,16,17,18,19,20,21,22,23,24].filter(k=>ENEMY_KINDS[k]);
+function startWar(){
+  if(WAR.on){ flashBanner('WAR already raging \u2014 '+Math.ceil((WAR.dur-WAR.t)/3600)+' min left'); return; }
+  WAR.on=true; WAR.t=0; WAR.spawnT=900; WAR.kindIdx=0; WAR.sirenT=0;   // sirens NOW; first bodies through the window after 15s
+  const sc=SCREENS.in_upstairs; if(sc && sc.files.length>1){ sc.idx=1; tvEnter(); }   // the window shows the war outside
+  flashBanner('WAR MODE \u2014 5 MINUTES OF MADNESS');
+  addShake(10,20); noiseBurst(0.4,0.3,120);
+}
+function endWar(){
+  WAR.on=false;
+  const sc=SCREENS.in_upstairs; if(sc){ sc.idx=0; if(SECTIONS[sectionIndex].id==='in_upstairs') tvEnter(); }
+  flashBanner('THE WAR IS OVER');
+  blip(392,784,0.3,'triangle',0.2);
+}
+function updateWar(){
+  if(!WAR.on) return;
+  if(SECTIONS[sectionIndex].id!=='in_upstairs') return;   // only rages while you're up there
+  WAR.t++;
+  if(WAR.t>=WAR.dur){ endWar(); return; }
+  WAR.sirenT++;                                           // two-tone siren
+  if(WAR.sirenT%44===0) blip(660,660,0.34,'sawtooth',0.10);
+  else if(WAR.sirenT%44===22) blip(880,880,0.34,'sawtooth',0.10);
+  WAR.spawnT--;
+  if(WAR.spawnT<=0){
+    const kind=WAR_KINDS[WAR.kindIdx%WAR_KINDS.length]; WAR.kindIdx++;
+    const at=1760+Math.random()*260;                     // they climb IN THROUGH THE WINDOW
+    const e=pushEnemy(kind, at, null, {face:(player.x<at?-1:1), hp:40});
+    if(e) e.aggro=true;
+    const ramp=Math.min(1, WAR.t/6000);
+    WAR.spawnT=Math.round(95-55*ramp)+Math.random()*20;   // waves thicken as the madness deepens
+  }
+}
+function drawWarLights(){
+  if(!WAR.on || SECTIONS[sectionIndex].id!=='in_upstairs') return;
+  const phase=Math.floor(WAR.sirenT/22)%2;                // red / blue strobes with the siren
+  const pulse=0.10+0.06*Math.abs(Math.sin(WAR.sirenT*0.14));
+  ctx.fillStyle=phase? 'rgba(255,40,40,'+pulse+')' : 'rgba(60,110,255,'+pulse+')';
+  ctx.fillRect(0,0,VW,VH);
+  const tleft=Math.max(0,WAR.dur-WAR.t);
+  const mm=Math.floor(tleft/3600), ss=Math.floor((tleft%3600)/60);
+  ctx.save(); ctx.textAlign='center'; ctx.font='bold 16px system-ui,sans-serif';
+  ctx.fillStyle='rgba(0,0,0,0.55)'; ctx.fillText('WAR '+mm+':'+String(ss).padStart(2,'0'), VW/2+1, 47);
+  ctx.fillStyle='#ff5f6d'; ctx.fillText('WAR '+mm+':'+String(ss).padStart(2,'0'), VW/2, 46);
+  ctx.restore();
+}
 /* ── THE STASH ─────────────────────────────────────────────────────────────
    The upstairs gun cabinet. Reuses the #travel overlay. Options are defined here
    (add more rows to STASH_ITEMS); each has a one-off effect when tapped. */
@@ -3274,7 +3328,7 @@ function update(){
   if(player.dead){
     player.ct++; player.vy+=GRAV; player.y+=player.vy;
     const g=groundAt(player.x+PW/2); if(player.y+PH>=g){player.y=g-PH;player.vy=0;}
-    player.deadT++; if(player.deadT>90){ respawnPlayer(); }
+    player.deadT++; if(player.deadT>210){ respawnPlayer(); }   // long enough to read the death card
     updateEnemies(); updateHelper(); return;
   }
 
@@ -3353,6 +3407,7 @@ function update(){
   updateNPC();
   updateBikini();
   updateDog();
+  updateWar();
   updateHubNpcs();
   updateChurchNpc();
   updateLibraryNpc();
@@ -3467,6 +3522,7 @@ function draw(){
   drawNPC();
   drawBikini();
   drawDog();
+  drawWarLights();
   drawHubNpcs();
   drawChurchNpc();
   drawLibraryNpc();
