@@ -349,9 +349,11 @@ const SECTIONS=[
   /* ── UPSTAIRS (room_upstairs.jpeg 2172x387) — master bedroom, gun cabinet (opens the
      STASH menu), landing with the big window (a TV screen so a moving 'outside' clip can
      play through it), and the lounge. Exits back down the stairs to the house. */
-  {id:'in_upstairs', name:'Upstairs', bgKey:'room_upstairs', BGW:2172, zoom:1.0, srcY:27, flatGround:360, charScale:2.2, interior:true, exitLeft:'in_house', exitRight:'in_house', enemies:[],
+  {id:'in_upstairs', name:'Upstairs', bgKey:'room_upstairs', BGW:2172, zoom:1.0, srcY:27, flatGround:360, charScale:2.2, interior:true, enemies:[],
+   /* NO edge exits up here — the STAIRS are the only way out (matters in WAR MODE). */
    doors:[ {x:1130, w:170, label:'Downstairs', target:'in_house', tx:1425},   // at the staircase; arrive downstairs by the stairs
-           {x:830,  w:150, label:'The Stash', action:'stash'} ]},
+           {x:830,  w:150, label:'The Stash', action:'stash'},
+           {x:1580, w:130, label:'WAR MODE', action:'war'} ]},   // the bubble LEFT of the window
   {id:'in_church', name:'Inside &mdash; The Church', bgKey:'room_church', BGW:591, srcY:46, flatGround:275, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
    doors:[]},
   {id:'in_gunstore', name:'Inside &mdash; FAFO Ammo &amp; Arms', bgKey:'room_gunstore', BGW:591, srcY:46, flatGround:273, charScale:1.3, interior:true, exitLeft:'home', exitRight:'home', enemies:[],
@@ -777,7 +779,7 @@ const SCREENS = {
   in_cinema:  { rect:{ x:183, y:61, w:240, h:120 },                      // measured to the painted cinema screen
                 files:['cinema.mp4'], playlist:false, switchable:false, sound:true, reach:160, idx:0, debug:false },   // ONE small looping clip on the screen (no parts, no auto-advance)
   in_upstairs:{ rect:{ x:1750, y:68, w:314, h:137 },                    // the big lounge WINDOW glass (stops at the sofa back) — outside.mp4 plays through it 
-                files:['outside.mp4'], switchable:false, sound:false, loop:true, idx:0, debug:false },
+                files:['outside.mp4','war.mp4'], switchable:false, sound:false, loop:true, idx:0, debug:false },   // war.mp4 = the view during WAR MODE
   in_restore: { rect:{ x:243, y:64, w:109, h:66 },                       // measured to the painted restore-room TV
                 files:['restore.mp4'], switchable:false, sound:true, idx:0, debug:false },
 };
