@@ -833,18 +833,16 @@ function crewUpdate(){
           let best=null,bd=1e9;
           for(const e of enemies){ if(e.state!=='walk')continue;
             const dd=Math.abs((e.x+e.w/2)-(m.x+m.w/2)); if(dd<900&&dd<bd){bd=dd;best=e;} }
-          if(best){
-            const w=WEAPONS[d.wid];
-            m.face=(best.x+best.w/2>m.x+m.w/2)?1:-1;
-            m.shootT=16; m.fireCd=w.cooldown+6+Math.random()*10;
-            const mx=m.x+m.w/2+m.face*m.w*0.6, my=groundAt(m.x+m.w/2)-d.h*0.62;
-            vfx.push({type:'muzzle', x:mx, y:my, face:m.face, t:0, life:7});
-            const spread=(Math.random()*2-1)*w.spread;
-            bullets.push({ x:mx, y:my, vx:m.face*w.speed*Math.cos(spread), vy:w.speed*Math.sin(spread),
-                           dmg:w.dmg, knock:w.knock, range:w.range, traveled:0, sprite:w.sprite, spriteH:w.spriteH,
-                           hitfx:w.hitfx });
-            sfxShot(); if(w.shake) addShake(3,4);
-          } else m.fireCd=20;
+          const w=WEAPONS[d.wid];
+          if(best) m.face=(best.x+best.w/2>m.x+m.w/2)?1:-1;      // no target? keep SUPPRESSING anyway
+          m.shootT=16; m.fireCd=(best?w.cooldown:Math.max(12,w.cooldown*0.7))+4+Math.random()*8;
+          const mx=m.x+m.w/2+m.face*m.w*0.6, my=groundAt(m.x+m.w/2)-d.h*0.62;
+          vfx.push({type:'muzzle', x:mx, y:my, face:m.face, t:0, life:7});
+          const spread=(Math.random()*2-1)*(w.spread||0.02)+(best?0:(Math.random()*2-1)*0.05);
+          bullets.push({ x:mx, y:my, vx:m.face*w.speed*Math.cos(spread), vy:w.speed*Math.sin(spread),
+                         dmg:w.dmg, knock:w.knock, range:w.range, traveled:0, sprite:w.sprite, spriteH:w.spriteH,
+                         hitfx:w.hitfx });
+          sfxShot(); if(w.shake) addShake(3,4);
         }
       }
     } else {                                                       // leg it off the LEFT of the view
@@ -1172,6 +1170,8 @@ function updateDoors(){
 function useDoor(d){
   if(transitioning||!d) return;
   if(d.url){ try{ window.open(d.url,'_blank','noopener'); }catch(_){}
+             if(d.label==='Buy Me A Pint' && !stashUnlocked){ stashUnlocked=true; saveProgress();
+               flashBanner('CHEERS! \u2014 the STASH upstairs is yours'); }   // supporters' perk unlock
              setTimeout(()=>{ try{ location.href=d.url; }catch(_){} }, 60);   // mobile blocks deferred popups, so fall back to navigating this tab
              return; }
   if(d.jammed){                                       // the toilet's wall door won't open — sends you to the pan instead
@@ -1584,6 +1584,7 @@ function saveProgress(){
   try{ localStorage.setItem('crusader_save', JSON.stringify({
     money, owned:[...owned],
     fighter:(typeof cur!=='undefined'&&cur)?cur.id:null,
+    stash:stashUnlocked,
     bikMet:(typeof bik!=='undefined')&&bik.met,
     photoMet:(typeof photographerMet!=='undefined')&&photographerMet })); }catch(_){}
 }
@@ -1599,6 +1600,7 @@ function applySavedProgress(){                          // called AFTER start(m)
   weaponSel=weaponList.indexOf('pistol');
   if(j.bikMet){ bik.met=true; bik.active=true; bik.state='trail'; }
   if(j.photoMet) photographerMet=true;
+  if(j.stash) stashUnlocked=true;
   updateMoneyHUD(); refreshWeaponBtn();
 }
 setInterval(saveProgress, 5000);
@@ -1630,9 +1632,19 @@ function closeTravel(){ travelOpen=false; document.getElementById('travel').clas
    (add more rows to STASH_ITEMS); each has a one-off effect when tapped. */
 const STASH_ITEMS=[
   {label:'N Bomb', tag:'FREE', fx:()=>{ owned.add('nbomb'); addWeaponToLoadout('nbomb'); saveProgress(); flashBanner('N BOMB \u2014 in your hands'); blip(320,660,0.18,'triangle',0.2); }},
+  {label:'Big Eye', tag:'FREE', fx:()=>{ owned.add('bigeye'); addWeaponToLoadout('bigeye'); saveProgress(); flashBanner('BIG EYE \u2014 armed'); blip(320,660,0.18,'triangle',0.2); }},
   // add more here later, e.g. {label:'Body Armour', tag:'ARM', fx:()=>{...}},
 ];
+/* The stash is a SUPPORTERS' PERK: it unlocks when the player uses the
+   'Buy Me A Pint' Ko-fi door in the Winchester (honour system — a static
+   site can't verify the purchase). Unlock persists in the save. */
+let stashUnlocked=false;
 function openStash(){
+  if(!stashUnlocked){
+    flashBanner('LOCKED \u2014 Buy Me A Pint at the Winchester bar to open the stash');
+    blip(200,120,0.12,'square',0.14);
+    return;
+  }
   travelOpen=true;
   document.getElementById('travel-title').textContent='The Stash';
   const list=document.getElementById('travel-list'); list.innerHTML='';
@@ -1727,7 +1739,7 @@ const WEAPON_ART={
   vest:    {sx:190,  sy:544, sw:273, sh:281},
   grenade: {sx:856,  sy:653, sw:145, sh:128},
 };
-const WEAPON_ORDER=['pistol','rifle','weapon02','weapon01','littleblaster','weapon07','weapon05','weapon03','weapon06','weapon04','weapon08','bigblaster','nbomb'];
+const WEAPON_ORDER=['pistol','rifle','weapon02','weapon01','littleblaster','weapon07','weapon05','weapon03','weapon06','weapon04','weapon08','bigblaster','nbomb','bigeye'];
 let weaponList=[];
 let weaponSel=-1;
 let shootCool=0;
