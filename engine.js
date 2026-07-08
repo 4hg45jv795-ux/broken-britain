@@ -1584,7 +1584,7 @@ function saveProgress(){
   try{ localStorage.setItem('crusader_save', JSON.stringify({
     money, owned:[...owned],
     fighter:(typeof cur!=='undefined'&&cur)?cur.id:null,
-    stash:stashUnlocked,
+    stash:stashUnlocked, ammo:STASH_AMMO,
     bikMet:(typeof bik!=='undefined')&&bik.met,
     photoMet:(typeof photographerMet!=='undefined')&&photographerMet })); }catch(_){}
 }
@@ -1601,6 +1601,7 @@ function applySavedProgress(){                          // called AFTER start(m)
   if(j.bikMet){ bik.met=true; bik.active=true; bik.state='trail'; }
   if(j.photoMet) photographerMet=true;
   if(j.stash) stashUnlocked=true;
+  if(j.ammo) Object.assign(STASH_AMMO, j.ammo);
   updateMoneyHUD(); refreshWeaponBtn();
 }
 setInterval(saveProgress, 5000);
@@ -1631,14 +1632,17 @@ function closeTravel(){ travelOpen=false; document.getElementById('travel').clas
    The upstairs gun cabinet. Reuses the #travel overlay. Options are defined here
    (add more rows to STASH_ITEMS); each has a one-off effect when tapped. */
 const STASH_ITEMS=[
-  {label:'N Bomb', tag:'FREE', fx:()=>{ owned.add('nbomb'); addWeaponToLoadout('nbomb'); saveProgress(); flashBanner('N BOMB \u2014 in your hands'); blip(320,660,0.18,'triangle',0.2); }},
-  {label:'Big Eye', tag:'FREE', fx:()=>{ owned.add('bigeye'); addWeaponToLoadout('bigeye'); saveProgress(); flashBanner('BIG EYE \u2014 armed'); blip(320,660,0.18,'triangle',0.2); }},
+  {label:'N Bomb', tag:'x3', fx:()=>{ owned.add('nbomb'); STASH_AMMO.nbomb=3; addWeaponToLoadout('nbomb'); saveProgress(); flashBanner('N BOMB \u00D73 \u2014 in your hands'); blip(320,660,0.18,'triangle',0.2); }},
+  {label:'Big Eye', tag:'x3', fx:()=>{ owned.add('bigeye'); STASH_AMMO.bigeye=3; addWeaponToLoadout('bigeye'); saveProgress(); flashBanner('BIG EYE \u00D73 \u2014 armed'); blip(320,660,0.18,'triangle',0.2); }},
   // add more here later, e.g. {label:'Body Armour', tag:'ARM', fx:()=>{...}},
 ];
 /* The stash is a SUPPORTERS' PERK: it unlocks when the player uses the
    'Buy Me A Pint' Ko-fi door in the Winchester (honour system — a static
    site can't verify the purchase). Unlock persists in the save. */
 let stashUnlocked=false;
+/* Stash weapons are AMMO-LIMITED: 3 shots each, then back to the cabinet to restock. */
+const STASH_AMMO={ nbomb:0, bigeye:0 };
+function isStashWeapon(id){ return id in STASH_AMMO; }
 function openStash(){
   if(!stashUnlocked){
     flashBanner('LOCKED \u2014 Buy Me A Pint at the Winchester bar to open the stash');
@@ -1784,7 +1788,14 @@ function drawWeaponIcon(cx,id,W,H){
 function refreshWeaponBtn(){
   const btn=document.getElementById('weaponsel'); if(!btn) return;
   const cvs=document.getElementById('weaponicon'); const cx=cvs.getContext('2d');
-  if(isArmed()){ btn.classList.remove('empty'); drawWeaponIcon(cx, weaponList[weaponSel], cvs.width, cvs.height); }
+  if(isArmed()){ btn.classList.remove('empty'); drawWeaponIcon(cx, weaponList[weaponSel], cvs.width, cvs.height);
+    const wid=weaponList[weaponSel];
+    if(isStashWeapon(wid)){                              // ammo pips on stash weapons
+      cx.save(); cx.font='bold 13px system-ui,sans-serif'; cx.textAlign='right'; cx.textBaseline='bottom';
+      cx.fillStyle='rgba(0,0,0,0.65)'; cx.fillText('\u00D7'+STASH_AMMO[wid], cvs.width-3, cvs.height-1);
+      cx.fillStyle=STASH_AMMO[wid]>0?'#ffe98a':'#ff5f6d'; cx.fillText('\u00D7'+STASH_AMMO[wid], cvs.width-4, cvs.height-2);
+      cx.restore(); }
+  }
   else { btn.classList.add('empty'); cx.clearRect(0,0,cvs.width,cvs.height); }
   const strike=document.querySelector('.btn.punch'); if(strike) strike.textContent=isArmed()?'SHOOT':'STRIKE';
 }
@@ -1860,6 +1871,11 @@ function fireWeapon(w){
 function tryFire(){
   const w=curWeapon(); if(!w) return;
   if(shootCool>0) return;
+  const wid=weaponList[weaponSel];
+  if(isStashWeapon(wid)){
+    if(STASH_AMMO[wid]<=0){ flashBanner((w.name||'Weapon').toUpperCase()+' EMPTY \u2014 restock at the stash'); blip(180,110,0.1,'square',0.14); shootCool=20; return; }
+    STASH_AMMO[wid]--; saveProgress(); refreshWeaponBtn();
+  }
   fireWeapon(w); shootCool=w.cooldown;
   if(w.clearAll) blastClearAll();
   if(CLIPS.shoot){ if(player.clip!=='shoot') setClip('shoot'); player.shootPoseT=14; }
