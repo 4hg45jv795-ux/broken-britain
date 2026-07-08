@@ -1165,7 +1165,9 @@ function updateDoors(){
   const sec=SECTIONS[sectionIndex];
   if(!sec.doors) return;
   const cx=player.x+PW/2;
-  for(const d of sec.doors){ if(d.needArm && !toiletPanArmed) continue; if(Math.abs(cx-d.x)<=d.w){ activeDoor=d; break; } }
+  for(const d of sec.doors){ if(d.needArm && !toiletPanArmed) continue;
+    if(WAR.on && sec.id==='in_upstairs' && !d.target) continue;   // WAR MODE: every bubble vanishes except the stairs
+    if(Math.abs(cx-d.x)<=d.w){ activeDoor=d; break; } }
 }
 function useDoor(d){
   if(transitioning||!d) return;
@@ -1656,14 +1658,14 @@ function updateWar(){
   if(SECTIONS[sectionIndex].id!=='in_upstairs') return;   // only rages while you're up there
   WAR.t++;
   if(WAR.t>=WAR.dur){ endWar(); return; }
-  WAR.sirenT++;                                           // two-tone siren
-  if(WAR.sirenT%44===0) blip(660,660,0.34,'sawtooth',0.10);
-  else if(WAR.sirenT%44===22) blip(880,880,0.34,'sawtooth',0.10);
+  WAR.sirenT++;                                           // drives the light strobe (siren SOUND removed by request)
   WAR.spawnT--;
   if(WAR.spawnT<=0){
     const kind=WAR_KINDS[WAR.kindIdx%WAR_KINDS.length]; WAR.kindIdx++;
     const at=1760+Math.random()*260;                     // they climb IN THROUGH THE WINDOW
-    const e=pushEnemy(kind, at, null, {face:(player.x<at?-1:1), hp:40, scaleMul:2.2});   // match the room's 2.2x character scale
+    const base=(ENEMY_KINDS[kind].scale||1);
+    const mul=Math.min(2.2, 2.6/base);                    // room-scale for normal lads; giants capped so they fit the room
+    const e=pushEnemy(kind, at, null, {face:(player.x<at?-1:1), hp:40, scaleMul:mul});
     if(e) e.aggro=true;
     const ramp=Math.min(1, WAR.t/6000);
     WAR.spawnT=Math.round(95-55*ramp)+Math.random()*20;   // waves thicken as the madness deepens
@@ -2279,6 +2281,11 @@ function dogHere(){ const id=SECTIONS[sectionIndex].id; return id==='in_house'||
 function updateDog(){
   if(!dogHere()||csActive) return;
   dog.anim+=1;
+  if(WAR.on && SECTIONS[sectionIndex].id==='in_upstairs'){   // WAR: he bolts to the far left and hides
+    if(dog.x>40){ dog.face=-1; dog.x-=3.4; dog.st='trail'; }
+    else { dog.st='settle'; dog.restT=Math.max(dog.restT,241); }   // straight to the head-down pose
+    return;
+  }
   const px=player.x+PW/2, dx=px-(dog.x+DOGW/2);
   const moving=Math.abs(player.vx||0)>0.4 || keys.left || keys.right;
   if(dog.st==='trail'){
