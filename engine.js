@@ -1043,6 +1043,7 @@ function respawnPlayer(){
     endWar(false);
     player.hp=player.max; player.dead=false; player.deadT=0; setClip('idle');
     hideDeathCard();
+    document.getElementById('hpbar').style.width='100%';   // full life back outside
     gotoId('home',{x:200,face:1});
     return;
   }
@@ -1676,8 +1677,7 @@ function updateWar(){
   WAR.spawnT--;
   if(WAR.spawnT<=0){
     const kind=WAR_KINDS[WAR.kindIdx%WAR_KINDS.length]; WAR.kindIdx++;
-    const fromWindow=(WAR.kindIdx%2===0);                 // BOTH sides: the window (right) and the far left, alternating
-    const at=fromWindow ? 1760+Math.random()*260 : 20+Math.random()*140;
+    const at=1760+Math.random()*260;                      // they come in THROUGH THE WINDOW only
     const base=(ENEMY_KINDS[kind].scale||1);
     const mul=Math.min(2.2, 2.6/base);                    // room-scale for normal lads; giants capped so they fit the room
     const e=pushEnemy(kind, at, null, {face:(player.x<at?-1:1), hp:40, scaleMul:mul});
