@@ -1068,6 +1068,46 @@ function respawnPlayer(){
 /* ── LEVEL TRANSITION ────────────────────────────────────── */
 let transitioning=false;
 function flashBanner(html){ const b=document.getElementById('banner'); b.innerHTML=html; b.style.opacity=1; clearTimeout(b._t); b._t=setTimeout(()=>b.style.opacity=0,1600); }
+
+/* ── ONE-TIME ROOM HINTS ──────────────────────────────────────────────
+   The first time (ever, per device) you walk into one of these rooms, a
+   short tip slides in for a few seconds, then never shows again. Seen room
+   ids persist in localStorage ('crusader_hints'). Edit HINT_TEXT freely —
+   any room id not listed simply shows no hint. (Dover/Zombies are left out
+   on purpose: those modes already print their own aim/fire prompt.) */
+const HINT_TEXT={
+  in_house:      'Head upstairs \u2014 the STASH and WAR MODE are up there.',
+  in_upstairs:   'Open the cabinet for the STASH. The red marker starts WAR MODE.',
+  in_winchester: '\u201CBuy Me A Pint\u201D unlocks the STASH upstairs. STRIKE the jukebox to change the tune.',
+  in_gunstore:   'Spend your cash on guns and ammo before you head back out.',
+  southampton:   'Tap a mate\u2019s face to summon help \u2014 the third slot is the cavalry.',
+};
+let _hintsSeen=null, _hintEl=null;
+function loadHintsSeen(){ if(_hintsSeen) return; try{ _hintsSeen=JSON.parse(localStorage.getItem('crusader_hints')||'{}')||{}; }catch(_){ _hintsSeen={}; } }
+function _ensureHintEl(){
+  if(_hintEl) return _hintEl;
+  const b=document.getElementById('banner'); const host=(b&&b.parentNode)||document.getElementById('game')||document.body;
+  const d=document.createElement('div'); d.id='hintribbon';
+  d.style.cssText='position:absolute;left:50%;top:20%;transform:translateX(-50%) translateY(-6px);'
+    +'max-width:78%;background:rgba(6,10,16,.88);border:1px solid #ffd24a;color:#fff;'
+    +'padding:9px 15px;border-radius:12px;font:600 14px system-ui,-apple-system,sans-serif;'
+    +'line-height:1.32;text-align:center;opacity:0;transition:opacity .45s ease,transform .45s ease;'
+    +'pointer-events:none;box-shadow:0 6px 22px rgba(0,0,0,.5);z-index:80;letter-spacing:.01em;';
+  host.appendChild(d); _hintEl=d; return d;
+}
+function maybeShowRoomHint(id){
+  loadHintsSeen();
+  const txt=HINT_TEXT[id]; if(!txt || _hintsSeen[id]) return;
+  setTimeout(()=>{                                     // let the room fade + any cutscene settle first
+    if(SECTIONS[sectionIndex].id!==id) return;         // player already moved on
+    if(typeof csActive!=='undefined' && csActive) return;  // don't stomp a cutscene; it'll show next visit
+    _hintsSeen[id]=1; try{ localStorage.setItem('crusader_hints', JSON.stringify(_hintsSeen)); }catch(_){}
+    const d=_ensureHintEl();
+    d.innerHTML='\uD83D\uDCA1&nbsp; '+txt;
+    d.style.opacity='1'; d.style.transform='translateX(-50%) translateY(0)';
+    clearTimeout(d._t); d._t=setTimeout(()=>{ d.style.opacity='0'; d.style.transform='translateX(-50%) translateY(-6px)'; }, 5200);
+  }, 900);
+}
 function nextSection(){
   if(transitioning) return;
   const here=SECTIONS[sectionIndex];
@@ -1169,6 +1209,7 @@ function enterSection(opts){
   if(SECTIONS[sectionIndex].autoMenu){ setTimeout(()=>{   // easyJet / station: open the board straight away
     if(SECTIONS[sectionIndex].autoMenu && !travelOpen) openTravel(SECTIONS[sectionIndex].autoMenu);
   }, 260); }
+  maybeShowRoomHint(SECTIONS[sectionIndex].id);          // ONE-TIME tip the first time you enter certain rooms
 }
 
 /* ── WORLD / DOORWAYS (hub <-> rooms) ────────────────────── */
