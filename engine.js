@@ -104,9 +104,11 @@ function buildContinueUI(){
   ov.innerHTML=`<div class="ccard"><h2>WELCOME BACK</h2>
     <div class="csub">${m.name} &bull; &pound;${(SAVED.money||0).toLocaleString()} &bull; ${(SAVED.owned||[]).length} weapon${(SAVED.owned||[]).length===1?'':'s'}</div>
     <button id="contbtn">&#9654; Continue</button>
-    <button id="newbtn">New Game</button></div>`;
+    <button id="newbtn">New Game</button>
+    <button id="contrec" style="background:transparent;color:#aab2bb;border:0;font-size:13px">\uD83C\uDFC5 Records &amp; challenges</button></div>`;
   document.body.appendChild(ov);
   document.getElementById('contbtn').onclick=()=>{ CONTINUE_MODE=true; ov.remove(); start(m); };
+  document.getElementById('contrec').onclick=()=>{ const rb=document.getElementById('recordsbtn'); if(rb) rb.click(); };
   document.getElementById('newbtn').onclick=()=>{
     CONTINUE_MODE=false; SAVED=null;
     try{ localStorage.removeItem('crusader_save'); }catch(_){}
@@ -119,7 +121,7 @@ function buildRecordsUI(){
   st.textContent=`
    #recordsbtn{display:block;margin:14px auto 0;padding:9px 20px;border-radius:999px;cursor:pointer;
      background:rgba(20,26,34,0.9);color:#eef2f6;border:1.5px solid #8a929b;font:bold 14px system-ui,sans-serif;}
-   #records{position:fixed;inset:0;z-index:80;background:rgba(4,6,10,0.9);display:none;align-items:center;justify-content:center;}
+   #records{position:fixed;inset:0;z-index:95;background:rgba(4,6,10,0.9);display:none;align-items:center;justify-content:center;}
    #records.on{display:flex;}
    #records .rcard{background:#12171f;border:1.5px solid #8a929b;border-radius:16px;padding:22px 26px;min-width:280px;max-width:360px;color:#eef2f6;font:15px/1.7 system-ui,sans-serif;}
    #records h2{margin:0 0 4px;font-size:22px;letter-spacing:1px;} #records .rsub{color:#aab2bb;font-size:12px;margin-bottom:14px;}
@@ -2079,7 +2081,7 @@ function drawBullets(){
     if(b.grenade){
       if(b.sprite && imgOk(loaded[b.sprite])){                 // N BOMB: the letter itself tumbles through the air
         const bi=loaded[b.sprite]; b.spin=(b.spin||0)+0.14;
-        const bh=34*ZOOM, bw=bh*bi.naturalWidth/bi.naturalHeight;
+        const bh=34*ZOOM*CSCALE, bw=bh*bi.naturalWidth/bi.naturalHeight;
         ctx.save(); ctx.translate(sx,sy); ctx.rotate(b.spin*(b.vx<0?-1:1));
         try{ ctx.drawImage(bi,-bw/2,-bh/2,bw,bh); }catch(_){}
         ctx.restore();
@@ -2088,7 +2090,7 @@ function drawBullets(){
         ctx.beginPath(); ctx.arc(sx,sy,6,0,7); ctx.fill(); ctx.stroke(); ctx.restore();
       }
     } else if(b.sprite && imgOk(loaded[b.sprite])){
-      const bi=loaded[b.sprite]; const bh=(b.spriteH||30)*ZOOM, bw=bh*bi.naturalWidth/bi.naturalHeight;
+      const bi=loaded[b.sprite]; const bh=(b.spriteH||30)*ZOOM*CSCALE, bw=bh*bi.naturalWidth/bi.naturalHeight;
       ctx.save(); ctx.translate(sx,sy); if(b.vx<0) ctx.scale(-1,1);
       ctx.shadowColor='rgba(90,190,255,0.85)'; ctx.shadowBlur=12;
       try{ ctx.drawImage(bi,-bw*0.5,-bh*0.5,bw,bh); }catch(_){}
