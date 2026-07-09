@@ -189,6 +189,7 @@ const ASSETS = [
   {key:'graffiti_eyes2', type:'img', src:'graffiti_eyes2.png', optional:true}, // Cottagers Cove grinning eyeball (15-frame roll+grin) — RIGHT of the Charlie tag
   {key:'graffiti_alien', type:'img', src:'graffiti_alien.png', optional:true}, // Cottagers Cove AREA 51 alien tag (6-frame blink) — LEFT side of the wall
   {key:'bigeye', type:'img', src:'bigeye.png', optional:true},                // BIG EYE stash weapon: the grinning eyeball, fired like the Big Blaster
+  {key:'graffiti_zombie', type:'img', src:'graffiti_zombie.png', optional:true}, // Cottagers Cove zombie face tag (6-frame blink) — RIGHT side of the wall
 ];
 /* ── SECTIONS / LEVELS ───────────────────────────────────── */
 const SECTIONS=[
@@ -750,7 +751,10 @@ const GRAFFITI = {
   in_cottagers: [
     /* AREA 51 ALIEN (left side of the wall) — blinks awake as you walk past.
        6 frames: 0 eyes open (idle), 1-3 closing, 4-5 reopening/looking. */
-    {img:'graffiti_alien', fw:100, fh:180, at:760, h:150, yOff:-270, range:160,
+    {img:'graffiti_alien', fw:100, fh:180, at:760, h:150, yOff:-258, range:160,
+     clips:{idle:{start:0,count:1,fps:1,loop:true}, react:{start:0,count:6,fps:9,loop:false}}},
+    /* ZOMBIE FACE (right side, the old eyeball spot) — blinks awake as you pass. */
+    {img:'graffiti_zombie', fw:98, fh:159, at:1360, h:150, yOff:-270, range:160,
      clips:{idle:{start:0,count:1,fps:1,loop:true}, react:{start:0,count:6,fps:9,loop:false}}},
   ],
 };
