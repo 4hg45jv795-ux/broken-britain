@@ -190,6 +190,7 @@ const ASSETS = [
   {key:'graffiti_alien', type:'img', src:'graffiti_alien.png', optional:true}, // Cottagers Cove AREA 51 alien tag (6-frame blink) — LEFT side of the wall
   {key:'bigeye', type:'img', src:'bigeye.png', optional:true},                // BIG EYE stash weapon: the grinning eyeball, fired like the Big Blaster
   {key:'graffiti_zombie', type:'img', src:'graffiti_zombie.png', optional:true}, // Cottagers Cove zombie face tag (6-frame blink) — RIGHT side of the wall
+  {key:'graffiti_fdc', type:'img', src:'graffiti_fdc.png', optional:true},     // Cottagers Cove FOREVER DOING CRIME tag (static, low on the wall near the end)
 ];
 /* ── SECTIONS / LEVELS ───────────────────────────────────── */
 const SECTIONS=[
@@ -756,6 +757,9 @@ const GRAFFITI = {
     /* ZOMBIE FACE (right side, the old eyeball spot) — blinks awake as you pass. */
     {img:'graffiti_zombie', fw:98, fh:159, at:1360, h:150, yOff:-270, range:160,
      clips:{idle:{start:0,count:1,fps:1,loop:true}, react:{start:0,count:6,fps:9,loop:false}}},
+    /* FOREVER DOING CRIME (static tag) — low on the wall near the end of the cove. */
+    {img:'graffiti_fdc', fw:420, fh:285, at:1800, h:120, yOff:-96, range:0,
+     clips:{idle:{start:0,count:1,fps:1,loop:true}, react:{start:0,count:1,fps:1,loop:false}}},
   ],
 };
 /* ── ROOM SCREENS (looping .mp4s with sound, painted onto wall screens) ──
