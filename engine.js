@@ -141,6 +141,7 @@ function buildRecordsUI(){
       ['Total &pound; earned', '&pound;'+fmt(STATS.earned)],
       ['Best Zombies wave', STATS.bestWave||'&mdash;'],
       ['Best Dover score', STATS.bestDover?fmt(STATS.bestDover):'&mdash;'],
+      ['Wars survived', fmt(STATS.wars||0)],
       ['Times downed', fmt(STATS.deaths)],
     ].map(r=>`<div class="rrow"><span>${r[0]}</span><b>${r[1]}</b></div>`).join(''); };
   btn.onclick=()=>{ render(); ov.classList.add('on'); };
@@ -1038,6 +1039,13 @@ function showDeathCard(){
 }
 function hideDeathCard(){ const d=document.getElementById('deathcard'); if(d) d.classList.remove('on'); }
 function respawnPlayer(){
+  if(WAR.on){                                            // the war took you: it ends, you wake up outside the house
+    endWar(false);
+    player.hp=player.max; player.dead=false; player.deadT=0; setClip('idle');
+    hideDeathCard();
+    gotoId('home',{x:200,face:1});
+    return;
+  }
   player.x=120; player.y=groundAt(120+PW/2)-PH; player.vx=0; player.vy=0; player.onGround=true;
   player.hp=player.max; player.dead=false; player.deadT=0; setClip('idle');
   hideDeathCard();
@@ -1166,7 +1174,7 @@ function updateDoors(){
   if(!sec.doors) return;
   const cx=player.x+PW/2;
   for(const d of sec.doors){ if(d.needArm && !toiletPanArmed) continue;
-    if(WAR.on && sec.id==='in_upstairs' && !d.target) continue;   // WAR MODE: every bubble vanishes except the stairs
+    if(WAR.on && sec.id==='in_upstairs') continue;   // WAR MODE: every exit vanishes — you're LOCKED IN for the duration
     if(Math.abs(cx-d.x)<=d.w){ activeDoor=d; break; } }
 }
 function useDoor(d){
@@ -1556,7 +1564,7 @@ function updateMoneyHUD(){ const m=document.getElementById('money'); if(m) m.tex
 function addMoney(n){ money+=n; updateMoneyHUD(); if(n>0){ STATS.earned+=n; } if(typeof saveProgress==='function') saveProgress(); }
 /* ── LIFETIME STATS ─────────────────────────────────────────────────────────
    Persisted records shown on the RECORDS screen. */
-const STATS={ kills:0, earned:0, bestWave:0, bestDover:0, deaths:0, runs:0 };
+const STATS={ kills:0, earned:0, bestWave:0, bestDover:0, deaths:0, runs:0, wars:0 };
 function loadStats(){ try{ const j=JSON.parse(localStorage.getItem('crusader_stats')||'null'); if(j) Object.assign(STATS,j); }catch(_){}}
 function saveStats(){ try{ localStorage.setItem('crusader_stats', JSON.stringify(STATS)); }catch(_){}}
 function statBestWave(w){ if(w>STATS.bestWave){ STATS.bestWave=w; saveStats(); } }
@@ -1647,22 +1655,29 @@ function startWar(){
   flashBanner('WAR MODE \u2014 5 MINUTES OF MADNESS');
   addShake(10,20); noiseBurst(0.4,0.3,120);
 }
-function endWar(){
+function endWar(survived){
   WAR.on=false;
   const sc=SCREENS.in_upstairs; if(sc){ sc.idx=0; if(SECTIONS[sectionIndex].id==='in_upstairs') tvEnter(); }
-  flashBanner('THE WAR IS OVER');
-  blip(392,784,0.3,'triangle',0.2);
+  if(survived){
+    STATS.wars=(STATS.wars||0)+1; saveStats();
+    addMoney(2000);
+    flashBanner('WAR SURVIVED \u2014 \u00A32,000 + achievement');
+    blip(523,1046,0.25,'triangle',0.22); blip(659,1318,0.3,'triangle',0.18);
+  } else {
+    flashBanner('THE WAR TOOK YOU');
+  }
 }
 function updateWar(){
   if(!WAR.on) return;
   if(SECTIONS[sectionIndex].id!=='in_upstairs') return;   // only rages while you're up there
   WAR.t++;
-  if(WAR.t>=WAR.dur){ endWar(); return; }
+  if(WAR.t>=WAR.dur){ endWar(true); return; }
   WAR.sirenT++;                                           // drives the light strobe (siren SOUND removed by request)
   WAR.spawnT--;
   if(WAR.spawnT<=0){
     const kind=WAR_KINDS[WAR.kindIdx%WAR_KINDS.length]; WAR.kindIdx++;
-    const at=1760+Math.random()*260;                     // they climb IN THROUGH THE WINDOW
+    const fromWindow=(WAR.kindIdx%2===0);                 // BOTH sides: the window (right) and the far left, alternating
+    const at=fromWindow ? 1760+Math.random()*260 : 20+Math.random()*140;
     const base=(ENEMY_KINDS[kind].scale||1);
     const mul=Math.min(2.2, 2.6/base);                    // room-scale for normal lads; giants capped so they fit the room
     const e=pushEnemy(kind, at, null, {face:(player.x<at?-1:1), hp:40, scaleMul:mul});
