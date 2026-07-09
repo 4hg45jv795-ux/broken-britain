@@ -758,7 +758,7 @@ const GRAFFITI = {
     {img:'graffiti_zombie', fw:98, fh:159, at:1360, h:150, yOff:-270, range:160,
      clips:{idle:{start:0,count:1,fps:1,loop:true}, react:{start:0,count:6,fps:9,loop:false}}},
     /* FOREVER DOING CRIME (static tag) — low on the wall near the end of the cove. */
-    {img:'graffiti_fdc', fw:420, fh:285, at:1800, h:120, yOff:-96, range:0,
+    {img:'graffiti_fdc', fw:420, fh:285, at:1472, h:190, yOff:-290, range:0,
      clips:{idle:{start:0,count:1,fps:1,loop:true}, react:{start:0,count:1,fps:1,loop:false}}},
   ],
 };
