@@ -2984,11 +2984,20 @@ function seaSpawn(anywhere){
   t.x = anywhere ? (40+Math.random()*(VW-80)) : (dir>0 ? -30 : VW+30);
   SEA.targets.push(t);
 }
+function seaGunFeel(){                                    // shared HEAVY-GUN feel for SEA + ZOM ranges
+  SEA.kick=7; SEA.flash=5;                                // meatier view-recoil + longer muzzle flash
+  addShake(2.6,4);                                        // a touch more screen-shake (reticle stays true)
+  rumble(8,8);                                            // controller dual-rumble EVERY shot (gun was under the mag>=6 gate before)
+  try{ if(navigator.vibrate) navigator.vibrate(55); }catch(_){}  // phone haptic (Android/Chromium; iOS Safari ignores it)
+  noiseBurst(0.13,0.30,110);                              // deep, fuller report (was thin @ hp500)
+  blip(115,34,0.15,'sawtooth',0.17);                     // low boom sweeping into sub-bass
+  blip(64,30,0.17,'sine',0.13);                          // sub thump \u2014 the "chest" of the shot
+}
 function seaFireAt(ax,ay){
   if(SEA.cool>0) return;
-  SEA.cool=5; SEA.shots++; SEA.kick=4; SEA.flash=3;      // MACHINE GUN: ~12 rounds/sec while held
+  SEA.cool=5; SEA.shots++;                               // MACHINE GUN: ~12 rounds/sec while held
   ax+=(Math.random()*2-1)*3; ay+=(Math.random()*2-1)*3;  // slight spray
-  addShake(1.5,3); noiseBurst(0.07,0.20,500); blip(180,70,0.06,'square',0.10);
+  seaGunFeel();
   let best=null, bd=1e9;
   for(const t of SEA.targets){ if(t.dead) continue;
     const hr=(t.r+8)*t.scale, d=Math.hypot(t.x-ax,t.y-ay);
@@ -3241,9 +3250,9 @@ function zomGeom(zb){                                    // screen geometry from
 }
 function zomFireAt(ax,ay){
   if(SEA.cool>0) return;
-  SEA.cool=5; SEA.kick=4; SEA.flash=3;
+  SEA.cool=5;
   ax+=(Math.random()*2-1)*3; ay+=(Math.random()*2-1)*3;
-  addShake(1.5,3); noiseBurst(0.07,0.20,500); blip(180,70,0.06,'square',0.10);
+  seaGunFeel();
   let best=null, bt=-1;
   for(const zb of ZOM.zombies){
     if(zb.st==='die') continue;
