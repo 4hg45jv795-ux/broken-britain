@@ -882,7 +882,7 @@ const WEAPONS={
   grenade: {name:'Grenade', auto:false, cooldown:48, type:'grenade', speed:8, dmg:80, radius:95, knock:22 },
   nbomb:   {name:'N Bomb', auto:false, cooldown:60, type:'grenade', speed:7.5, dmg:150, radius:175, knock:28, nuke:true, sprite:'nbomb' },   // free from the upstairs STASH; ground-shaking blast
   littleblaster:{name:'Little Blaster', auto:false, cooldown:16, type:'bullet', pellets:1, spread:0.02, speed:12, range:600, dmg:34, knock:9,  sprite:'littleblaster', spriteH:30, shake:false},
-  bigblaster:   {name:'Big Blaster',    auto:false, cooldown:75, type:'bullet', pellets:1, spread:0.00, speed:10, range:680, dmg:999, knock:30, sprite:'bigblaster', spriteH:58, shake:true, clearAll:true },  // THE ultimate: one shot wipes every enemy on the level. Long cooldown so each blast is an event.
+  bigblaster:   {name:'Big Blaster',    auto:false, cooldown:75, type:'bullet', pellets:1, spread:0.00, speed:10, range:680, dmg:999, knock:30, sprite:'bigblaster', spriteH:58, shake:true },  // 3-shot magazine + 90s recharge (see BB in engine.js); kills what it HITS, no screen-wipe.
   bigeye:       {name:'Big Eye',        auto:false, cooldown:75, type:'bullet', pellets:1, spread:0.00, speed:10, range:680, dmg:999, knock:30, sprite:'bigeye', spriteH:58, shake:true, clearAll:true },   // STASH exclusive: the grinning eyeball, same one-shot wipe as the Big Blaster
   // NOTE: the 'fireblaster' weapon AND its asset were removed completely by request.
   // Shooter enemies (the UFO) now fire the BIG BLASTER bolt instead (bigblaster.png),
