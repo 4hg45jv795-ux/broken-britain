@@ -136,14 +136,21 @@ function buildRecordsUI(){
     '<button id="rclose">Close</button><button class="rreset" id="rreset">Reset records</button></div>';
   document.body.appendChild(ov);
   const fmt=n=>n.toLocaleString();
-  const render=()=>{ document.getElementById('rrows').innerHTML=[
+  const render=()=>{
+    const rows=[
       ['Enemies defeated', fmt(STATS.kills)],
       ['Total &pound; earned', '&pound;'+fmt(STATS.earned)],
       ['Best Zombies wave', STATS.bestWave||'&mdash;'],
       ['Best Dover score', STATS.bestDover?fmt(STATS.bestDover):'&mdash;'],
       ['Wars survived', fmt(STATS.wars||0)],
       ['Times downed', fmt(STATS.deaths)],
-    ].map(r=>`<div class="rrow"><span>${r[0]}</span><b>${r[1]}</b></div>`).join(''); };
+    ].map(r=>`<div class="rrow"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('');
+    const done=STATS.ach||[];
+    const achRows='<div class="rsub" style="margin-top:14px">Challenges</div>'+ACH.map(A=>{
+      const ok=done.includes(A.id);
+      return `<div class="rrow"><span>${ok?'\u2705':'\u2B1C'} ${A.label}</span><b>${ok?'PAID':'\u00A3'+fmt(A.pay)}</b></div>`;
+    }).join('');
+    document.getElementById('rrows').innerHTML=rows+achRows; };
   btn.onclick=()=>{ render(); ov.classList.add('on'); };
   ov.onclick=e=>{ if(e.target===ov) ov.classList.remove('on'); };
   document.getElementById('rclose').onclick=()=>ov.classList.remove('on');
@@ -364,6 +371,7 @@ function maybeDropPickup(e){
 }
 function killEnemy(e,ko){ if(e.state==='die'||e.state==='dead')return; e.state='die'; e.ct=0; (ko?sfxKO:sfxHit)();
   STATS.kills++; if(STATS.kills%25===0) saveStats();
+  if(STATS.kills>=500) checkAch('kills500');
   const reward=e.static?25:10; addMoney(reward); addFloater(e.x+e.w/2, e.y, '+\u00A3'+reward); arenaAddKillScore();
   maybeDropPickup(e);
   const sec=SECTIONS[sectionIndex];
@@ -1102,7 +1110,7 @@ function showCard(opts){
     img.onload =()=>card.classList.remove('noimg');
     img.src=opts.img;
   } else { card.classList.add('noimg'); img.removeAttribute('src'); }   // text-only card
-  if(opts.sound && !musicMuted){ try{ const a=new Audio(opts.sound); a.volume=0.9; a.play().catch(()=>{}); }catch(_){} }
+  if(opts.sound){ try{ const a=new Audio(opts.sound); a.volume=0.9; a.play().catch(()=>{}); }catch(_){} }
   card.classList.add('on');
   requestAnimationFrame(()=>{ card.style.opacity='1'; });
   setTimeout(()=>{ opts.swap&&opts.swap(); }, 1500);          // switch the level underneath while it's hidden
@@ -1568,8 +1576,27 @@ function addMoney(n){ money+=n; updateMoneyHUD(); if(n>0){ STATS.earned+=n; } if
 const STATS={ kills:0, earned:0, bestWave:0, bestDover:0, deaths:0, runs:0, wars:0 };
 function loadStats(){ try{ const j=JSON.parse(localStorage.getItem('crusader_stats')||'null'); if(j) Object.assign(STATS,j); }catch(_){}}
 function saveStats(){ try{ localStorage.setItem('crusader_stats', JSON.stringify(STATS)); }catch(_){}}
-function statBestWave(w){ if(w>STATS.bestWave){ STATS.bestWave=w; saveStats(); } }
+function statBestWave(w){ if(w>STATS.bestWave){ STATS.bestWave=w; saveStats(); } if(w>=5) checkAch('zwave5'); }
 function statBestDover(s){ if(s>STATS.bestDover){ STATS.bestDover=s; saveStats(); } }
+/* ── ACHIEVEMENTS ────────────────────────────────────────────────────────────
+   One-time cash challenges. Completion pays out instantly and is remembered in
+   STATS.ach. Listed at the bottom of the RECORDS screen. Add rows to ACH and
+   call checkAch(id) from wherever the condition is met. */
+const ACH=[
+  {id:'pistol10', label:'Reach wave 10 in an arena \u2014 PISTOL ONLY', pay:5000},
+  {id:'zwave5',   label:'Survive to wave 5 in Zombies', pay:2000},
+  {id:'kills500', label:'500 enemies defeated', pay:5000},
+  {id:'warhero',  label:'Survive War Mode', pay:3000},
+];
+let arenaPistolPure=true;                                // tainted by firing anything else in an arena
+function checkAch(id){
+  STATS.ach=STATS.ach||[];
+  if(STATS.ach.includes(id)) return;
+  const A=ACH.find(x=>x.id===id); if(!A) return;
+  STATS.ach.push(id); saveStats(); addMoney(A.pay);
+  flashBanner('ACHIEVEMENT \u2014 '+A.label+' \u2014 \u00A3'+A.pay.toLocaleString());
+  blip(523,1046,0.22,'triangle',0.22); blip(784,1568,0.28,'triangle',0.18);
+}
 let floaters=[];
 function addFloater(x,y,txt){ floaters.push({x,y,txt,t:0}); }
 function updateFloaters(){ for(const f of floaters) f.t++; floaters=floaters.filter(f=>f.t<55); }
@@ -1661,6 +1688,7 @@ function endWar(survived){
   const sc=SCREENS.in_upstairs; if(sc){ sc.idx=0; if(SECTIONS[sectionIndex].id==='in_upstairs') tvEnter(); }
   if(survived){
     STATS.wars=(STATS.wars||0)+1; saveStats();
+    checkAch('warhero');
     addMoney(2000);
     flashBanner('WAR SURVIVED \u2014 \u00A32,000 + achievement');
     blip(523,1046,0.25,'triangle',0.22); blip(659,1318,0.3,'triangle',0.18);
@@ -1713,6 +1741,8 @@ const STASH_ITEMS=[
 let stashUnlocked=false;
 /* Stash weapons are AMMO-LIMITED: 3 shots each, then back to the cabinet to restock. */
 const STASH_AMMO={ nbomb:0, bigeye:0 };
+/* BIG BLASTER magazine: 3 shots, then a 90-second recharge before it works again. */
+const BB={ shots:3, rechargeT:0 };
 function isStashWeapon(id){ return id in STASH_AMMO; }
 function openStash(){
   if(!stashUnlocked){
@@ -1861,6 +1891,12 @@ function refreshWeaponBtn(){
   const cvs=document.getElementById('weaponicon'); const cx=cvs.getContext('2d');
   if(isArmed()){ btn.classList.remove('empty'); drawWeaponIcon(cx, weaponList[weaponSel], cvs.width, cvs.height);
     const wid=weaponList[weaponSel];
+    if(wid==='bigblaster'){                              // magazine / recharge readout
+      cx.save(); cx.font='bold 12px system-ui,sans-serif'; cx.textAlign='right'; cx.textBaseline='bottom';
+      const txt=BB.rechargeT>0 ? Math.ceil(BB.rechargeT/60)+'s' : '\u00D7'+BB.shots;
+      cx.fillStyle='rgba(0,0,0,0.65)'; cx.fillText(txt, cvs.width-3, cvs.height-1);
+      cx.fillStyle=BB.rechargeT>0?'#ff5f6d':'#ffe98a'; cx.fillText(txt, cvs.width-4, cvs.height-2);
+      cx.restore(); }
     if(isStashWeapon(wid)){                              // ammo pips on stash weapons
       cx.save(); cx.font='bold 13px system-ui,sans-serif'; cx.textAlign='right'; cx.textBaseline='bottom';
       cx.fillStyle='rgba(0,0,0,0.65)'; cx.fillText('\u00D7'+STASH_AMMO[wid], cvs.width-3, cvs.height-1);
@@ -1922,6 +1958,7 @@ function hitEnemy(e,dmg,knock,dir){
   if(e.hp<=0) killEnemy(e,true); else sfxHit();
 }
 function fireWeapon(w){
+  if(typeof isArena==='function' && isArena() && weaponList[weaponSel]!=='pistol') arenaPistolPure=false;
   const m=muzzlePoint();
   vfx.push({type:'muzzle', x:m.x, y:m.y, face:player.face, t:0, life:7});
   for(let i=0;i<3;i++) vfx.push({type:'spark', x:m.x+player.face*(4+Math.random()*9), y:m.y+(Math.random()*7-3.5), t:0, life:6});
@@ -1943,6 +1980,13 @@ function tryFire(){
   const w=curWeapon(); if(!w) return;
   if(shootCool>0) return;
   const wid=weaponList[weaponSel];
+  if(wid==='bigblaster'){
+    if(BB.rechargeT>0){ const ss=Math.ceil(BB.rechargeT/60);
+      flashBanner('BIG BLASTER recharging \u2014 '+Math.floor(ss/60)+':'+String(ss%60).padStart(2,'0'));
+      blip(180,110,0.1,'square',0.14); shootCool=20; return; }
+    BB.shots--; refreshWeaponBtn();
+    if(BB.shots<=0){ BB.rechargeT=90*60; }
+  }
   if(isStashWeapon(wid)){
     if(STASH_AMMO[wid]<=0){ flashBanner((w.name||'Weapon').toUpperCase()+' EMPTY \u2014 restock at the stash'); blip(180,110,0.1,'square',0.14); shootCool=20; return; }
     STASH_AMMO[wid]--; saveProgress(); refreshWeaponBtn();
@@ -2183,7 +2227,14 @@ function drawBlood(){
 }
 
 let shakeT=0, shakeMag=0, shakeDur=1;
+function rumble(mag,frames){                             // controller rumble mirrors big screen-shakes
+  try{ const gp=(navigator.getGamepads&&navigator.getGamepads()[0]);
+    if(gp && gp.vibrationActuator) gp.vibrationActuator.playEffect('dual-rumble',
+      { duration:Math.min(700,frames*16), strongMagnitude:Math.min(1,mag/14), weakMagnitude:Math.min(1,mag/9) });
+  }catch(_){}
+}
 function addShake(mag,frames){
+  if(mag>=6) rumble(mag,frames);
   if(shakeT<=0){ shakeMag=0; shakeDur=1; }
   shakeT=Math.max(shakeT,frames);
   shakeDur=Math.max(shakeDur,frames);
@@ -2561,7 +2612,7 @@ document.getElementById('travel').onclick=(e)=>{ if(e.target.id==='travel') clos
 document.getElementById('mute').onclick=(e)=>{
   e.stopPropagation(); musicMuted=!musicMuted;
   const bgm=document.getElementById('bgm'); bgm.muted=musicMuted;
-  if(musicMuted) pauseAllProxAudio();
+  // (NPC proximity voices intentionally NOT muted — the button only kills music/TV)
   for(const k in _tvVidPool){ _tvVidPool[k].muted=true; }
   { const _sc=curScreen(); if(tvVideo) tvVideo.muted=(_sc&&_sc.sound)?musicMuted:true; }   // sound screens follow the music toggle; cinema stays muted in-world
   if(!musicMuted && cur && !paused && sectionMusic()) bgm.play().catch(()=>{});
@@ -2814,17 +2865,17 @@ function updateProxAudio(){
   for(const p of PROX_AUDIO){
     const a=_proxEl(p.src);
     let want=false, vol=0;
-    if(!musicMuted && !paused && cur && !player.dead && secId===p.section){
+    if(!paused && cur && !player.dead && secId===p.section){
       const nx=p.getX();
       if(nx!=null){
         const d=Math.abs((player.x+PW/2)-nx);
         if(d<p.range){ want=true; vol=0.25 + 0.55*(1-d/p.range); }
       }
     }
-    if(want){ a.muted=musicMuted; a.volume=Math.max(0,Math.min(0.8,vol)); if(a.paused) a.play().catch(()=>{}); }
+    if(want){ a.muted=false; a.volume=Math.max(0,Math.min(0.8,vol)); if(a.paused) a.play().catch(()=>{}); }
     else if(!a.paused){ a.pause(); }
   }
-  const live = !musicMuted && !paused && cur && !player.dead;
+  const live = !paused && cur && !player.dead;   // (music mute does NOT silence NPC voices)
   // per ENEMY KIND: every enemy has an mp3 slot; the NEAREST live instance sets the volume
   for(let k=0;k<ENEMY_KINDS.length;k++){
     const K=ENEMY_KINDS[k]; if(!K.mp3) continue;
@@ -3430,6 +3481,7 @@ function update(){
   updateBikini();
   updateDog();
   updateWar();
+  if(BB.rechargeT>0){ BB.rechargeT--; if(BB.rechargeT===0){ BB.shots=3; refreshWeaponBtn(); flashBanner('BIG BLASTER recharged'); blip(523,1046,0.2,'triangle',0.18); } }
   updateHubNpcs();
   updateChurchNpc();
   updateLibraryNpc();
@@ -3706,11 +3758,13 @@ function arenaPool(){
 }
 function arenaEnter(){
   arenaActive=true; arenaWave=0; arenaScore=0; arenaGrace=0; arenaScored=false;
+  arenaPistolPure=true;
   enemies=[]; bullets=[]; vfx=[]; enemyBullets=[]; drops=[];
   arenaNextWave();
 }
 function arenaNextWave(){
   arenaWave++;
+  if(arenaWave>=10 && arenaPistolPure) checkAch('pistol10');
   const w=arenaWave;
   const s=SECTIONS[sectionIndex];
   const bossMode = !!s.arenaBossMode;                      // BOSS MODE: every wave is a special squad
