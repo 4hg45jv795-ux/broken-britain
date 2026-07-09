@@ -1080,7 +1080,7 @@ const HINT_TEXT={
   in_upstairs:   'Open the cabinet for the STASH. The red marker starts WAR MODE.',
   in_winchester: '\u201CBuy Me A Pint\u201D unlocks the STASH upstairs. STRIKE the jukebox to change the tune.',
   in_gunstore:   'Spend your cash on guns and ammo before you head back out.',
-  southampton:   'Tap a mate\u2019s face to summon help \u2014 the third slot is the cavalry.',
+  southampton:   'Tap the Hurler, burning bin or cavalry tab for help.',
 };
 let _hintsSeen=null, _hintEl=null;
 function loadHintsSeen(){ if(_hintsSeen) return; try{ _hintsSeen=JSON.parse(localStorage.getItem('crusader_hints')||'{}')||{}; }catch(_){ _hintsSeen={}; } }
@@ -3026,8 +3026,7 @@ function seaSpawn(anywhere){
   SEA.targets.push(t);
 }
 function seaGunFeel(){                                    // shared HEAVY-GUN feel for SEA + ZOM ranges
-  SEA.kick=7; SEA.flash=5;                                // meatier view-recoil + longer muzzle flash
-  addShake(2.6,4);                                        // a touch more screen-shake (reticle stays true)
+  SEA.flash=5;                                            // longer muzzle flash only \u2014 camera shake removed by request
   rumble(8,8);                                            // controller dual-rumble EVERY shot (gun was under the mag>=6 gate before)
   try{ if(navigator.vibrate) navigator.vibrate(55); }catch(_){}  // phone haptic (Android/Chromium; iOS Safari ignores it)
   noiseBurst(0.13,0.30,110);                              // deep, fuller report (was thin @ hp500)
