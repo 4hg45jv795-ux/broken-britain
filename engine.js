@@ -1973,7 +1973,7 @@ function fireWeapon(w){
     const spread=(Math.random()*2-1)*w.spread;
     bullets.push({ x:m.x, y:m.y, vx:player.face*w.speed*Math.cos(spread), vy:w.speed*Math.sin(spread),
                    dmg:w.dmg, knock:w.knock, range:w.range, traveled:0, sprite:w.sprite, spriteH:w.spriteH,
-                   hitfx:w.hitfx });   // only weapons with an explicit hitfx get the fire/electric burst
+                   hitfx:w.hitfx , pierce:w.pierce});   // only weapons with an explicit hitfx get the fire/electric burst
   }
 }
 function tryFire(){
@@ -2035,6 +2035,7 @@ function updateBullets(){
     if(b.traveled>b.range || b.x<-20 || b.x>BGW+20){ b.dead=true; continue; }
     for(const e of enemies){
       if(e.state!=='walk') continue;
+      if(b._hit && b._hit.has(e)) continue;
       const ex=e.x+e.w/2, ey=e.y+e.h*0.46;
       if(Math.abs(b.x-ex) < e.w*0.5+5 && Math.abs(b.y-ey) < e.h*0.5){
         hitEnemy(e, b.dmg, b.knock, b.vx>=0?1:-1);
@@ -2045,7 +2046,11 @@ function updateBullets(){
           if(b.hitfx==='electric') e.shockT=Math.max(e.shockT||0,16);  // crackles over them a moment
           else e.burnT=Math.max(e.burnT||0,22);                         // flames lick up off them
         }
-        b.dead=true; break;
+        if(b.pierce){                              // BIG BLASTER: carves through the whole row
+          if(!b._hit) b._hit=new Set();
+          if(b._hit.has(e)) continue;
+          b._hit.add(e);
+        } else { b.dead=true; break; }
       }
     }
   }
