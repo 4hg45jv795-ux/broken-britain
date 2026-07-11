@@ -1774,16 +1774,19 @@ function drawWarLights(){
    The upstairs gun cabinet. Reuses the #travel overlay. Options are defined here
    (add more rows to STASH_ITEMS); each has a one-off effect when tapped. */
 const STASH_ITEMS=[
-  {label:'N Bomb', tag:'x3', fx:()=>{ owned.add('nbomb'); STASH_AMMO.nbomb=3; addWeaponToLoadout('nbomb'); saveProgress(); flashBanner('N BOMB \u00D73 \u2014 in your hands'); blip(320,660,0.18,'triangle',0.2); }},
-  {label:'Big Eye', tag:'x3', fx:()=>{ owned.add('bigeye'); STASH_AMMO.bigeye=3; addWeaponToLoadout('bigeye'); saveProgress(); flashBanner('BIG EYE \u00D73 \u2014 armed'); blip(320,660,0.18,'triangle',0.2); }},
+  {label:'N Bomb', tag:'x3', fx:()=>{ owned.add('nbomb'); STASH_AMMO.nbomb=3; STASH_RE.nbomb=0; addWeaponToLoadout('nbomb'); saveProgress(); flashBanner('N BOMB \u00D73 \u2014 in your hands'); blip(320,660,0.18,'triangle',0.2); }},
+  {label:'Big Eye', tag:'x3', fx:()=>{ owned.add('bigeye'); STASH_AMMO.bigeye=3; STASH_RE.bigeye=0; addWeaponToLoadout('bigeye'); saveProgress(); flashBanner('BIG EYE \u00D73 \u2014 armed'); blip(320,660,0.18,'triangle',0.2); }},
   // add more here later, e.g. {label:'Body Armour', tag:'ARM', fx:()=>{...}},
 ];
 /* The stash is a SUPPORTERS' PERK: it unlocks when the player uses the
    'Buy Me A Pint' Ko-fi door in the Winchester (honour system — a static
    site can't verify the purchase). Unlock persists in the save. */
 let stashUnlocked=false;
-/* Stash weapons are AMMO-LIMITED: 3 shots each, then back to the cabinet to restock. */
+/* Stash weapons are now COOLDOWN-based: fire 3, then a 90-second auto-recharge back
+   to 3 (no stash restock needed). Grabbing them from the cabinet still tops you up. */
 const STASH_AMMO={ nbomb:0, bigeye:0 };
+const STASH_RE={ nbomb:0, bigeye:0 };                  // recharge frames remaining per weapon (90s*60)
+const STASH_NAME={ nbomb:'N BOMB', bigeye:'BIG EYE' };
 /* BIG BLASTER magazine: 3 shots, then a 90-second recharge before it works again. */
 const BB={ shots:3, rechargeT:0 };
 function isStashWeapon(id){ return id in STASH_AMMO; }
@@ -1940,10 +1943,12 @@ function refreshWeaponBtn(){
       cx.fillStyle='rgba(0,0,0,0.65)'; cx.fillText(txt, cvs.width-3, cvs.height-1);
       cx.fillStyle=BB.rechargeT>0?'#ff5f6d':'#ffe98a'; cx.fillText(txt, cvs.width-4, cvs.height-2);
       cx.restore(); }
-    if(isStashWeapon(wid)){                              // ammo pips on stash weapons
+    if(isStashWeapon(wid)){                              // ammo pips, or recharge countdown when cooling
       cx.save(); cx.font='bold 13px system-ui,sans-serif'; cx.textAlign='right'; cx.textBaseline='bottom';
-      cx.fillStyle='rgba(0,0,0,0.65)'; cx.fillText('\u00D7'+STASH_AMMO[wid], cvs.width-3, cvs.height-1);
-      cx.fillStyle=STASH_AMMO[wid]>0?'#ffe98a':'#ff5f6d'; cx.fillText('\u00D7'+STASH_AMMO[wid], cvs.width-4, cvs.height-2);
+      const rt=STASH_RE[wid]||0;
+      const txt=rt>0 ? Math.ceil(rt/60)+'s' : '\u00D7'+STASH_AMMO[wid];
+      cx.fillStyle='rgba(0,0,0,0.65)'; cx.fillText(txt, cvs.width-3, cvs.height-1);
+      cx.fillStyle=rt>0?'#ff5f6d':'#ffe98a'; cx.fillText(txt, cvs.width-4, cvs.height-2);
       cx.restore(); }
   }
   else { btn.classList.add('empty'); cx.clearRect(0,0,cvs.width,cvs.height); }
@@ -2031,8 +2036,12 @@ function tryFire(){
     if(BB.shots<=0){ BB.rechargeT=90*60; }
   }
   if(isStashWeapon(wid)){
-    if(STASH_AMMO[wid]<=0){ flashBanner((w.name||'Weapon').toUpperCase()+' EMPTY \u2014 restock at the stash'); blip(180,110,0.1,'square',0.14); shootCool=20; return; }
+    if(STASH_RE[wid]>0){ const ss=Math.ceil(STASH_RE[wid]/60);
+      flashBanner((STASH_NAME[wid]||wid.toUpperCase())+' RECHARGING \u2014 '+ss+'s'); blip(180,110,0.1,'square',0.14); shootCool=20; return; }
+    if(STASH_AMMO[wid]<=0){ STASH_RE[wid]=90*60; refreshWeaponBtn();
+      flashBanner((STASH_NAME[wid]||wid.toUpperCase())+' EMPTY \u2014 recharging 90s'); blip(180,110,0.1,'square',0.14); shootCool=20; return; }
     STASH_AMMO[wid]--; saveProgress(); refreshWeaponBtn();
+    if(STASH_AMMO[wid]<=0){ STASH_RE[wid]=90*60; }      // fired the last of 3 -> start the 90s cooldown
   }
   fireWeapon(w); shootCool=w.cooldown;
   if(w.clearAll) blastClearAll();
@@ -3026,7 +3035,7 @@ function seaSpawn(anywhere){
   SEA.targets.push(t);
 }
 function seaGunFeel(){                                    // shared HEAVY-GUN feel for SEA + ZOM ranges
-  SEA.flash=5;                                            // longer muzzle flash only \u2014 camera shake removed by request
+  SEA.kick=2; SEA.flash=5;                                // tiny recoil kick (2px, was 7) + longer muzzle flash
   rumble(8,8);                                            // controller dual-rumble EVERY shot (gun was under the mag>=6 gate before)
   try{ if(navigator.vibrate) navigator.vibrate(55); }catch(_){}  // phone haptic (Android/Chromium; iOS Safari ignores it)
   noiseBurst(0.13,0.30,110);                              // deep, fuller report (was thin @ hp500)
@@ -3538,6 +3547,10 @@ function update(){
   updateDog();
   updateWar();
   if(BB.rechargeT>0){ BB.rechargeT--; if(BB.rechargeT===0){ BB.shots=3; refreshWeaponBtn(); flashBanner('BIG BLASTER recharged'); blip(523,1046,0.2,'triangle',0.18); } }
+  for(const wid in STASH_RE){                            // N BOMB / BIG EYE: 90s auto-recharge, no stash restock
+    if(STASH_RE[wid]>0){ STASH_RE[wid]--; if(STASH_RE[wid]===0){ STASH_AMMO[wid]=3; saveProgress(); refreshWeaponBtn(); flashBanner((STASH_NAME[wid]||wid.toUpperCase())+' recharged'); blip(523,1046,0.2,'triangle',0.18); } }
+    else if(owned.has(wid) && STASH_AMMO[wid]<=0){ STASH_RE[wid]=90*60; }   // empty (e.g. from a saved game) -> auto-start cooldown
+  }
   updateHubNpcs();
   updateChurchNpc();
   updateLibraryNpc();
