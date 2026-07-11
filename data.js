@@ -831,7 +831,7 @@ const PDF_MENUS={
   library:{ title:'The Library \u2014 Reading Desk', files:[
     {label:"Foxe's Book of Martyrs", file:'pdf1.pdf'},
     {label:'The Turner Diaries', file:'doc2.pdf'},
-    {label:'Document Three', file:'doc3.pdf'},
+    {label:'The King James Bible', file:'doc3.pdf'},
   ]},
 };
 const TRAVEL_MENUS={
