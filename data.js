@@ -567,7 +567,7 @@ const SECTIONS=[
   {id:'in_special', name:'Room 3 &mdash; Special Guest', bgKey:'room_special', BGW:591, bgScale:2, srcY:46, flatGround:275, charScale:1.3, interior:true, enemies:[],
    /* JOKE TELLER draws FIRST (behind), so the strolling piggyback group passes IN FRONT of him. */
    npcs:[ {img:'jokeman', fw:156, fh:223, at:253, h:78, yOff:-110, face:1,
-           clip:{start:0,count:8,fps:6,loop:true}, mp3:'Jokeman.mp3', range:180},
+           clip:{start:0,count:8,fps:6,loop:true}},   /* audio now plays as the ROOM track (Jokeman.mp3), not proximity */
           /* Decorative NPC: the carried sedan-chair group strolls back and forth along the
              floor on the player's path (normal size, ground level), passing in front of the
              joke teller on the stage. Nudge h / paceFrom-To / paceSpd / face. */
@@ -611,7 +611,7 @@ const TRACKS={ select:'Character selection screen.mp3', home:'Home.mp3', street:
   in_toilet:'Toilet.mp3',
   /* ── NEW ROOM MUSIC SLOTS (upload these three .mp3s next to index.html) ── */
   in_police:'Police.mp3', in_nightclub:'Slamminvinyl.mp3', in_crackadilly:'Crackadilly.mp3',
-  in_dnb:'Dnb.mp3', in_hiphop:'Hiphop.mp3', in_special:'Specialguest.mp3', in_cottagers:'Cottagerscove.mp3',
+  in_dnb:'Dnb.mp3', in_hiphop:'Hiphop.mp3', in_special:'Jokeman.mp3', in_cottagers:'Cottagerscove.mp3',
   /* ── BLACK LEVEL + HOLODECK MUSIC (the MP4s are silent; these are the sound) ── */
   blacklevel:'Void.mp3', holodeck:'Holodeck.mp3', judgement:'Judgement.mp3', bossmode:'Bossmode.mp3',
   lvl_europe:'Europe.mp3', lvl_america:'America.mp3', in_shitter:'Shitter.mp3', the_sea:'Sea.mp3', lvl_zombies:'Zombies.mp3', in_upstairs:'Upstairs.mp3' };
