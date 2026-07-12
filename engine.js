@@ -371,7 +371,7 @@ function maybeDropPickup(e){
   const kind = Math.random()<0.78 ? 'food' : 'star';
   drops.push({kind, x:e.x+e.w/2, taken:false, t:Math.random()*10});
 }
-function killEnemy(e,ko){ if(e.state==='die'||e.state==='dead')return; e.state='die'; e.ct=0; (ko?sfxKO:sfxHit)();
+function killEnemy(e,ko,silent){ if(e.state==='die'||e.state==='dead')return; e.state='die'; e.ct=0; if(!silent)(ko?sfxKO:sfxHit)();
   STATS.kills++; if(STATS.kills%25===0) saveStats();
   if(STATS.kills>=500) checkAch('kills500');
   const reward=e.static?25:10; addMoney(reward); addFloater(e.x+e.w/2, e.y, '+\u00A3'+reward); arenaAddKillScore();
@@ -2060,15 +2060,21 @@ function blastClearAll(){            // Big Blaster: one shot wipes every enemy 
   if(n) flashBanner('ENOUGH IS ENOUGH');
 }
 function explodeGrenade(b){
-  vfx.push({type:'boom', x:b.x, y:b.y, t:0, life:26, r:b.radius});
-  if(b.nuke){ vfx.push({type:'nboom', x:b.x, y:b.y-14, t:0, life:34, r:b.radius});   // N BOMB: the big art + ground-shaking blast
+  const R = b.nuke ? Math.max((b.radius||175)*2, 340) : b.radius;   // N BOMB gets a much bigger blast
+  vfx.push({type:'boom', x:b.x, y:b.y, t:0, life:26, r:R});
+  if(b.nuke){ vfx.push({type:'nboom', x:b.x, y:b.y-14, t:0, life:34, r:R});   // N BOMB: the big art + ground-shaking blast
     addShake(15,30); noiseBurst(0.5,0.34,90); noiseBurst(0.3,0.3,60); blip(70,24,0.5,'sawtooth',0.3); }
   sfxKO();
   addShake(9,12);
   for(const e of enemies){
-    if(e.state!=='walk') continue;
+    if(e.state==='die'||e.state==='dead') continue;                // already down
+    if(!b.nuke && e.state!=='walk') continue;                      // normal grenades only catch walkers
     const ex=e.x+e.w/2, ey=e.y+e.h*0.5;
-    if(Math.hypot(b.x-ex,b.y-ey) < b.radius){ hitEnemy(e, b.dmg, b.knock, ex>=b.x?1:-1); spawnBlood(ex, ey, ex>=b.x?1:-1); }
+    if(Math.hypot(b.x-ex,b.y-ey) < R){
+      if(b.nuke) killEnemy(e, true, true);                         // N BOMB: outright kill regardless of HP (silent — the blast is loud enough)
+      else hitEnemy(e, b.dmg, b.knock, ex>=b.x?1:-1);
+      spawnBlood(ex, ey, ex>=b.x?1:-1);
+    }
   }
 }
 function updateBullets(){
